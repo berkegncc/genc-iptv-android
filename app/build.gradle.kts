@@ -14,7 +14,11 @@ val localProperties = Properties().apply {
     val file = rootProject.file("local.properties")
     if (file.exists()) FileInputStream(file).use { load(it) }
 }
-val tmdbApiKey: String = localProperties.getProperty("TMDB_API_KEY", "")
+// Env var takes precedence so CI / public release builds can ship an APK
+// without baking the maintainer's TMDB key into the bytecode. Local dev
+// keeps reading from `local.properties` as before.
+val tmdbApiKey: String = System.getenv("TMDB_API_KEY")
+    ?: localProperties.getProperty("TMDB_API_KEY", "")
 
 android {
     namespace = "com.genciptv.player"
