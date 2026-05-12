@@ -1,0 +1,20 @@
+# Genç IPTV — local.properties template
+#
+# Bu dosyayı `local.properties` olarak kopyala ve aşağıdaki alanları doldur.
+# `local.properties` `.gitignore`'a dahildir; commit edilmez.
+
+# ── Android SDK ──────────────────────────────────────────────────────────────
+# Android Studio otomatik olarak ekler. Manuel ekliyorsan kendi SDK yolun:
+#   Windows:  sdk.dir=C:\\Users\\<kullanici>\\AppData\\Local\\Android\\Sdk
+#   macOS:    sdk.dir=/Users/<kullanici>/Library/Android/sdk
+#   Linux:    sdk.dir=/home/<kullanici>/Android/Sdk
+sdk.dir=
+
+# ── TMDB API anahtarı (OPSİYONEL) ────────────────────────────────────────────
+# Anahtar yoksa uygulama TMDB özelliklerini sessizce atlar:
+#   • Boş poster'lar için TMDB fallback DEVREDIŞI
+#   • Film/dizi detayında oyuncu kadrosu listesi BOŞ
+# Temel oynatma (canlı + VOD) bu olmadan da tam çalışır.
+#
+# Anahtar almak (ücretsiz): https://www.themoviedb.org/settings/api
+TMDB_API_KEY=

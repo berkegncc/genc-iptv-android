@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Genç IPTV — v2 brand mark.
+    Stylized G with silver outer arc, teal play-triangle core, copper closing arc.
+    Original mark; not a recreation of any third-party brand asset.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="32dp"
+    android:height="32dp"
+    android:viewportWidth="32"
+    android:viewportHeight="32">
+
+    <!-- Silver outer G arc -->
+    <path android:pathData="M16,4 a12,12 0 1 0 12,12 h-3 a9,9 0 1 1 -9,-9 z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="0"
+                android:startY="0"
+                android:endX="32"
+                android:endY="32"
+                android:type="linear">
+                <item android:offset="0" android:color="#FFD8DCDD" />
+                <item android:offset="0.5" android:color="#FF9FA5A7" />
+                <item android:offset="1" android:color="#FF5C6264" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Copper bottom arc — closes the G -->
+    <path android:pathData="M28,16 a12,12 0 0 1 -12,12 v-3 a9,9 0 0 0 9,-9 z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="0"
+                android:startY="0"
+                android:endX="32"
+                android:endY="32"
+                android:type="linear">
+                <item android:offset="0" android:color="#FFD89B6A" />
+                <item android:offset="1" android:color="#FF7A4A2A" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Teal play-triangle core -->
+    <path android:pathData="M13,11 l8,5 -8,5 z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="0"
+                android:startY="0"
+                android:endX="32"
+                android:endY="32"
+                android:type="linear">
+                <item android:offset="0" android:color="#FF5DEAD8" />
+                <item android:offset="1" android:color="#FF0E8A7C" />
+            </gradient>
+        </aapt:attr>
+    </path>
+</vector>

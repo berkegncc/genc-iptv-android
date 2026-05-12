@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Adaptive-icon foreground (108×108dp canvas, inner 66×66dp safe area).
+
+    The brand G mark is authored in a 32-unit coordinate system (matching
+    `ic_logo_g_mark.xml` and the source SVG in `App Icon.html`). We embed
+    those paths inside a `<group>` that translates them to (21,21) and
+    scales by 2.0625× — that lands the artwork dead-centre with a 21dp
+    safe-zone margin on each side, so no launcher mask (circle / squircle /
+    teardrop) clips the icon.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <group
+        android:translateX="21"
+        android:translateY="21"
+        android:scaleX="2.0625"
+        android:scaleY="2.0625">
+
+        <!-- Silver G outer arc -->
+        <path android:pathData="M16,4 a12,12 0 1 0 12,12 h-3 a9,9 0 1 1 -9,-9 z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="0" android:startY="0"
+                    android:endX="32" android:endY="32">
+                    <item android:offset="0.00" android:color="#E2E6E7" />
+                    <item android:offset="0.55" android:color="#9FA5A7" />
+                    <item android:offset="1.00" android:color="#4F5557" />
+                </gradient>
+            </aapt:attr>
+        </path>
+
+        <!-- Copper bottom curve -->
+        <path android:pathData="M28,16 a12,12 0 0 1 -12,12 v-3 a9,9 0 0 0 9,-9 z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="0" android:startY="0"
+                    android:endX="32" android:endY="32">
+                    <item android:offset="0.00" android:color="#E0A878" />
+                    <item android:offset="1.00" android:color="#7A4A2A" />
+                </gradient>
+            </aapt:attr>
+        </path>
+
+        <!-- Teal play triangle -->
+        <path android:pathData="M13,11 l8,5 l-8,5 z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="13" android:startY="11"
+                    android:endX="21" android:endY="21">
+                    <item android:offset="0.00" android:color="#5DEAD8" />
+                    <item android:offset="1.00" android:color="#0E8A7C" />
+                </gradient>
+            </aapt:attr>
+        </path>
+    </group>
+</vector>

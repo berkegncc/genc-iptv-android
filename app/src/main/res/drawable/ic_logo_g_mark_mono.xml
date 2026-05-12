@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Monochrome silhouette of the brand G mark.
+
+    Used for:
+      • Adaptive-icon `<monochrome>` layer (Android 13 themed icons)
+      • Notification small-icon (Android 12+ requires a single-tint vector)
+
+    Same three paths as `ic_logo_g_mark.xml` but flat white — the system
+    re-tints this asset to match the active theme / notification colour.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Centre the 32-unit source paths inside the 108-unit launcher canvas
+         with ~22% safe-zone margin (66dp visible safe area). -->
+    <group
+        android:translateX="21"
+        android:translateY="21"
+        android:scaleX="2.0625"
+        android:scaleY="2.0625">
+
+        <path
+            android:pathData="M16,4 a12,12 0 1 0 12,12 h-3 a9,9 0 1 1 -9,-9 z"
+            android:fillColor="#FFFFFF" />
+        <path
+            android:pathData="M28,16 a12,12 0 0 1 -12,12 v-3 a9,9 0 0 0 9,-9 z"
+            android:fillColor="#FFFFFF" />
+        <path
+            android:pathData="M13,11 l8,5 l-8,5 z"
+            android:fillColor="#FFFFFF" />
+    </group>
+</vector>

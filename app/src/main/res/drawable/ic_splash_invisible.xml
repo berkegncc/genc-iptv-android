@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Görünmez sistem-splash ikonu.
+
+    Android `core-splashscreen` API'si `windowSplashScreenAnimatedIcon`
+    olmadan kullanıcının launcher icon'unu (renkli G mark) gösterir. Biz
+    Compose tarafındaki [AnimatedSplashOverlay]'in mark fade-in'ini başlangıç
+    noktası olarak istiyoruz — sistem splash'ın kendi G işareti, animasyonun
+    fade-in'iyle çakışıp "iki splash" hissi yaratıyordu.
+
+    Bu drawable bir piksel bile çizmez; sistem splash sadece
+    `windowSplashScreenBackground` rengini (#0E1213) gösterir, ardından
+    Compose overlay'i devreye girip mark'ı sıfırdan fade-in eder.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <path
+        android:pathData="M0,0"
+        android:fillColor="#00000000" />
+</vector>

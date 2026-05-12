@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--
+        API 31+ splash. Same brand G mark on the same dark background as the
+        legacy theme — staying consistent across versions is more important
+        than tracking the system light/dark theme for the splash flash.
+    -->
+    <style name="Theme.GencIPTVPlayer" parent="Theme.SplashScreen">
+        <!--
+            Sistem splash'ı sadece dark zemin gösterir; animasyonlu logo
+            sekansı Compose tarafındaki AnimatedSplashOverlay'da oynanır
+            (aksi halde sistem statik G'yi, ardından Compose tekrar fade-in'i
+            gösterip "iki splash" hissi verir).
+        -->
+        <item name="android:windowSplashScreenBackground">#0E1213</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_splash_invisible</item>
+        <item name="postSplashScreenTheme">@style/Theme.GencIPTVPlayer.App</item>
+    </style>
+
+</resources>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Auto-Backup KAPALI (manifest'te `android:allowBackup="false"`); bu dosya
+    yine de izin verilse bile Xtream credentials'ı, EPG/VOD cache'ini ve
+    devam-et listesini hiçbir backup hedefine göndermez. Hassas içerik:
+      • SQLite DB → kullanıcı adı/parolası içerir
+      • SharedPreferences/DataStore → görünen ad + tercihler
+    Hepsi exclude.
+-->
+<full-backup-content>
+    <exclude domain="database" path="genciptv.db" />
+    <exclude domain="sharedpref" path="." />
+    <exclude domain="file" path="." />
+</full-backup-content>

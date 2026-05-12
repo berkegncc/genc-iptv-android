@@ -1,0 +1,54 @@
+# ── Gradle / build outputs ───────────────────────────────────────────────────
+.gradle/
+**/build/
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+
+# ── IDEs ─────────────────────────────────────────────────────────────────────
+.idea/
+*.iml
+.vscode/
+.fleet/
+
+# ── Kotlin compiler cache ────────────────────────────────────────────────────
+.kotlin/
+
+# ── OS junk ──────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── APK / AAB / binary outputs ───────────────────────────────────────────────
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# ── Archives (project backups, exports) ──────────────────────────────────────
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+
+# ── Internal scratch (Claude Code, working drafts, design references) ────────
+.claude/
+new_design/
+handoff/
+*.html
+design-brief-*.md
+engineering-brief-*.md
+
+# ── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+hs_err_pid*
+
+# ── Tooling caches ───────────────────────────────────────────────────────────
+.gradletasknamecache
+node_modules/
+
+# ── Sensitive ────────────────────────────────────────────────────────────────
+# local.properties carries SDK path AND optional TMDB_API_KEY; never commit.
+# Use `local.properties.example` to document the structure for contributors.

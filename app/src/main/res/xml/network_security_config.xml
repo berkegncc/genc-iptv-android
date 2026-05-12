@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Cleartext (HTTP) traffic is permitted because IPTV users commonly supply
+    legacy Xtream/M3U endpoints that only serve over HTTP. User certificates
+    are trusted so self-hosted provider CAs work without rebuilds.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system"/>
+            <certificates src="user"/>
+        </trust-anchors>
+    </base-config>
+</network-security-config>

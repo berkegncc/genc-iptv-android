@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--
+        Splash screen theme (API 24+, enhanced on API 31+ via core-splashscreen).
+        Shows the brand G mark on the dark brand background, then transitions
+        into the main app theme. Brand colours match `App Icon.html` "Dark
+        splash" variant — `#0A0D0E` is the deep end of the radial gradient.
+    -->
+    <style name="Theme.GencIPTVPlayer" parent="Theme.SplashScreen">
+        <!--
+            Sistem splash'ı sadece dark zemin gösterir; animasyonlu logo +
+            wordmark + halo Compose tarafındaki AnimatedSplashOverlay'da
+            oynanır. Aksi halde sistem statik G'yi gösterir, sonra Compose
+            mark'ı yeniden fade-in eder ve kullanıcı "iki splash" görür.
+        -->
+        <item name="windowSplashScreenBackground">#0E1213</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_invisible</item>
+        <item name="postSplashScreenTheme">@style/Theme.GencIPTVPlayer.App</item>
+    </style>
+
+    <style name="Theme.GencIPTVPlayer.App" parent="android:Theme.Material.Light.NoActionBar">
+        <!--
+            Window background sistem splash dismiss olduktan sonra ile
+            Compose ilk frame arası kısa anda görünür; splash zemin rengiyle
+            (#0E1213) eşleştirerek o ara karede gri flash oluşmasını
+            engelliyoruz. Compose'da AnimatedSplashOverlay zaten ekranı
+            tamamen kapladığı için bu renk Compose çalışırken hiç görünmez.
+        -->
+        <item name="android:windowBackground">#0E1213</item>
+    </style>
+
+</resources>

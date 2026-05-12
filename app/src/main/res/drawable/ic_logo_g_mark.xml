@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Genç IPTV brand mark (v3) — three SVG paths from `App Icon.html`:
+      • Silver outer arc — 270° G ring opening to the bottom-right
+      • Copper bottom curve — closes the G's right side with a warm tone
+      • Teal play triangle — the IPTV identity inside the G
+    All three paths use linear gradients matching the brand spec.
+
+    Viewport is 32×32 (the source SVG); set width/height at the call site.
+    Used by Compose `GencLogo` / `AppLogoIcon`. The launcher icon uses a
+    derived 108×108 viewport with the same paths transformed into the
+    safe zone — see `ic_launcher_foreground.xml`.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="32dp"
+    android:height="32dp"
+    android:viewportWidth="32"
+    android:viewportHeight="32">
+
+    <!-- Silver G outer arc -->
+    <path android:pathData="M16,4 a12,12 0 1 0 12,12 h-3 a9,9 0 1 1 -9,-9 z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="0" android:startY="0"
+                android:endX="32" android:endY="32">
+                <item android:offset="0.00" android:color="#E2E6E7" />
+                <item android:offset="0.55" android:color="#9FA5A7" />
+                <item android:offset="1.00" android:color="#4F5557" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Copper bottom curve -->
+    <path android:pathData="M28,16 a12,12 0 0 1 -12,12 v-3 a9,9 0 0 0 9,-9 z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="0" android:startY="0"
+                android:endX="32" android:endY="32">
+                <item android:offset="0.00" android:color="#E0A878" />
+                <item android:offset="1.00" android:color="#7A4A2A" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Teal play triangle -->
+    <path android:pathData="M13,11 l8,5 l-8,5 z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="13" android:startY="11"
+                android:endX="21" android:endY="21">
+                <item android:offset="0.00" android:color="#5DEAD8" />
+                <item android:offset="1.00" android:color="#0E8A7C" />
+            </gradient>
+        </aapt:attr>
+    </path>
+</vector>

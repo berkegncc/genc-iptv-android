@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Android 12+ data extraction rules. Auto-backup tamamen kapalı olsa bile
+    cloud-backup ve device-transfer için açık exclude'lar koyuyoruz — Xtream
+    credentials'ı, EPG/VOD cache'ini ve oturum tercihlerini hiçbir hedefe
+    göndermez.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="database" path="genciptv.db" />
+        <exclude domain="sharedpref" path="." />
+        <exclude domain="file" path="." />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="database" path="genciptv.db" />
+        <exclude domain="sharedpref" path="." />
+        <exclude domain="file" path="." />
+    </device-transfer>
+</data-extraction-rules>

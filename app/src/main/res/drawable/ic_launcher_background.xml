@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Adaptive-icon background — radial dark gradient matching the "Default"
+    variant in `App Icon.html`:
+
+        radial-gradient(120% 120% at 30% 20%, #1F2A2C, #0A0D0E 70%)
+
+    The light hot-spot in the upper-left mirrors the brushed-metal sheen of
+    the brand render. Launchers that apply round / squircle masks see this
+    layer at the edges.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <path android:pathData="M0,0 H108 V108 H0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="32.4"
+                android:centerY="21.6"
+                android:gradientRadius="129.6">
+                <item android:offset="0.0" android:color="#1F2A2C" />
+                <item android:offset="0.7" android:color="#0A0D0E" />
+                <item android:offset="1.0" android:color="#0A0D0E" />
+            </gradient>
+        </aapt:attr>
+    </path>
+</vector>
