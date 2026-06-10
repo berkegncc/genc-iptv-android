@@ -20,6 +20,17 @@ val localProperties = Properties().apply {
 val tmdbApiKey: String = System.getenv("TMDB_API_KEY")
     ?: localProperties.getProperty("TMDB_API_KEY", "")
 
+// Release signing secrets. keystore.properties is gitignored; env vars take
+// precedence so CI can sign without a file on disk. Fall back to debug if absent.
+val keystoreProperties = Properties().apply {
+    val file = rootProject.file("keystore.properties")
+    if (file.exists()) FileInputStream(file).use { load(it) }
+}
+fun signingProp(key: String, env: String): String? =
+    System.getenv(env) ?: keystoreProperties.getProperty(key)
+val releaseStoreFile = signingProp("storeFile", "RELEASE_STORE_FILE")
+val hasReleaseSigning = releaseStoreFile != null && rootProject.file(releaseStoreFile).exists()
+
 android {
     namespace = "com.genciptv.player"
     compileSdk {
@@ -32,12 +43,23 @@ android {
         applicationId = "com.genciptv.player"
         minSdk = 24
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("String", "TMDB_API_KEY", "\"$tmdbApiKey\"")
+    }
+
+    signingConfigs {
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = rootProject.file(releaseStoreFile!!)
+                storePassword = signingProp("storePassword", "RELEASE_STORE_PASSWORD")
+                keyAlias = signingProp("keyAlias", "RELEASE_KEY_ALIAS")
+                keyPassword = signingProp("keyPassword", "RELEASE_KEY_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
@@ -48,11 +70,14 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            // Dev convenience: sign release with the debug keystore so we can
-            // sideload the optimised APK on a phone to test R8 / animation
-            // smoothness without setting up a real release keystore. Swap to
-            // a proper signingConfigs.create("release") block before shipping.
-            signingConfig = signingConfigs.getByName("debug")
+            // Sign with the real release keystore when keystore.properties / env vars
+            // are present. Otherwise fall back to the debug key so a plain local
+            // assembleRelease still produces an installable APK. NEVER ship debug-signed.
+            signingConfig = if (hasReleaseSigning) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
     }
     compileOptions {

@@ -25,11 +25,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.genciptv.player.core.designsystem.Border
+import com.genciptv.player.core.designsystem.GencLogo
 import com.genciptv.player.core.designsystem.LocalAccentPalette
 import com.genciptv.player.core.designsystem.Surface
 import com.genciptv.player.core.designsystem.TextTertiary
+import com.genciptv.player.core.designsystem.WindowSize
 
 private val RailWidth = 80.dp
+private val ExpandedRailWidth = 96.dp
 private val IndicatorShape = RoundedCornerShape(14.dp)
 
 /**
@@ -45,12 +48,14 @@ fun GencNavRail(
 ) {
     val accent = LocalAccentPalette.current.primary
     val accentSoft = LocalAccentPalette.current.soft
+    val isExpanded = WindowSize.isExpanded
+    val railWidth = if (isExpanded) ExpandedRailWidth else RailWidth
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top,
         modifier = modifier
-            .width(RailWidth)
+            .width(railWidth)
             .fillMaxHeight()
             .background(Surface)
             .border(width = 1.dp, color = Border)
@@ -58,6 +63,10 @@ fun GencNavRail(
             .navigationBarsPadding()
             .padding(vertical = 16.dp),
     ) {
+        // Brand mark anchors the rail on wide screens.
+        GencLogo(size = if (isExpanded) 34.dp else 28.dp)
+        Spacer(Modifier.height(if (isExpanded) 20.dp else 14.dp))
+
         GencNavItem.entries.forEach { item ->
             val isActive = item == current
             val iconTint = if (isActive) accent else TextTertiary

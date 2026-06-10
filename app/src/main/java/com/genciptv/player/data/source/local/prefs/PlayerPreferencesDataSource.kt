@@ -24,7 +24,6 @@ class PlayerPreferencesDataSource(
             decoderPref = runCatching {
                 DecoderPref.valueOf(p[KEY_DECODER] ?: DecoderPref.AUTO.name)
             }.getOrDefault(DecoderPref.AUTO),
-            trustAllCerts = p[KEY_TRUST_ALL] ?: false,
             loudnessNormalization = p[KEY_LOUDNESS] ?: false,
             pictureInPicture = p[KEY_PIP] ?: true,
         )
@@ -41,7 +40,6 @@ class PlayerPreferencesDataSource(
                 decoderPref = runCatching {
                     DecoderPref.valueOf(prefs[KEY_DECODER] ?: DecoderPref.AUTO.name)
                 }.getOrDefault(DecoderPref.AUTO),
-                trustAllCerts = prefs[KEY_TRUST_ALL] ?: false,
                 loudnessNormalization = prefs[KEY_LOUDNESS] ?: false,
                 pictureInPicture = prefs[KEY_PIP] ?: true,
             )
@@ -52,7 +50,6 @@ class PlayerPreferencesDataSource(
             updated.userAgent?.let { prefs[KEY_USER_AGENT] = it }
                 ?: prefs.remove(KEY_USER_AGENT)
             prefs[KEY_DECODER] = updated.decoderPref.name
-            prefs[KEY_TRUST_ALL] = updated.trustAllCerts
             prefs[KEY_LOUDNESS] = updated.loudnessNormalization
             prefs[KEY_PIP] = updated.pictureInPicture
         }
@@ -64,7 +61,6 @@ class PlayerPreferencesDataSource(
         private val KEY_AUDIO_LANG = stringPreferencesKey("audio_lang")
         private val KEY_USER_AGENT = stringPreferencesKey("user_agent")
         private val KEY_DECODER = stringPreferencesKey("decoder")
-        private val KEY_TRUST_ALL = booleanPreferencesKey("trust_all_certs")
         private val KEY_LOUDNESS = booleanPreferencesKey("loudness_norm")
         private val KEY_PIP = booleanPreferencesKey("pip")
     }

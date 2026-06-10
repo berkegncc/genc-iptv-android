@@ -185,6 +185,11 @@ class PlayerViewModel @Inject constructor(
             initialValue = null,
         )
 
+    val userAgent: StateFlow<String?> = userPreferencesRepository.player
+        .map { it.userAgent?.takeIf { ua -> ua.isNotBlank() } }
+        .distinctUntilChanged()
+        .stateIn(scope = viewModelScope, started = SharingStarted.WhileSubscribed(5_000), initialValue = null)
+
     init {
         // Record recently-watched channel in local-only DataStore (LRU list).
         // This is NOT ContinueWatching — no position/duration, just an ID list.

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -45,6 +46,7 @@ import com.genciptv.player.core.designsystem.WindowSize
 import com.genciptv.player.core.ui.ChannelListItem
 import com.genciptv.player.core.ui.EmptyState
 import com.genciptv.player.core.ui.GencSearchBar
+import com.genciptv.player.core.ui.readableContentWidth
 import com.genciptv.player.feature.vod.VodPosterCard
 
 private val sectionGradient = Brush.linearGradient(
@@ -124,7 +126,9 @@ fun SearchScreen(
                 modifier = Modifier.fillMaxSize(),
             )
             else -> LazyColumn(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .readableContentWidth(760.dp)
+                    .fillMaxHeight(),
                 contentPadding = PaddingValues(bottom = 24.dp),
             ) {
                 if (state.channels.isNotEmpty()) {

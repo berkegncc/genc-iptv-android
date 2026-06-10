@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -54,6 +55,7 @@ import com.genciptv.player.core.designsystem.Surface2
 import com.genciptv.player.core.designsystem.TextPrimary
 import com.genciptv.player.core.designsystem.TextSecondary
 import com.genciptv.player.core.designsystem.TextTertiary
+import com.genciptv.player.core.ui.readableContentWidth
 import com.genciptv.player.data.model.AppearancePreferences
 import com.genciptv.player.data.model.ThemeMode
 
@@ -122,7 +124,8 @@ fun ThemeSettingsContent(
 
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .readableContentWidth()
+                .fillMaxHeight()
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {

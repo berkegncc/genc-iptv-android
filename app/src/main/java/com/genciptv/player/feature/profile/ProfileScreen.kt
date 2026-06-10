@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -60,6 +61,7 @@ import com.genciptv.player.core.ui.GencAdaptiveScaffold
 import com.genciptv.player.core.ui.GencNavItem
 import com.genciptv.player.core.ui.GencToggle
 import com.genciptv.player.core.ui.GradientProfileCard
+import com.genciptv.player.core.ui.readableContentWidth
 import com.genciptv.player.core.ui.SettingGroupCard
 import com.genciptv.player.core.ui.SettingRow
 import com.genciptv.player.core.ui.SettingRowDivider
@@ -150,10 +152,12 @@ fun ProfileContent(
             // Header
             ProfileHeader(onBack = onBack)
 
-            // Scrollable content
+            // Scrollable content — capped to a readable width and centred on
+            // tablets (no-op on phones where the screen is already narrower).
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .readableContentWidth()
+                    .fillMaxHeight()
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 16.dp, vertical = 12.dp)
             ) {

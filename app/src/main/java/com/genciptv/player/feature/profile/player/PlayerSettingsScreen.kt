@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -50,7 +51,6 @@ import com.genciptv.player.core.designsystem.Bg
 import com.genciptv.player.core.designsystem.Border
 import com.genciptv.player.core.designsystem.GencIptvTheme
 import com.genciptv.player.core.designsystem.IcBlueSoft
-import com.genciptv.player.core.designsystem.Live
 import com.genciptv.player.core.designsystem.LocalAccentPalette
 import com.genciptv.player.core.designsystem.OrangeSoft
 import com.genciptv.player.core.designsystem.Surface
@@ -58,6 +58,7 @@ import com.genciptv.player.core.designsystem.Surface2
 import com.genciptv.player.core.designsystem.TextPrimary
 import com.genciptv.player.core.designsystem.TextTertiary
 import com.genciptv.player.core.ui.GencToggle
+import com.genciptv.player.core.ui.readableContentWidth
 import com.genciptv.player.core.ui.SettingGroupCard
 import com.genciptv.player.core.ui.SettingRow
 import com.genciptv.player.core.ui.SettingRowDivider
@@ -80,7 +81,6 @@ fun PlayerSettingsScreen(
         onSetAudioLang = viewModel::setAudioLang,
         onToggleLoudness = viewModel::toggleLoudness,
         onSetUserAgent = viewModel::setUserAgent,
-        onSetTrustAllCerts = viewModel::setTrustAllCerts,
         onTogglePip = viewModel::togglePip,
     )
 }
@@ -95,7 +95,6 @@ fun PlayerSettingsContent(
     onSetAudioLang: (String?) -> Unit,
     onToggleLoudness: (Boolean) -> Unit,
     onSetUserAgent: (String?) -> Unit,
-    onSetTrustAllCerts: (Boolean) -> Unit,
     onTogglePip: (Boolean) -> Unit,
 ) {
     val accent = LocalAccentPalette.current
@@ -104,7 +103,6 @@ fun PlayerSettingsContent(
     var showDecoderSheet by remember { mutableStateOf(false) }
     var showAudioLangDialog by remember { mutableStateOf(false) }
     var showUserAgentDialog by remember { mutableStateOf(false) }
-    var showSslWarningDialog by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -147,7 +145,8 @@ fun PlayerSettingsContent(
 
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .readableContentWidth()
+                .fillMaxHeight()
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
@@ -206,22 +205,6 @@ fun PlayerSettingsContent(
                     label = "User-Agent Override",
                     subtitle = player.userAgent ?: "Varsayılan",
                     onClick = { showUserAgentDialog = true },
-                )
-                SettingRowDivider()
-                SettingRow(
-                    icon = "⚠️",
-                    iconBgColor = com.genciptv.player.core.designsystem.LiveSoft,
-                    label = "SSL Doğrulamayı Atla",
-                    subtitle = "DİKKAT: Güvensiz",
-                    trailing = {
-                        GencToggle(
-                            checked = player.trustAllCerts,
-                            onCheckedChange = { newValue ->
-                                if (newValue) showSslWarningDialog = true
-                                else onSetTrustAllCerts(false)
-                            },
-                        )
-                    }
                 )
             }
 
@@ -397,25 +380,6 @@ fun PlayerSettingsContent(
         )
     }
 
-    // SSL warning dialog
-    if (showSslWarningDialog) {
-        AlertDialog(
-            onDismissRequest = { showSslWarningDialog = false },
-            title = { Text("Güvenlik Uyarısı") },
-            text = {
-                Text("Bu ayar man-in-the-middle saldırılarına açıktır. Yalnızca güvendiğiniz özel IPTV sunucularınız için kullanın. Devam etmek istiyor musunuz?")
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    onSetTrustAllCerts(true)
-                    showSslWarningDialog = false
-                }) { Text("Devam Et", color = Live) }
-            },
-            dismissButton = {
-                TextButton(onClick = { showSslWarningDialog = false }) { Text("İptal") }
-            }
-        )
-    }
 }
 
 // ── Label extensions ──────────────────────────────────────────────────────────
@@ -454,7 +418,6 @@ private fun PlayerSettingsPreview() {
                 preferredAudioLang = "tr",
                 loudnessNormalization = false,
                 pictureInPicture = true,
-                trustAllCerts = false,
             ),
             onBack = {},
             onSetQuality = {},
@@ -462,7 +425,6 @@ private fun PlayerSettingsPreview() {
             onSetAudioLang = {},
             onToggleLoudness = {},
             onSetUserAgent = {},
-            onSetTrustAllCerts = {},
             onTogglePip = {},
         )
     }

@@ -52,3 +52,6 @@ node_modules/
 # ── Sensitive ────────────────────────────────────────────────────────────────
 # local.properties carries SDK path AND optional TMDB_API_KEY; never commit.
 # Use `local.properties.example` to document the structure for contributors.
+keystore.properties
+*.jks
+*.keystore

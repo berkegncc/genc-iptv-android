@@ -41,13 +41,16 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -79,11 +82,15 @@ import com.genciptv.player.core.designsystem.PosterShape
 import com.genciptv.player.core.designsystem.TextPrimary
 import com.genciptv.player.core.designsystem.TextSecondary
 import com.genciptv.player.core.designsystem.TextTertiary
+import com.genciptv.player.core.designsystem.WindowSize
+import com.genciptv.player.core.ui.DetailPlaceholder
 import com.genciptv.player.core.ui.EmptyState
 import com.genciptv.player.core.ui.GencAdaptiveScaffold
 import com.genciptv.player.core.ui.GencNavItem
 import com.genciptv.player.core.ui.LoadingState
 import com.genciptv.player.core.ui.Poster
+import com.genciptv.player.core.ui.TwoPaneRow
+import com.genciptv.player.core.ui.TwoPaneSide
 import com.genciptv.player.data.model.ContinueWatching
 import com.genciptv.player.data.model.FavoriteTargetType
 import com.genciptv.player.data.model.Series
@@ -159,8 +166,6 @@ fun VodListContent(
 ) {
     val accent = LocalAccentPalette.current
     val activeNavItem = if (uiState.kind == VodKind.MOVIE) GencNavItem.MOVIES else GencNavItem.SERIES
-    val inProgress = if (uiState.kind == VodKind.MOVIE) uiState.inProgressMovies
-                     else uiState.inProgressSeries
 
     var showRemoveDialog by remember { mutableStateOf(false) }
     if (showRemoveDialog) {
@@ -242,87 +247,196 @@ fun VodListContent(
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
-            Column(modifier = Modifier.fillMaxSize()) {
-                // Header — toggles between normal and selection-mode bar
-                if (uiState.isCwSelectionMode) {
-                    SelectionTopBar(
-                        selectedCount = uiState.selectedCwIds.size,
-                        onClear = onClearCwSelection,
-                        onRemove = { showRemoveDialog = true },
-                    )
-                } else {
-                    VodListHeader(onBack = onBack)
-                }
+            val isExpanded = WindowSize.isExpanded
 
-                // Tabs (Filmler / Diziler)
-                if (!uiState.isCwSelectionMode) {
-                    VodTabRow(
-                        activeIndex = if (uiState.kind == VodKind.MOVIE) 0 else 1,
-                        onSelect = onTabSelected,
-                    )
-                }
+            if (isExpanded) {
+                // Tablet master-detail: poster grid on the left, the selected
+                // item's detail in a fixed pane on the right.
+                var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
+                // Switching Movies <-> Series invalidates the previous selection.
+                LaunchedEffect(uiState.kind) { selectedId = null }
 
-                // Search
-                if (!uiState.isCwSelectionMode) {
-                    VodSearchEntry(
-                        query = uiState.query,
-                        onQueryChange = onQueryChanged,
-                        placeholder = if (uiState.kind == VodKind.MOVIE) "Film ara…" else "Dizi ara…",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 10.dp),
-                    )
-
-                    if (uiState.categories.isNotEmpty()) {
-                        VodCategoryChips(
-                            categories = uiState.categories,
-                            selectedId = uiState.selectedCategoryId,
-                            onSelected = onCategorySelected,
+                TwoPaneRow(
+                    fixedSide = TwoPaneSide.End,
+                    fixedWidth = 400.dp,
+                    startPane = {
+                        VodListBody(
+                            uiState = uiState,
+                            onBack = onBack,
+                            onTabSelected = onTabSelected,
+                            onCategorySelected = onCategorySelected,
+                            onQueryChanged = onQueryChanged,
+                            onItemClick = { id -> selectedId = id },
+                            onContinueMovie = onContinueMovie,
+                            onContinueEpisode = onContinueEpisode,
+                            onToggleCwSelection = onToggleCwSelection,
+                            onClearCwSelection = onClearCwSelection,
+                            onRequestRemove = { showRemoveDialog = true },
                         )
-                        Spacer(Modifier.height(8.dp))
-                    }
-                }
-
-                // Body
-                when {
-                    uiState.isLoading -> LoadingState(modifier = Modifier.fillMaxSize())
-
-                    uiState.kind == VodKind.MOVIE && uiState.movies.isEmpty() && inProgress.isEmpty() ->
-                        EmptyState(
-                            icon = "🎬",
-                            title = "Film bulunamadı",
-                            description = "Senkronizasyon tamamlandıktan sonra filmler burada görünecek.",
-                            modifier = Modifier.fillMaxSize(),
-                        )
-
-                    uiState.kind == VodKind.SERIES && uiState.series.isEmpty() && inProgress.isEmpty() ->
-                        EmptyState(
-                            icon = "📺",
-                            title = "Dizi bulunamadı",
-                            description = "Senkronizasyon tamamlandıktan sonra diziler burada görünecek.",
-                            modifier = Modifier.fillMaxSize(),
-                        )
-
-                    uiState.kind == VodKind.MOVIE -> VodMovieList(
-                        inProgress = inProgress,
-                        movies = uiState.movies,
-                        selectedCwIds = uiState.selectedCwIds,
-                        onContinue = onContinueMovie,
-                        onToggleCwSelection = onToggleCwSelection,
-                        onMovieClick = onItemClick,
-                    )
-                    else -> VodSeriesList(
-                        inProgress = inProgress,
-                        seriesList = uiState.series,
-                        selectedCwIds = uiState.selectedCwIds,
-                        onContinue = onContinueEpisode,
-                        onToggleCwSelection = onToggleCwSelection,
-                        onSeriesClick = onItemClick,
-                    )
-                }
+                    },
+                    endPane = {
+                        val id = selectedId
+                        if (id == null) {
+                            DetailPlaceholder(text = "Soldan bir film veya dizi seçin")
+                        } else {
+                            EmbeddedVodDetail(
+                                id = id,
+                                onClose = { selectedId = null },
+                                onPlayMovie = onContinueMovie,
+                                onPlayEpisode = onContinueEpisode,
+                                onSelectSimilar = { selectedId = it },
+                            )
+                        }
+                    },
+                )
+            } else {
+                VodListBody(
+                    uiState = uiState,
+                    onBack = onBack,
+                    onTabSelected = onTabSelected,
+                    onCategorySelected = onCategorySelected,
+                    onQueryChanged = onQueryChanged,
+                    onItemClick = onItemClick,
+                    onContinueMovie = onContinueMovie,
+                    onContinueEpisode = onContinueEpisode,
+                    onToggleCwSelection = onToggleCwSelection,
+                    onClearCwSelection = onClearCwSelection,
+                    onRequestRemove = { showRemoveDialog = true },
+                )
             }
         }
     }
+}
+
+// ── List body (shared by single-pane and the master pane of two-pane) ────────
+
+@Composable
+private fun VodListBody(
+    uiState: VodListUiState,
+    onBack: () -> Unit,
+    onTabSelected: (Int) -> Unit,
+    onCategorySelected: (String?) -> Unit,
+    onQueryChanged: (String) -> Unit,
+    onItemClick: (String) -> Unit,
+    onContinueMovie: (String) -> Unit,
+    onContinueEpisode: (String) -> Unit,
+    onToggleCwSelection: (ContinueWatching) -> Unit,
+    onClearCwSelection: () -> Unit,
+    onRequestRemove: () -> Unit,
+) {
+    val inProgress = if (uiState.kind == VodKind.MOVIE) uiState.inProgressMovies
+                     else uiState.inProgressSeries
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        // Header — toggles between normal and selection-mode bar
+        if (uiState.isCwSelectionMode) {
+            SelectionTopBar(
+                selectedCount = uiState.selectedCwIds.size,
+                onClear = onClearCwSelection,
+                onRemove = onRequestRemove,
+            )
+        } else {
+            VodListHeader(onBack = onBack)
+        }
+
+        // Tabs (Filmler / Diziler)
+        if (!uiState.isCwSelectionMode) {
+            VodTabRow(
+                activeIndex = if (uiState.kind == VodKind.MOVIE) 0 else 1,
+                onSelect = onTabSelected,
+            )
+        }
+
+        // Search
+        if (!uiState.isCwSelectionMode) {
+            VodSearchEntry(
+                query = uiState.query,
+                onQueryChange = onQueryChanged,
+                placeholder = if (uiState.kind == VodKind.MOVIE) "Film ara…" else "Dizi ara…",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+            )
+
+            if (uiState.categories.isNotEmpty()) {
+                VodCategoryChips(
+                    categories = uiState.categories,
+                    selectedId = uiState.selectedCategoryId,
+                    onSelected = onCategorySelected,
+                )
+                Spacer(Modifier.height(8.dp))
+            }
+        }
+
+        // Body
+        when {
+            uiState.isLoading -> LoadingState(modifier = Modifier.fillMaxSize())
+
+            uiState.kind == VodKind.MOVIE && uiState.movies.isEmpty() && inProgress.isEmpty() ->
+                EmptyState(
+                    icon = "🎬",
+                    title = "Film bulunamadı",
+                    description = "Senkronizasyon tamamlandıktan sonra filmler burada görünecek.",
+                    modifier = Modifier.fillMaxSize(),
+                )
+
+            uiState.kind == VodKind.SERIES && uiState.series.isEmpty() && inProgress.isEmpty() ->
+                EmptyState(
+                    icon = "📺",
+                    title = "Dizi bulunamadı",
+                    description = "Senkronizasyon tamamlandıktan sonra diziler burada görünecek.",
+                    modifier = Modifier.fillMaxSize(),
+                )
+
+            uiState.kind == VodKind.MOVIE -> VodMovieList(
+                inProgress = inProgress,
+                movies = uiState.movies,
+                selectedCwIds = uiState.selectedCwIds,
+                onContinue = onContinueMovie,
+                onToggleCwSelection = onToggleCwSelection,
+                onMovieClick = onItemClick,
+            )
+            else -> VodSeriesList(
+                inProgress = inProgress,
+                seriesList = uiState.series,
+                selectedCwIds = uiState.selectedCwIds,
+                onContinue = onContinueEpisode,
+                onToggleCwSelection = onToggleCwSelection,
+                onSeriesClick = onItemClick,
+            )
+        }
+    }
+}
+
+// ── Embedded detail pane (tablet two-pane) ───────────────────────────────────
+
+/**
+ * Renders [VodDetailContent] for [id] inside the right pane of the tablet VOD
+ * list. Backed by its own [VodDetailViewModel] scoped to the VOD list nav entry;
+ * [VodDetailViewModel.open] repoints it whenever the selection changes.
+ */
+@Composable
+private fun EmbeddedVodDetail(
+    id: String,
+    onClose: () -> Unit,
+    onPlayMovie: (String) -> Unit,
+    onPlayEpisode: (String) -> Unit,
+    onSelectSimilar: (String) -> Unit,
+) {
+    val viewModel: VodDetailViewModel = hiltViewModel()
+    LaunchedEffect(id) { viewModel.open(id) }
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    VodDetailContent(
+        uiState = state,
+        snackbarHostState = snackbarHostState,
+        onBack = onClose,
+        onToggleFavorite = viewModel::toggleFavorite,
+        onPlay = { onPlayMovie(id) },
+        onPlayEpisode = { episode -> onPlayEpisode(episode.id) },
+        onNavigateToSimilar = onSelectSimilar,
+    )
 }
 
 // ── Header (normal) ──────────────────────────────────────────────────────────
@@ -818,7 +932,7 @@ private fun VodMovieList(
     onMovieClick: (String) -> Unit,
 ) {
     LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
+        columns = GridCells.Adaptive(minSize = 116.dp),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),
@@ -884,7 +998,7 @@ private fun VodSeriesList(
     onSeriesClick: (String) -> Unit,
 ) {
     LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
+        columns = GridCells.Adaptive(minSize = 116.dp),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),

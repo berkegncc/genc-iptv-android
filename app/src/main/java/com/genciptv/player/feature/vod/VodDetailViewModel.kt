@@ -22,9 +22,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -48,26 +53,27 @@ class VodDetailViewModel @Inject constructor(
     private val episodeDao: EpisodeDao,
 ) : ViewModel() {
 
-    // The id argument from navigation: "{playlistId}:movie:{streamId}" or "{playlistId}:series:{seriesId}"
-    private val vodId: String = savedStateHandle["id"] ?: ""
+    // The id of the content being shown: "{playlistId}:movie:{streamId}" or
+    // "{playlistId}:series:{seriesId}". Seeded from the nav arg for the
+    // standalone detail route; mutable so an embedded detail pane (tablet
+    // two-pane) can repoint this VM at a new selection via [open].
+    private val _vodId = MutableStateFlow(savedStateHandle.get<String>("id") ?: "")
 
     private val _state = MutableStateFlow(VodDetailUiState())
 
-    // ── Determine content type and load ───────────────────────────────────────
+    // ── Reactive favourite / episodes flows (follow the current id) ────────────
 
-    private val isSeries: Boolean = vodId.contains(":series:")
+    private val isFavoriteFlow = _vodId.flatMapLatest { id ->
+        if (id.isBlank()) flowOf(false)
+        else favoriteRepository.observeIsFavorite(id, favoriteTypeOf(id))
+    }
 
-    private val favoriteType: FavoriteTargetType =
-        if (isSeries) FavoriteTargetType.SERIES else FavoriteTargetType.MOVIE
-
-    private val isFavoriteFlow = favoriteRepository.observeIsFavorite(vodId, favoriteType)
-
-    private val episodesFlow = if (isSeries) {
-        episodeDao.observeForSeries(vodId).flatMapLatest { entities ->
-            flowOf(entities.map { it.toDomainEpisode() })
+    private val episodesFlow = _vodId.flatMapLatest { id ->
+        if (id.contains(":series:")) {
+            episodeDao.observeForSeries(id).map { entities -> entities.map { it.toDomainEpisode() } }
+        } else {
+            flowOf(emptyList())
         }
-    } else {
-        flowOf(emptyList())
     }
 
     val uiState: StateFlow<VodDetailUiState> = combine(
@@ -83,14 +89,36 @@ class VodDetailViewModel @Inject constructor(
     )
 
     init {
-        loadContent()
+        // Load whenever the id changes (initial seed + every open()).
+        _vodId
+            .filter { it.isNotBlank() }
+            .distinctUntilChanged()
+            .onEach { loadContent(it) }
+            .launchIn(viewModelScope)
     }
+
+    /**
+     * Repoint this VM at a different VOD/series id. Used by the tablet two-pane
+     * VOD list to show the selected item's detail in the right pane without
+     * navigating to a new screen. No-op when [id] is blank or unchanged.
+     */
+    fun open(id: String) {
+        if (id.isNotBlank() && id != _vodId.value) {
+            _vodId.value = id
+        }
+    }
+
+    private fun favoriteTypeOf(id: String): FavoriteTargetType =
+        if (id.contains(":series:")) FavoriteTargetType.SERIES else FavoriteTargetType.MOVIE
 
     // ── Load content ──────────────────────────────────────────────────────────
 
-    private fun loadContent() {
+    private fun loadContent(vodId: String) {
+        val isSeries = vodId.contains(":series:")
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true, error = null) }
+            // Full reset so a previous selection's data never flashes when the
+            // pane switches to a new id.
+            _state.value = VodDetailUiState(isLoading = true)
             try {
                 if (isSeries) {
                     val series = vodRepository.getSeriesById(vodId)
@@ -254,8 +282,9 @@ class VodDetailViewModel @Inject constructor(
     // ── Actions ───────────────────────────────────────────────────────────────
 
     fun toggleFavorite() {
+        val id = _vodId.value.ifBlank { return }
         viewModelScope.launch {
-            favoriteRepository.toggle(vodId, favoriteType)
+            favoriteRepository.toggle(id, favoriteTypeOf(id))
         }
     }
 

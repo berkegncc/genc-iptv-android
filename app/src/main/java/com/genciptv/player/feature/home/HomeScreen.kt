@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -69,6 +70,7 @@ import com.genciptv.player.core.ui.EmptyState
 import com.genciptv.player.core.ui.GencAdaptiveScaffold
 import com.genciptv.player.core.ui.GencNavItem
 import com.genciptv.player.core.ui.Poster
+import com.genciptv.player.core.ui.readableContentWidth
 import com.genciptv.player.data.model.Channel
 import com.genciptv.player.data.model.Series
 import com.genciptv.player.data.model.VodItem
@@ -148,7 +150,12 @@ fun HomeContent(
                 .padding(innerPadding),
         ) {
             LazyColumn(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .then(
+                        if (WindowSize.isExpanded) Modifier.readableContentWidth(1040.dp)
+                        else Modifier.fillMaxWidth()
+                    ),
                 contentPadding = PaddingValues(bottom = 24.dp),
             ) {
                 // Header — logo + bell + avatar

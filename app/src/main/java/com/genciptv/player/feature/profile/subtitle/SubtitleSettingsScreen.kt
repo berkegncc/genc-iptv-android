@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -72,6 +73,7 @@ import com.genciptv.player.core.designsystem.TextTertiary
 import com.genciptv.player.core.ui.SettingGroupCard
 import com.genciptv.player.core.ui.SettingRow
 import com.genciptv.player.core.ui.SettingRowDivider
+import com.genciptv.player.core.ui.readableContentWidth
 import com.genciptv.player.data.model.SubtitleEdgeType
 import com.genciptv.player.data.model.SubtitleFontFamily
 import com.genciptv.player.data.model.SubtitleFontStyle
@@ -208,7 +210,8 @@ fun SubtitleSettingsContent(
 
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .readableContentWidth()
+                .fillMaxHeight()
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {

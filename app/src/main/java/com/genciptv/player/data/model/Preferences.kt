@@ -20,7 +20,6 @@ data class PlayerPreferences(
     val preferredAudioLang: String? = null,
     val userAgent: String? = null,
     val decoderPref: DecoderPref = DecoderPref.AUTO,
-    val trustAllCerts: Boolean = false,
     val loudnessNormalization: Boolean = false,
     val pictureInPicture: Boolean = true,
 )

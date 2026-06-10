@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -58,6 +59,7 @@ import com.genciptv.player.core.designsystem.TextPrimary
 import com.genciptv.player.core.designsystem.TextSecondary
 import com.genciptv.player.core.designsystem.TextTertiary
 import com.genciptv.player.core.ui.EmptyState
+import com.genciptv.player.core.ui.readableContentWidth
 import com.genciptv.player.data.model.Playlist
 import com.genciptv.player.data.model.PlaylistType
 import java.text.SimpleDateFormat
@@ -166,7 +168,8 @@ fun PlaylistManagerContent(
             } else {
                 LazyColumn(
                     modifier = Modifier
-                        .fillMaxSize()
+                        .readableContentWidth()
+                        .fillMaxHeight()
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {

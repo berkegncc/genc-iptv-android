@@ -64,15 +64,19 @@ import com.genciptv.player.core.designsystem.LocalAccentPalette
 import com.genciptv.player.core.designsystem.TextPrimary
 import com.genciptv.player.core.designsystem.TextSecondary
 import com.genciptv.player.core.designsystem.TextTertiary
+import com.genciptv.player.core.designsystem.WindowSize
 import com.genciptv.player.core.designsystem.categoryGradientFor
 import com.genciptv.player.core.ui.CanliPill
 import com.genciptv.player.core.ui.ChannelLogoMark
+import com.genciptv.player.core.ui.DetailPlaceholder
 import com.genciptv.player.core.ui.EmptyState
 import com.genciptv.player.core.ui.ErrorState
 import com.genciptv.player.core.ui.GencAdaptiveScaffold
 import com.genciptv.player.core.ui.GencNavItem
 import com.genciptv.player.core.ui.LoadingState
 import com.genciptv.player.core.ui.QualityPill
+import com.genciptv.player.core.ui.TwoPaneRow
+import com.genciptv.player.core.ui.TwoPaneSide
 import com.genciptv.player.data.model.CategoryChannelCount
 import com.genciptv.player.data.model.Channel
 import com.genciptv.player.feature.home.model.ChannelWithProgram
@@ -91,7 +95,10 @@ fun ChannelsScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val isSyncing by viewModel.isSyncing.collectAsStateWithLifecycle()
 
-    BackHandler(enabled = state.inCategoryView) {
+    // In the tablet two-pane layout categories stay visible alongside the
+    // channel list, so system-back should leave the screen rather than just
+    // deselecting the category.
+    BackHandler(enabled = state.inCategoryView && !WindowSize.isExpanded) {
         viewModel.backToCategories()
     }
 
@@ -163,6 +170,38 @@ fun ChannelsContent(
                     retryLabel = "Geri Dön",
                     onRetry = onBack,
                     modifier = Modifier.fillMaxSize(),
+                )
+
+                // Tablet master-detail: categories on the left, the selected
+                // category's channels on the right.
+                WindowSize.isExpanded -> TwoPaneRow(
+                    fixedSide = TwoPaneSide.Start,
+                    fixedWidth = 320.dp,
+                    startPane = {
+                        CategoryPickerView(
+                            categories = state.categories,
+                            totalChannelCount = state.totalChannelCount,
+                            isSyncing = isSyncing,
+                            onBack = onBack,
+                            onResync = onResync,
+                            onEnterCategory = onEnterCategory,
+                        )
+                    },
+                    endPane = {
+                        if (!state.inCategoryView) {
+                            DetailPlaceholder(text = "Soldan bir kategori seçin")
+                        } else {
+                            ChannelListView(
+                                state = state,
+                                isSyncing = isSyncing,
+                                onBackToCategories = onBackToCategories,
+                                onResync = onResync,
+                                onQueryChange = onQueryChange,
+                                onNavigateToPlayer = onNavigateToPlayer,
+                                onToggleFavorite = onToggleFavorite,
+                            )
+                        }
+                    },
                 )
 
                 !state.inCategoryView -> CategoryPickerView(

@@ -60,6 +60,11 @@ class VodPlayerViewModel @Inject constructor(
             initialValue = null,
         )
 
+    val userAgent: StateFlow<String?> = userPreferencesRepository.player
+        .map { it.userAgent?.takeIf { ua -> ua.isNotBlank() } }
+        .distinctUntilChanged()
+        .stateIn(scope = viewModelScope, started = SharingStarted.WhileSubscribed(5_000), initialValue = null)
+
     // Route args — exactly one of these is set
     private val initialVodId: String?     = savedStateHandle["vodId"]
     private val initialEpisodeId: String? = savedStateHandle["episodeId"]

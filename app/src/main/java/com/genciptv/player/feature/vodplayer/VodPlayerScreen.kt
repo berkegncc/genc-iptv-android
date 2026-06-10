@@ -1,6 +1,7 @@
 package com.genciptv.player.feature.vodplayer
 
 import android.content.pm.ActivityInfo
+import android.content.res.Configuration
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.compose.animation.AnimatedVisibility
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -58,6 +60,7 @@ import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -77,6 +80,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
@@ -190,6 +194,7 @@ fun VodPlayerScreen(
     val playbackSpeed by viewModel.playbackSpeed.collectAsStateWithLifecycle()
     val subtitleStyle by viewModel.subtitleStyle.collectAsStateWithLifecycle()
     val preferredAudioLang by viewModel.preferredAudioLang.collectAsStateWithLifecycle()
+    val userAgent by viewModel.userAgent.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     // Keep the device awake while a stream is on screen. Without this Android's
@@ -202,7 +207,7 @@ fun VodPlayerScreen(
     }
 
     val exoPlayer = remember { ExoPlayer.Builder(context).build() }
-    val dataSourceFactory = remember { buildIptvDataSourceFactory() }
+    val dataSourceFactory = remember(userAgent) { buildIptvDataSourceFactory(userAgent) }
 
     // Push the user's preferred audio language into the track selector. `null`
     // = no preference, so multi-audio streams play in their native default
@@ -347,8 +352,14 @@ private fun VodPlayerContent(
 ) {
     val accent = LocalAccentPalette.current
     val context = LocalContext.current
+    val configuration = LocalConfiguration.current
 
     val isInPipMode by PipController.isInPipMode.collectAsState()
+
+    // Tablet landscape gets the side-by-side layout (video left, info/episodes
+    // right); everything else keeps the stacked layout.
+    val isTabletDevice = configuration.smallestScreenWidthDp >= 600
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     var isFullscreen by remember { mutableStateOf(false) }
     var overlayVisible by remember { mutableStateOf(true) }
@@ -405,7 +416,13 @@ private fun VodPlayerContent(
             controller.hide(WindowInsetsCompat.Type.systemBars())
             controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         } else {
-            activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            // Tablets follow the sensor so the landscape side-by-side layout
+            // stays reachable; phones snap back to portrait.
+            activity.requestedOrientation = if (isTabletDevice) {
+                ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            } else {
+                ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            }
             WindowCompat.setDecorFitsSystemWindows(window, true)
             controller.show(WindowInsetsCompat.Type.systemBars())
         }
@@ -421,13 +438,12 @@ private fun VodPlayerContent(
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    Column(modifier = Modifier.fillMaxSize().background(Color.Black)) {
-
-        // ── Video area — 40 % via weight 2/3 (fullscreen takes all) ─────────
+    // Video surface + overlays, reused by all three layouts. [boxModifier]
+    // carries the sizing (weight / fixed / fill) from the call site.
+    @Composable
+    fun VideoArea(boxModifier: Modifier) {
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .then(if (isFullscreen) Modifier.fillMaxSize() else Modifier.weight(2f))
+            modifier = boxModifier
                 .background(Color.Black)
                 .onSizeChanged { containerWidth = it.width }
                 .pointerInput(Unit) {
@@ -542,37 +558,69 @@ private fun VodPlayerContent(
                 )
             }
         }
+    }
 
-        // ── Bottom panel — context-aware (movie or episode) ─────────────────
-        if (!isFullscreen && !isInPipMode) {
-            Box(
+    // Context-aware info panel (movie meta / episode list). [panelModifier]
+    // carries the sizing; [statusBarPadding] is needed when the panel reaches
+    // the top of the screen (side-by-side landscape).
+    @Composable
+    fun BottomPanel(panelModifier: Modifier, statusBarPadding: Boolean) {
+        Box(
+            modifier = panelModifier
+                .clip(SheetTopShape)
+                .background(BgElev),
+        ) {
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(3f)
-                    .clip(SheetTopShape)
-                    .background(BgElev),
+                    .fillMaxSize()
+                    .then(if (statusBarPadding) Modifier.statusBarsPadding() else Modifier)
+                    .navigationBarsPadding(),
             ) {
-                Column(modifier = Modifier.fillMaxSize().navigationBarsPadding()) {
-                    // Drag handle
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.CenterHorizontally)
-                            .padding(top = 10.dp, bottom = 8.dp)
-                            .size(width = 36.dp, height = 4.dp)
-                            .clip(RoundedCornerShape(2.dp))
-                            .background(LineStrong),
-                    )
+                // Drag handle
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(top = 10.dp, bottom = 8.dp)
+                        .size(width = 36.dp, height = 4.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(LineStrong),
+                )
 
-                    if (state.isMovie) {
-                        MoviePanel(state = state, onItemClick = { /* navigate to similar — needs callback from parent */ })
-                    } else {
-                        EpisodePanel(
-                            state = state,
-                            onSeasonClick = { openSheet = PlayerSheet.SEASON },
-                            onEpisodeClick = onSelectEpisode,
-                        )
-                    }
+                if (state.isMovie) {
+                    MoviePanel(state = state, onItemClick = { /* navigate to similar — needs callback from parent */ })
+                } else {
+                    EpisodePanel(
+                        state = state,
+                        onSeasonClick = { openSheet = PlayerSheet.SEASON },
+                        onEpisodeClick = onSelectEpisode,
+                    )
                 }
+            }
+        }
+    }
+
+    when {
+        // Fullscreen / PiP — video fills everything.
+        isFullscreen || isInPipMode -> {
+            Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
+                VideoArea(Modifier.fillMaxSize())
+            }
+        }
+
+        // Tablet landscape — video on the left, info/episodes on the right.
+        isTabletDevice && isLandscape -> {
+            Row(modifier = Modifier.fillMaxSize().background(Color.Black)) {
+                VideoArea(Modifier.weight(1f).fillMaxHeight())
+                VerticalDivider(thickness = 1.dp, color = Line)
+                BottomPanel(Modifier.width(380.dp).fillMaxHeight(), statusBarPadding = true)
+            }
+        }
+
+        // Phone / tablet portrait — stacked video over the info panel.
+        else -> {
+            Column(modifier = Modifier.fillMaxSize().background(Color.Black)) {
+                VideoArea(Modifier.fillMaxWidth().weight(2f))
+                BottomPanel(Modifier.fillMaxWidth().weight(3f), statusBarPadding = false)
             }
         }
     }

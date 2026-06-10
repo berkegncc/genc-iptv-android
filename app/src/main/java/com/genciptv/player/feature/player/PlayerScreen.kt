@@ -1,6 +1,7 @@
 package com.genciptv.player.feature.player
 
 import android.content.pm.ActivityInfo
+import android.content.res.Configuration
 import androidx.activity.ComponentActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -48,6 +50,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -64,6 +67,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
@@ -133,6 +137,7 @@ fun PlayerScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val subtitleStyle by viewModel.subtitleStyle.collectAsStateWithLifecycle()
     val preferredAudioLang by viewModel.preferredAudioLang.collectAsStateWithLifecycle()
+    val userAgent by viewModel.userAgent.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     // Keep the device awake while a stream is on screen. Without this Android's
@@ -168,7 +173,7 @@ fun PlayerScreen(
     //   "exhausted"                → no further fallbacks possible
     var fallbackForUrl by remember { mutableStateOf<String?>(null) }
     var fallbackStage by remember { mutableStateOf<String?>(null) }
-    val dataSourceFactory = remember { buildIptvDataSourceFactory() }
+    val dataSourceFactory = remember(userAgent) { buildIptvDataSourceFactory(userAgent) }
 
     DisposableEffect(exoPlayer) {
         val listener = object : Player.Listener {
@@ -285,8 +290,13 @@ fun PlayerContent(
     onSwitchChannel: (String) -> Unit,
 ) {
     val context = LocalContext.current
-    val accent = LocalAccentPalette.current
+    val configuration = LocalConfiguration.current
     val isInPipMode by PipController.isInPipMode.collectAsState()
+
+    // Tablet landscape gets the side-by-side master-detail layout; everything
+    // else keeps the stacked video-over-panel layout.
+    val isTabletDevice = configuration.smallestScreenWidthDp >= 600
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     var isFullscreen by remember { mutableStateOf(false) }
     var controlsVisible by remember { mutableStateOf(true) }
@@ -317,242 +327,373 @@ fun PlayerContent(
     fun exitFullscreen() {
         isFullscreen = false
         val activity = context as? ComponentActivity ?: return
-        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        // Tablets follow the sensor so the side-by-side landscape layout stays
+        // reachable after exiting fullscreen; phones snap back to portrait.
+        activity.requestedOrientation = if (isTabletDevice) {
+            ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        } else {
+            ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        }
         val window = activity.window
         WindowCompat.setDecorFitsSystemWindows(window, true)
         WindowInsetsControllerCompat(window, window.decorView).show(WindowInsetsCompat.Type.systemBars())
     }
 
-    Column(modifier = Modifier.fillMaxSize().background(Color.Black)) {
+    val handleBack: () -> Unit = { if (isFullscreen) exitFullscreen() else onBack() }
+    val handleToggleFullscreen: () -> Unit = { if (isFullscreen) exitFullscreen() else enterFullscreen() }
+    val handleTap: () -> Unit = {
+        controlsVisible = !controlsVisible
+        inactivityTick++
+    }
+    val handlePlayPause: () -> Unit = {
+        isPlaying = !isPlaying
+        if (isPlaying) exoPlayer.play() else exoPlayer.pause()
+        inactivityTick++
+    }
+    val handlePrev: () -> Unit = {
+        state.upcomingOtherChannels.lastOrNull()?.channel?.id?.let { onSwitchChannel(it) }
+        inactivityTick++
+    }
+    val handleNext: () -> Unit = {
+        state.upcomingOtherChannels.firstOrNull()?.channel?.id?.let { onSwitchChannel(it) }
+        inactivityTick++
+    }
+    val handleVolume: (Float) -> Unit = { v ->
+        volumeLocal = v
+        onVolumeChange(v)
+    }
 
-        // ── Video area (top 40 % via weight 2/3 split) ───────────────────────
-        VideoAreaBox(
-            isFullscreen = isFullscreen,
-            onTap = {
-                controlsVisible = !controlsVisible
-                inactivityTick++
-            },
-            modifier = Modifier.fillMaxWidth()
-                .then(if (isFullscreen) Modifier.fillMaxSize() else Modifier.weight(2f)),
-        ) {
-            // ExoPlayer surface
-            AndroidView(
-                factory = { ctx ->
-                    PlayerView(ctx).apply {
-                        player = exoPlayer
-                        useController = false
-                    }
-                },
-                update = { view -> view.applySubtitleStyle(subtitleStyle) },
-                modifier = Modifier.fillMaxSize(),
-            )
-
-            // Either: error overlay (prevents controls), or normal controls
-            if (playbackError != null) {
-                ErrorOverlay(
-                    errorCode = playbackError,
-                    channelName = state.channel?.name ?: "",
-                    onBack = { if (isFullscreen) exitFullscreen() else onBack() },
-                    onToggleFullscreen = { if (isFullscreen) exitFullscreen() else enterFullscreen() },
-                    isFullscreen = isFullscreen,
-                )
-            } else {
-                PlayerOverlay(
-                    visible = controlsVisible && !isInPipMode,
+    when {
+        // Fullscreen / PiP — video fills everything, no side panel.
+        isFullscreen || isInPipMode -> {
+            Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
+                PlayerVideoArea(
                     state = state,
+                    exoPlayer = exoPlayer,
+                    subtitleStyle = subtitleStyle,
+                    playbackError = playbackError,
                     isFullscreen = isFullscreen,
+                    controlsVisible = controlsVisible,
+                    isInPipMode = isInPipMode,
                     isPlaying = isPlaying,
-                    onBack = { if (isFullscreen) exitFullscreen() else onBack() },
-                    onToggleFullscreen = { if (isFullscreen) exitFullscreen() else enterFullscreen() },
-                    onPlayPause = {
-                        isPlaying = !isPlaying
-                        if (isPlaying) exoPlayer.play() else exoPlayer.pause()
-                        inactivityTick++
-                    },
-                    onPrevChannel = {
-                        state.upcomingOtherChannels.lastOrNull()?.channel?.id?.let { onSwitchChannel(it) }
-                        inactivityTick++
-                    },
-                    onNextChannel = {
-                        state.upcomingOtherChannels.firstOrNull()?.channel?.id?.let { onSwitchChannel(it) }
-                        inactivityTick++
-                    },
+                    onTap = handleTap,
+                    onBack = handleBack,
+                    onToggleFullscreen = handleToggleFullscreen,
+                    onPlayPause = handlePlayPause,
+                    onPrevChannel = handlePrev,
+                    onNextChannel = handleNext,
+                    modifier = Modifier.fillMaxSize(),
                 )
             }
         }
 
-        // ── Bottom panel (60 % via weight 3) ─────────────────────────────────
-        if (!isFullscreen && !isInPipMode) {
+        // Tablet landscape — video on the left, channel/info panel on the right
+        // (live-TV master-detail).
+        isTabletDevice && isLandscape -> {
+            Row(modifier = Modifier.fillMaxSize().background(Color.Black)) {
+                PlayerVideoArea(
+                    state = state,
+                    exoPlayer = exoPlayer,
+                    subtitleStyle = subtitleStyle,
+                    playbackError = playbackError,
+                    isFullscreen = isFullscreen,
+                    controlsVisible = controlsVisible,
+                    isInPipMode = isInPipMode,
+                    isPlaying = isPlaying,
+                    onTap = handleTap,
+                    onBack = handleBack,
+                    onToggleFullscreen = handleToggleFullscreen,
+                    onPlayPause = handlePlayPause,
+                    onPrevChannel = handlePrev,
+                    onNextChannel = handleNext,
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
+                )
+                VerticalDivider(thickness = 1.dp, color = Line)
+                PlayerInfoPanel(
+                    state = state,
+                    exoPlayer = exoPlayer,
+                    volume = volumeLocal,
+                    onVolumeChange = handleVolume,
+                    onToggleFavorite = onToggleFavorite,
+                    onSwitchChannel = onSwitchChannel,
+                    statusBarPadding = true,
+                    modifier = Modifier.width(380.dp).fillMaxHeight(),
+                )
+            }
+        }
+
+        // Phone / tablet portrait — stacked video over the info panel.
+        else -> {
+            Column(modifier = Modifier.fillMaxSize().background(Color.Black)) {
+                PlayerVideoArea(
+                    state = state,
+                    exoPlayer = exoPlayer,
+                    subtitleStyle = subtitleStyle,
+                    playbackError = playbackError,
+                    isFullscreen = isFullscreen,
+                    controlsVisible = controlsVisible,
+                    isInPipMode = isInPipMode,
+                    isPlaying = isPlaying,
+                    onTap = handleTap,
+                    onBack = handleBack,
+                    onToggleFullscreen = handleToggleFullscreen,
+                    onPlayPause = handlePlayPause,
+                    onPrevChannel = handlePrev,
+                    onNextChannel = handleNext,
+                    modifier = Modifier.fillMaxWidth().weight(2f),
+                )
+                PlayerInfoPanel(
+                    state = state,
+                    exoPlayer = exoPlayer,
+                    volume = volumeLocal,
+                    onVolumeChange = handleVolume,
+                    onToggleFavorite = onToggleFavorite,
+                    onSwitchChannel = onSwitchChannel,
+                    statusBarPadding = false,
+                    modifier = Modifier.fillMaxWidth().weight(3f),
+                )
+            }
+        }
+    }
+}
+
+// ── Video area + panel (extracted so both stacked & side-by-side reuse them) ─
+
+@Composable
+private fun PlayerVideoArea(
+    state: PlayerUiState,
+    exoPlayer: ExoPlayer,
+    subtitleStyle: SubtitleStyle,
+    playbackError: String?,
+    isFullscreen: Boolean,
+    controlsVisible: Boolean,
+    isInPipMode: Boolean,
+    isPlaying: Boolean,
+    onTap: () -> Unit,
+    onBack: () -> Unit,
+    onToggleFullscreen: () -> Unit,
+    onPlayPause: () -> Unit,
+    onPrevChannel: () -> Unit,
+    onNextChannel: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    VideoAreaBox(
+        isFullscreen = isFullscreen,
+        onTap = onTap,
+        modifier = modifier,
+    ) {
+        // ExoPlayer surface
+        AndroidView(
+            factory = { ctx ->
+                PlayerView(ctx).apply {
+                    player = exoPlayer
+                    useController = false
+                }
+            },
+            update = { view -> view.applySubtitleStyle(subtitleStyle) },
+            modifier = Modifier.fillMaxSize(),
+        )
+
+        if (playbackError != null) {
+            ErrorOverlay(
+                errorCode = playbackError,
+                channelName = state.channel?.name ?: "",
+                onBack = onBack,
+                onToggleFullscreen = onToggleFullscreen,
+                isFullscreen = isFullscreen,
+            )
+        } else {
+            PlayerOverlay(
+                visible = controlsVisible && !isInPipMode,
+                state = state,
+                isFullscreen = isFullscreen,
+                isPlaying = isPlaying,
+                onBack = onBack,
+                onToggleFullscreen = onToggleFullscreen,
+                onPlayPause = onPlayPause,
+                onPrevChannel = onPrevChannel,
+                onNextChannel = onNextChannel,
+            )
+        }
+    }
+}
+
+@Composable
+private fun PlayerInfoPanel(
+    state: PlayerUiState,
+    exoPlayer: ExoPlayer,
+    volume: Float,
+    onVolumeChange: (Float) -> Unit,
+    onToggleFavorite: () -> Unit,
+    onSwitchChannel: (String) -> Unit,
+    statusBarPadding: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val accent = LocalAccentPalette.current
+    Box(
+        modifier = modifier
+            .clip(SheetTopShape)
+            .background(BgElev),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .then(if (statusBarPadding) Modifier.statusBarsPadding() else Modifier)
+                .navigationBarsPadding(),
+        ) {
+            // Drag handle
             Box(
                 modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(top = 10.dp, bottom = 8.dp)
+                    .size(width = 36.dp, height = 4.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(LineStrong),
+            )
+
+            // Channel header
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
                     .fillMaxWidth()
-                    .weight(3f)
-                    .clip(SheetTopShape)
-                    .background(BgElev),
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .navigationBarsPadding(),
+                ChannelLogoMark(
+                    name = state.channel?.name ?: "",
+                    logoUrl = state.channel?.logoUrl,
+                    size = 44.dp,
+                )
+                Spacer(Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = state.channel?.name ?: "",
+                        style = TextStyle(
+                            fontFamily = GeistFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 15.sp,
+                            color = TextPrimary,
+                        ),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Spacer(Modifier.height(3.dp))
+                    val cat = buildCatTimeString(state.channel?.groupTitle, state.currentProgram)
+                    Text(
+                        text = cat.ifBlank { "Yayın bilgisi yok" }.uppercase(),
+                        style = TextStyle(
+                            fontFamily = GeistMonoFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 10.sp,
+                            letterSpacing = 0.06.sp,
+                            color = TextTertiary,
+                        ),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                IconButton(
+                    onClick = onToggleFavorite,
+                    modifier = Modifier.size(36.dp),
                 ) {
-                    // Drag handle
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.CenterHorizontally)
-                            .padding(top = 10.dp, bottom = 8.dp)
-                            .size(width = 36.dp, height = 4.dp)
-                            .clip(RoundedCornerShape(2.dp))
-                            .background(LineStrong),
+                    Icon(
+                        imageVector = if (state.isFavorite) Icons.Filled.Star else Icons.Filled.StarBorder,
+                        contentDescription = if (state.isFavorite) "Favorilerden çıkar" else "Favorilere ekle",
+                        tint = if (state.isFavorite) Copper else TextSecondary,
+                        modifier = Modifier.size(20.dp),
                     )
-
-                    // Channel header
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                    ) {
-                        ChannelLogoMark(
-                            name = state.channel?.name ?: "",
-                            logoUrl = state.channel?.logoUrl,
-                            size = 44.dp,
-                        )
-                        Spacer(Modifier.width(12.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = state.channel?.name ?: "",
-                                style = TextStyle(
-                                    fontFamily = GeistFamily,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 15.sp,
-                                    color = TextPrimary,
-                                ),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                            Spacer(Modifier.height(3.dp))
-                            val cat = buildCatTimeString(state.channel?.groupTitle, state.currentProgram)
-                            Text(
-                                text = cat.ifBlank { "Yayın bilgisi yok" }.uppercase(),
-                                style = TextStyle(
-                                    fontFamily = GeistMonoFamily,
-                                    fontWeight = FontWeight.Normal,
-                                    fontSize = 10.sp,
-                                    letterSpacing = 0.06.sp,
-                                    color = TextTertiary,
-                                ),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        }
-                        IconButton(
-                            onClick = onToggleFavorite,
-                            modifier = Modifier.size(36.dp),
-                        ) {
-                            Icon(
-                                imageVector = if (state.isFavorite) Icons.Filled.Star else Icons.Filled.StarBorder,
-                                contentDescription = if (state.isFavorite) "Favorilerden çıkar" else "Favorilere ekle",
-                                tint = if (state.isFavorite) Copper else TextSecondary,
-                                modifier = Modifier.size(20.dp),
-                            )
-                        }
-                        IconButton(onClick = {}, modifier = Modifier.size(36.dp)) {
-                            Icon(
-                                imageVector = Icons.Default.MoreVert,
-                                contentDescription = "Daha fazla",
-                                tint = TextSecondary,
-                                modifier = Modifier.size(20.dp),
-                            )
-                        }
-                    }
-
-                    // Quality / Audio / Subtitle pill row
-                    TrackPillsRow(
-                        exoPlayer = exoPlayer,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                }
+                IconButton(onClick = {}, modifier = Modifier.size(36.dp)) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = "Daha fazla",
+                        tint = TextSecondary,
+                        modifier = Modifier.size(20.dp),
                     )
+                }
+            }
 
-                    // Volume slider
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.VolumeDown,
-                            contentDescription = null,
-                            tint = TextSecondary,
-                            modifier = Modifier.size(18.dp),
-                        )
-                        Slider(
-                            value = volumeLocal,
-                            onValueChange = { v ->
-                                volumeLocal = v
-                                onVolumeChange(v)
-                            },
-                            valueRange = 0f..1f,
-                            colors = SliderDefaults.colors(
-                                thumbColor = accent.primary,
-                                activeTrackColor = accent.primary,
-                                inactiveTrackColor = BgElev2,
-                            ),
-                            modifier = Modifier.weight(1f).padding(horizontal = 10.dp),
-                        )
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.VolumeUp,
-                            contentDescription = null,
-                            tint = TextSecondary,
-                            modifier = Modifier.size(18.dp),
-                        )
-                    }
+            // Quality / Audio / Subtitle pill row
+            TrackPillsRow(
+                exoPlayer = exoPlayer,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+            )
 
-                    if (state.upcomingOtherChannels.isNotEmpty()) {
-                        Row(
-                            verticalAlignment = Alignment.Bottom,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 6.dp),
-                        ) {
-                            Text(
-                                text = "Şu Anda Diğer Kanallarda",
-                                style = TextStyle(
-                                    fontFamily = GeistFamily,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 13.sp,
-                                    letterSpacing = (-0.005).sp,
-                                    color = TextPrimary,
-                                ),
-                                modifier = Modifier.weight(1f),
-                            )
-                            Text(
-                                text = "SURF",
-                                style = TextStyle(
-                                    fontFamily = GeistMonoFamily,
-                                    fontWeight = FontWeight.Normal,
-                                    fontSize = 9.sp,
-                                    letterSpacing = 0.08.sp,
-                                    color = TextTertiary,
-                                ),
-                            )
-                        }
+            // Volume slider
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.VolumeDown,
+                    contentDescription = null,
+                    tint = TextSecondary,
+                    modifier = Modifier.size(18.dp),
+                )
+                Slider(
+                    value = volume,
+                    onValueChange = onVolumeChange,
+                    valueRange = 0f..1f,
+                    colors = SliderDefaults.colors(
+                        thumbColor = accent.primary,
+                        activeTrackColor = accent.primary,
+                        inactiveTrackColor = BgElev2,
+                    ),
+                    modifier = Modifier.weight(1f).padding(horizontal = 10.dp),
+                )
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.VolumeUp,
+                    contentDescription = null,
+                    tint = TextSecondary,
+                    modifier = Modifier.size(18.dp),
+                )
+            }
 
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-                        ) {
-                            items(
-                                items = state.upcomingOtherChannels,
-                                key = { it.channel.id },
-                            ) { item ->
-                                OtherChannelRow(
-                                    item = item,
-                                    onClick = { onSwitchChannel(item.channel.id) },
-                                )
-                            }
-                        }
+            if (state.upcomingOtherChannels.isNotEmpty()) {
+                Row(
+                    verticalAlignment = Alignment.Bottom,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 6.dp),
+                ) {
+                    Text(
+                        text = "Şu Anda Diğer Kanallarda",
+                        style = TextStyle(
+                            fontFamily = GeistFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 13.sp,
+                            letterSpacing = (-0.005).sp,
+                            color = TextPrimary,
+                        ),
+                        modifier = Modifier.weight(1f),
+                    )
+                    Text(
+                        text = "SURF",
+                        style = TextStyle(
+                            fontFamily = GeistMonoFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 9.sp,
+                            letterSpacing = 0.08.sp,
+                            color = TextTertiary,
+                        ),
+                    )
+                }
+
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                ) {
+                    items(
+                        items = state.upcomingOtherChannels,
+                        key = { it.channel.id },
+                    ) { item ->
+                        OtherChannelRow(
+                            item = item,
+                            onClick = { onSwitchChannel(item.channel.id) },
+                        )
                     }
                 }
             }

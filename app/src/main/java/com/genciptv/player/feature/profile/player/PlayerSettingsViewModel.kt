@@ -55,12 +55,6 @@ class PlayerSettingsViewModel @Inject constructor(
         }
     }
 
-    fun setTrustAllCerts(trust: Boolean) {
-        viewModelScope.launch {
-            userPreferencesRepository.updatePlayer { it.copy(trustAllCerts = trust) }
-        }
-    }
-
     fun togglePip(enabled: Boolean) {
         viewModelScope.launch {
             userPreferencesRepository.updatePlayer { it.copy(pictureInPicture = enabled) }

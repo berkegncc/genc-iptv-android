@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -58,6 +59,7 @@ import com.genciptv.player.core.designsystem.Bg
 import com.genciptv.player.core.designsystem.GencIptvTheme
 import com.genciptv.player.core.designsystem.LocalAccentPalette
 import com.genciptv.player.core.designsystem.TextSecondary
+import com.genciptv.player.core.ui.readableContentWidth
 
 // ── Stateful screen ───────────────────────────────────────────────────────────
 
@@ -125,7 +127,8 @@ private fun Step1Welcome(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .fillMaxSize()
+            .readableContentWidth(480.dp)
+            .fillMaxHeight()
             .verticalScroll(rememberScrollState())
             .imePadding()
             .padding(horizontal = 28.dp, vertical = 56.dp),
@@ -199,7 +202,8 @@ private fun Step2Playlist(
 
     Column(
         modifier = Modifier
-            .fillMaxSize()
+            .readableContentWidth(560.dp)
+            .fillMaxHeight()
             .verticalScroll(rememberScrollState())
             .imePadding()
             .padding(bottom = 24.dp),

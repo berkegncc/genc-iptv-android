@@ -1,5 +1,6 @@
 package com.genciptv.player.data.di
 
+import com.genciptv.player.BuildConfig
 import com.genciptv.player.data.source.tmdb.TmdbApi
 import com.genciptv.player.data.source.xtream.XtreamApi
 import dagger.Module
@@ -30,16 +31,16 @@ object NetworkModule {
 
     @Provides @Singleton
     fun provideOkHttpClient(): OkHttpClient {
-        val logging = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BASIC
-        }
-        return OkHttpClient.Builder()
-            .addInterceptor(logging)
+        val builder = OkHttpClient.Builder()
             .connectTimeout(20, TimeUnit.SECONDS)
             .readTimeout(60, TimeUnit.SECONDS)
             .writeTimeout(60, TimeUnit.SECONDS)
             .retryOnConnectionFailure(true)
-            .build()
+        if (BuildConfig.DEBUG) {
+            val logging = HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BASIC }
+            builder.addInterceptor(logging)
+        }
+        return builder.build()
     }
 
     @OptIn(ExperimentalSerializationApi::class)
