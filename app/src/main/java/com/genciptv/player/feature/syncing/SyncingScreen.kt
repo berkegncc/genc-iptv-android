@@ -65,7 +65,7 @@ private fun SyncingScreenContent() {
             modifier = Modifier.padding(32.dp),
         ) {
             Text(
-                text = "Genç IPTV",
+                text = "Genç IPTV Player",
                 style = MaterialTheme.typography.titleLarge.copy(
                     color = TextPrimary,
                     fontWeight = FontWeight.SemiBold,

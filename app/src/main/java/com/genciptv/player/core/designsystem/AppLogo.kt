@@ -26,7 +26,7 @@ fun GencLogo(
 ) {
     Image(
         painter = painterResource(R.drawable.ic_logo_g_mark),
-        contentDescription = "Genç IPTV",
+        contentDescription = "Genç IPTV Player",
         contentScale = ContentScale.Fit,
         modifier = modifier.size(size),
     )

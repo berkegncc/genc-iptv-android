@@ -357,7 +357,7 @@ private fun HomeHeader(
                     ),
                 )
                 Text(
-                    text = "IPTV",
+                    text = "IPTV PLAYER",
                     style = TextStyle(
                         fontFamily = GeistMonoFamily,
                         fontWeight = FontWeight.Normal,

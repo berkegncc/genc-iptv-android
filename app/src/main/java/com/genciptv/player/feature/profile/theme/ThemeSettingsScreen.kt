@@ -311,7 +311,7 @@ private fun ThemePreviewCard(
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    text = "Genç IPTV",
+                    text = "Genç IPTV Player",
                     style = MaterialTheme.typography.labelMedium.copy(
                         color = Color.White,
                         fontWeight = FontWeight.Bold,
