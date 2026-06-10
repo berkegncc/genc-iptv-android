@@ -1,12 +1,15 @@
-# Genç IPTV
+# Genç IPTV Player
 
 Modern, sade ve tipografi odaklı bir Android IPTV oynatıcı.
 
 **M3U** ve **Xtream Codes** playlist desteğiyle canlı kanalları, filmleri ve
 dizileri tek bir uygulamada izlemek için tasarlandı.
 
-> ⚠️ Genç IPTV bir **oynatıcı**dır — içerik veya playlist sağlamaz. Kullanmak
-> için kendi M3U URL'iniz ya da Xtream credentials'larınız olması gerekir.
+> ⚠️ **TR:** Genç IPTV Player bir **oynatıcı**dır — içerik veya playlist sağlamaz.
+> Kullanmak için kendi M3U URL'iniz ya da Xtream credentials'larınız olması gerekir.
+>
+> ⚠️ **EN:** Genç IPTV Player is a **media player** — it provides no content or
+> playlists. You need your own M3U URL or Xtream credentials to use it.
 
 ---
 
@@ -36,7 +39,7 @@ dizileri tek bir uygulamada izlemek için tasarlandı.
 - Aspect ratio (Original / 16:9 / 21:9 / Stretch / Fit)
 - Hız kontrolü (VOD)
 - 3 aşamalı stream fallback (HLS → progressive → .ts variant)
-- Custom User-Agent & SSL bypass (gelişmiş ayarlardan)
+- Custom User-Agent (gelişmiş ayarlardan)
 - Tercih edilen audio dili (boş bırakılırsa stream'in kendi dili)
 
 ### UX
@@ -127,15 +130,33 @@ fonksiyonları etkilenmez.
 
 ---
 
-## Disclaimer
+## Disclaimer / Yasal Uyarı
 
-- Genç IPTV **yalnızca bir oynatıcıdır**; içerik, kanal veya playlist sağlamaz.
-- Kullandığın IPTV servisinin **yasal**lığından **sen** sorumlusun.
-- Uygulama TMDB'nin API'sini kullanır ve bu hizmet için TMDB'ye atıf vermek
-  şarttır: _"This product uses the TMDB API but is not endorsed or certified
-  by TMDB."_
-- Geliştirici, kullanılan playlist'lerin/Xtream hesaplarının yasallığı veya
-  içeriği hakkında hiçbir sorumluluk kabul etmez.
+**English**
+
+- **Genç IPTV Player is only a media player.** It does **not** provide, host,
+  bundle, stream, or distribute any channels, content, or playlists.
+- The app ships with **no** preloaded sources. You must supply your own **M3U
+  URL** or **Xtream Codes** credentials to use it.
+- **You are solely responsible** for the content you access and for the
+  legality of any IPTV service, playlist, or credentials you use with this app,
+  in your own jurisdiction.
+- The developer accepts **no liability** for how the app is used or for the
+  legality or content of user-supplied sources.
+- This product uses the TMDB API but is not endorsed or certified by TMDB.
+
+**Türkçe**
+
+- **Genç IPTV Player yalnızca bir medya oynatıcısıdır.** Hiçbir kanal, içerik
+  veya playlist **sağlamaz, barındırmaz, yayınlamaz veya dağıtmaz.**
+- Uygulama **hiçbir** hazır kaynakla gelmez; kullanmak için kendi **M3U URL'ini**
+  ya da **Xtream Codes** bilgilerini girmen gerekir.
+- Eriştiğin içerikten ve uygulamayla kullandığın IPTV servisinin/playlist'in/
+  hesabının **kendi ülkendeki yasallığından yalnızca sen sorumlusun.**
+- Geliştirici, uygulamanın nasıl kullanıldığından ya da kullanıcının girdiği
+  kaynakların yasallığı veya içeriğinden **hiçbir sorumluluk kabul etmez.**
+- Bu ürün TMDB API'sini kullanır; ancak TMDB tarafından onaylanmış veya
+  sertifikalanmış değildir.
 
 ---
 
