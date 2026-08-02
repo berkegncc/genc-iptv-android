@@ -55,3 +55,7 @@ node_modules/
 keystore.properties
 *.jks
 *.keystore
+
+# Yapay zekâ asistanı çalışma notları — yerelde kalır, depoya girmez
+CLAUDE.md
+AGENTS.md
