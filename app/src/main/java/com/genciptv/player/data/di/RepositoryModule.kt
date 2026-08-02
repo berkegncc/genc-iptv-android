@@ -12,6 +12,8 @@ import com.genciptv.player.data.repository.PlaylistRepository
 import com.genciptv.player.data.repository.PlaylistRepositoryImpl
 import com.genciptv.player.data.repository.TmdbRepository
 import com.genciptv.player.data.repository.TmdbRepositoryImpl
+import com.genciptv.player.data.repository.UpdateRepository
+import com.genciptv.player.data.repository.UpdateRepositoryImpl
 import com.genciptv.player.data.repository.UserPreferencesRepository
 import com.genciptv.player.data.repository.UserPreferencesRepositoryImpl
 import com.genciptv.player.data.repository.VodRepository
@@ -53,4 +55,7 @@ abstract class RepositoryModule {
 
     @Binds @Singleton
     abstract fun bindTmdbRepository(impl: TmdbRepositoryImpl): TmdbRepository
+
+    @Binds @Singleton
+    abstract fun bindUpdateRepository(impl: UpdateRepositoryImpl): UpdateRepository
 }

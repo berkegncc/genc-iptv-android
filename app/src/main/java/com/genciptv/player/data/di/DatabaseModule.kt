@@ -40,6 +40,38 @@ object DatabaseModule {
         }
     }
 
+    /**
+     * v3 → v4: `vod_items` / `series` gain `addedAt` (provider timestamp, epoch
+     * millis) and `providerId` (numeric Xtream id). "Son Eklenen" rows used to
+     * sort on the TEXT primary key, which SQLite compares lexicographically —
+     * so `"1:series:999"` outranked `"1:series:3500"` and the series row on the
+     * home screen never changed. Backfill `providerId` from the id suffix so
+     * the ordering is correct immediately, without waiting for a re-sync;
+     * `addedAt` fills in on the next sync.
+     */
+    private val MIGRATION_3_4 = object : Migration(3, 4) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE vod_items ADD COLUMN addedAt INTEGER NOT NULL DEFAULT 0")
+            db.execSQL("ALTER TABLE vod_items ADD COLUMN providerId INTEGER NOT NULL DEFAULT 0")
+            db.execSQL("ALTER TABLE series ADD COLUMN addedAt INTEGER NOT NULL DEFAULT 0")
+            db.execSQL("ALTER TABLE series ADD COLUMN providerId INTEGER NOT NULL DEFAULT 0")
+            db.execSQL(
+                """
+                UPDATE vod_items
+                SET providerId = CAST(substr(id, instr(id, ':movie:') + 7) AS INTEGER)
+                WHERE instr(id, ':movie:') > 0
+                """.trimIndent()
+            )
+            db.execSQL(
+                """
+                UPDATE series
+                SET providerId = CAST(substr(id, instr(id, ':series:') + 8) AS INTEGER)
+                WHERE instr(id, ':series:') > 0
+                """.trimIndent()
+            )
+        }
+    }
+
     @Provides @Singleton
     fun provideDatabase(@ApplicationContext context: Context): AppDatabase =
         Room.databaseBuilder(
@@ -47,9 +79,18 @@ object DatabaseModule {
             AppDatabase::class.java,
             AppDatabase.DB_NAME,
         )
-            .addMigrations(MIGRATION_2_3)
-            // Anything we forgot to migrate explicitly drops the DB; user just
-            // re-syncs via the Refresh button in the Channels header.
+            .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
+            // A missing migration wipes every table rather than crashing.
+            //
+            // Deliberate: this app is sideloaded, so a version that crashes on
+            // launch locks the user out with no way back. Losing data is at
+            // least recoverable. But be clear about the cost — `playlists`
+            // holds the Xtream server, username and password, so the user must
+            // type their subscription details in again; "just hit Refresh" is
+            // not an option once that row is gone.
+            //
+            // So: whenever an @Entity changes, bump AppDatabase.version and add
+            // the Migration above. See CLAUDE.md.
             .fallbackToDestructiveMigration(dropAllTables = true)
             .build()
 

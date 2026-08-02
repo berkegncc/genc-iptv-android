@@ -42,6 +42,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.genciptv.player.core.designsystem.Bg
 import com.genciptv.player.core.designsystem.LocalAccentPalette
+import com.genciptv.player.core.designsystem.TextPrimary
 
 // ── Add Playlist Bottom Sheet ─────────────────────────────────────────────────
 
@@ -81,7 +82,7 @@ fun AddPlaylistSheet(
         ) {
             Text(
                 text = "Yeni Playlist Ekle",
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.titleLarge.copy(color = TextPrimary),
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
             )
 

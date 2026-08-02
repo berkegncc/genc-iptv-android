@@ -31,6 +31,45 @@ fun signingProp(key: String, env: String): String? =
 val releaseStoreFile = signingProp("storeFile", "RELEASE_STORE_FILE")
 val hasReleaseSigning = releaseStoreFile != null && rootProject.file(releaseStoreFile).exists()
 
+// A fresh clone has no keystore and still needs to produce something
+// installable, so `release` falls back to the debug key (see buildTypes). But
+// once the project *is* configured for release signing, a fallback means a
+// typo'd path or a moved keystore — and a debug-signed "release" APK installs
+// for nobody who already has the app, with no visible symptom until users
+// report it. Fail the release build instead of shipping that.
+val wantsReleaseSigning =
+    !keystoreProperties.isEmpty || System.getenv("RELEASE_STORE_FILE") != null
+
+gradle.taskGraph.whenReady {
+    val buildingRelease = allTasks.any { it.name.endsWith("Release") }
+    if (buildingRelease && wantsReleaseSigning && !hasReleaseSigning) {
+        throw GradleException(
+            "Release signing is configured but the keystore was not found at " +
+                "'${releaseStoreFile ?: "<unset>"}'. This build would fall back to the " +
+                "debug key and produce an APK that no existing install can accept as an " +
+                "update. Fix keystore.properties (or RELEASE_STORE_FILE) and rebuild."
+        )
+    }
+    // Warn, don't fail: a baked-in key is exactly what you want for local
+    // testing, and only wrong in an APK you hand to other people. Anyone who
+    // downloads it can extract the key, and every install then shares one
+    // quota — users set their own under Profil → Hakkında instead.
+    if (buildingRelease && tmdbApiKey.isNotBlank()) {
+        // ASCII only: Gradle writes UTF-8 but Windows consoles still default to
+        // a legacy code page, and a warning nobody can read is no warning.
+        logger.warn(
+            "\n" +
+                "==============================================================\n" +
+                "  WARNING: this release APK has a TMDB API key compiled in.\n" +
+                "  Fine for local testing, not for anything you publish -\n" +
+                "  anyone who downloads the APK can extract it.\n" +
+                "  Clear TMDB_API_KEY in local.properties and rebuild before\n" +
+                "  uploading. Users supply their own key in the app instead.\n" +
+                "=============================================================="
+        )
+    }
+}
+
 android {
     namespace = "com.genciptv.player"
     compileSdk {
@@ -43,8 +82,13 @@ android {
         applicationId = "com.genciptv.player"
         minSdk = 24
         targetSdk = 36
-        versionCode = 2
-        versionName = "1.1"
+        // Bump on every release — Android decides "is this an update?" from
+        // this number, not from versionName. 3 was consumed by update-system
+        // testing on a device, so the first published build after v1.1 is 4.
+        versionCode = 4
+        // Three-part semver, and the release tag is `v` + this exact string
+        // (v1.2.0) — the in-app updater compares them directly.
+        versionName = "1.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

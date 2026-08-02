@@ -232,9 +232,13 @@ class PlaylistRepositoryImpl @Inject constructor(
                 "(sample: $sampleEpgIds)",
         )
 
-        // VOD and Series sync — wrapped separately so failures don't abort live channels
+        // VOD and Series sync — wrapped separately so failures don't abort live
+        // channels. Log failures: a silently-swallowed series error looks
+        // exactly like "the catalogue never updates" from the home screen.
         runCatching { syncXtreamVod(playlist, apiUrl, username, password) }
+            .onFailure { e -> Log.w("GencIPTV/Sync", "VOD sync failed", e) }
         runCatching { syncXtreamSeries(playlist, apiUrl, username, password) }
+            .onFailure { e -> Log.w("GencIPTV/Sync", "Series sync failed", e) }
 
         // EPG sync via xmltv.php — optional; provider may not serve it
         runCatching {
@@ -273,6 +277,11 @@ class PlaylistRepositoryImpl @Inject constructor(
         }
         vodDao.deleteByPlaylist(playlist.id)
         vodEntities.chunked(500).forEach { vodDao.insertAll(it) }
+        Log.i(
+            "GencIPTV/Sync",
+            "VOD sync: ${vodEntities.size} movies, " +
+                "${vodEntities.count { it.addedAt > 0L }} with an `added` timestamp",
+        )
     }
 
     private suspend fun syncXtreamSeries(
@@ -294,5 +303,10 @@ class PlaylistRepositoryImpl @Inject constructor(
         }
         seriesDao.deleteByPlaylist(playlist.id)
         seriesEntities.chunked(500).forEach { seriesDao.insertAll(it) }
+        Log.i(
+            "GencIPTV/Sync",
+            "Series sync: ${seriesEntities.size} series, " +
+                "${seriesEntities.count { it.addedAt > 0L }} with a `last_modified` timestamp",
+        )
     }
 }

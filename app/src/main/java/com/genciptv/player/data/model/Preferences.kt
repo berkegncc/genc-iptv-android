@@ -54,4 +54,13 @@ data class UserPreferences(
     val onboardingCompleted: Boolean = false,
     val activePlaylistId: Long = -1L,
     val autoUpdateEnabled: Boolean = true,
+    /**
+     * The user's own TMDb key, pasted in Settings. Optional — blank simply
+     * means the actor photos and poster fallback stay off.
+     *
+     * Published builds ship without a key compiled in, so this is how anyone
+     * other than the developer enables those features. Never goes near the
+     * repository.
+     */
+    val tmdbApiKey: String = "",
 )

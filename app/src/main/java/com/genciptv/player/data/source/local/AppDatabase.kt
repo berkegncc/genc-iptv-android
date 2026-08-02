@@ -34,7 +34,7 @@ import com.genciptv.player.data.source.local.entity.VodEntity
         FavoriteEntity::class,
         ContinueWatchingEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = true,
 )
 @TypeConverters(DbTypeConverters::class)

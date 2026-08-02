@@ -41,16 +41,13 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -82,15 +79,12 @@ import com.genciptv.player.core.designsystem.PosterShape
 import com.genciptv.player.core.designsystem.TextPrimary
 import com.genciptv.player.core.designsystem.TextSecondary
 import com.genciptv.player.core.designsystem.TextTertiary
-import com.genciptv.player.core.designsystem.WindowSize
-import com.genciptv.player.core.ui.DetailPlaceholder
 import com.genciptv.player.core.ui.EmptyState
 import com.genciptv.player.core.ui.GencAdaptiveScaffold
 import com.genciptv.player.core.ui.GencNavItem
 import com.genciptv.player.core.ui.LoadingState
 import com.genciptv.player.core.ui.Poster
-import com.genciptv.player.core.ui.TwoPaneRow
-import com.genciptv.player.core.ui.TwoPaneSide
+import com.genciptv.player.core.ui.posterGridMinWidth
 import com.genciptv.player.data.model.ContinueWatching
 import com.genciptv.player.data.model.FavoriteTargetType
 import com.genciptv.player.data.model.Series
@@ -109,22 +103,23 @@ fun VodListScreen(
     onNavigateToHome: () -> Unit = {},
     onNavigateToChannels: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
-    initialKind: VodKind = VodKind.MOVIE,
+    /**
+     * Switch to the other VOD tab. Filmler and Diziler are separate nav
+     * destinations, so this navigates rather than mutating local state — that
+     * keeps the route and the visible tab in lockstep.
+     */
+    onSelectKind: (VodKind) -> Unit = {},
     viewModel: VodListViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
-
-    if (uiState.kind != initialKind && uiState.isLoading) {
-        viewModel.setKind(initialKind)
-    }
 
     VodListContent(
         uiState = uiState,
         isRefreshing = isRefreshing,
         onBack = onBack,
         onTabSelected = { tabIndex ->
-            viewModel.setKind(if (tabIndex == 0) VodKind.MOVIE else VodKind.SERIES)
+            onSelectKind(if (tabIndex == 0) VodKind.MOVIE else VodKind.SERIES)
         },
         onCategorySelected = viewModel::selectCategory,
         onQueryChanged = viewModel::setQuery,
@@ -247,63 +242,26 @@ fun VodListContent(
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
-            val isExpanded = WindowSize.isExpanded
-
-            if (isExpanded) {
-                // Tablet master-detail: poster grid on the left, the selected
-                // item's detail in a fixed pane on the right.
-                var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
-                // Switching Movies <-> Series invalidates the previous selection.
-                LaunchedEffect(uiState.kind) { selectedId = null }
-
-                TwoPaneRow(
-                    fixedSide = TwoPaneSide.End,
-                    fixedWidth = 400.dp,
-                    startPane = {
-                        VodListBody(
-                            uiState = uiState,
-                            onBack = onBack,
-                            onTabSelected = onTabSelected,
-                            onCategorySelected = onCategorySelected,
-                            onQueryChanged = onQueryChanged,
-                            onItemClick = { id -> selectedId = id },
-                            onContinueMovie = onContinueMovie,
-                            onContinueEpisode = onContinueEpisode,
-                            onToggleCwSelection = onToggleCwSelection,
-                            onClearCwSelection = onClearCwSelection,
-                            onRequestRemove = { showRemoveDialog = true },
-                        )
-                    },
-                    endPane = {
-                        val id = selectedId
-                        if (id == null) {
-                            DetailPlaceholder(text = "Soldan bir film veya dizi seçin")
-                        } else {
-                            EmbeddedVodDetail(
-                                id = id,
-                                onClose = { selectedId = null },
-                                onPlayMovie = onContinueMovie,
-                                onPlayEpisode = onContinueEpisode,
-                                onSelectSimilar = { selectedId = it },
-                            )
-                        }
-                    },
-                )
-            } else {
-                VodListBody(
-                    uiState = uiState,
-                    onBack = onBack,
-                    onTabSelected = onTabSelected,
-                    onCategorySelected = onCategorySelected,
-                    onQueryChanged = onQueryChanged,
-                    onItemClick = onItemClick,
-                    onContinueMovie = onContinueMovie,
-                    onContinueEpisode = onContinueEpisode,
-                    onToggleCwSelection = onToggleCwSelection,
-                    onClearCwSelection = onClearCwSelection,
-                    onRequestRemove = { showRemoveDialog = true },
-                )
-            }
+            // Single pane at every width: tapping a poster navigates to the
+            // full detail screen. A tablet did have the poster grid on the left
+            // and the detail pinned to a 400dp pane on the right, but a film or
+            // series page is a backdrop, a plot and a season's worth of episode
+            // rows — 400dp is narrower than the phone it was meant to improve
+            // on. The grid does not need a companion; it needs the detail to
+            // have the whole screen.
+            VodListBody(
+                uiState = uiState,
+                onBack = onBack,
+                onTabSelected = onTabSelected,
+                onCategorySelected = onCategorySelected,
+                onQueryChanged = onQueryChanged,
+                onItemClick = onItemClick,
+                onContinueMovie = onContinueMovie,
+                onContinueEpisode = onContinueEpisode,
+                onToggleCwSelection = onToggleCwSelection,
+                onClearCwSelection = onClearCwSelection,
+                onRequestRemove = { showRemoveDialog = true },
+            )
         }
     }
 }
@@ -406,37 +364,6 @@ private fun VodListBody(
             )
         }
     }
-}
-
-// ── Embedded detail pane (tablet two-pane) ───────────────────────────────────
-
-/**
- * Renders [VodDetailContent] for [id] inside the right pane of the tablet VOD
- * list. Backed by its own [VodDetailViewModel] scoped to the VOD list nav entry;
- * [VodDetailViewModel.open] repoints it whenever the selection changes.
- */
-@Composable
-private fun EmbeddedVodDetail(
-    id: String,
-    onClose: () -> Unit,
-    onPlayMovie: (String) -> Unit,
-    onPlayEpisode: (String) -> Unit,
-    onSelectSimilar: (String) -> Unit,
-) {
-    val viewModel: VodDetailViewModel = hiltViewModel()
-    LaunchedEffect(id) { viewModel.open(id) }
-    val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val snackbarHostState = remember { SnackbarHostState() }
-
-    VodDetailContent(
-        uiState = state,
-        snackbarHostState = snackbarHostState,
-        onBack = onClose,
-        onToggleFavorite = viewModel::toggleFavorite,
-        onPlay = { onPlayMovie(id) },
-        onPlayEpisode = { episode -> onPlayEpisode(episode.id) },
-        onNavigateToSimilar = onSelectSimilar,
-    )
 }
 
 // ── Header (normal) ──────────────────────────────────────────────────────────
@@ -932,7 +859,7 @@ private fun VodMovieList(
     onMovieClick: (String) -> Unit,
 ) {
     LazyVerticalGrid(
-        columns = GridCells.Adaptive(minSize = 116.dp),
+        columns = GridCells.Adaptive(minSize = posterGridMinWidth()),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),
@@ -998,7 +925,7 @@ private fun VodSeriesList(
     onSeriesClick: (String) -> Unit,
 ) {
     LazyVerticalGrid(
-        columns = GridCells.Adaptive(minSize = 116.dp),
+        columns = GridCells.Adaptive(minSize = posterGridMinWidth()),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),

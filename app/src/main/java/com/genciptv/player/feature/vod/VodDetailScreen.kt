@@ -47,6 +47,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
@@ -75,7 +76,10 @@ import com.genciptv.player.core.designsystem.PosterShape
 import com.genciptv.player.core.designsystem.TextPrimary
 import com.genciptv.player.core.designsystem.TextSecondary
 import com.genciptv.player.core.designsystem.TextTertiary
+import com.genciptv.player.core.util.episodeDisplayTitle
 import com.genciptv.player.core.ui.Backdrop
+import com.genciptv.player.core.ui.DetailReadableWidth
+import com.genciptv.player.core.ui.readableContentWidth
 import com.genciptv.player.core.ui.EmptyState
 import com.genciptv.player.core.ui.LoadingState
 import com.genciptv.player.core.ui.Poster
@@ -213,141 +217,152 @@ private fun VodDetailBody(
             }
         }
 
-        // ── Meta block ───────────────────────────────────────────────────────
-        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-            Text(
-                text = uiState.title,
-                style = TextStyle(
-                    fontFamily = InstrumentSerifFamily,
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 28.sp,
-                    lineHeight = 32.sp,
-                    letterSpacing = (-0.02).sp,
-                    color = TextPrimary,
-                ),
-            )
-            Spacer(Modifier.height(6.dp))
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (uiState.year != null) {
+        // Everything below the hero is width-capped and centred. Left
+        // full-width, plot text and episode rows stretch the whole way
+        // across a tablet, which is exactly where line length stops being
+        // readable. The backdrop above stays full-bleed on purpose.
+        //
+        // The cap is the wider detail measure, not the reading one: episode
+        // rows carry a 148dp thumbnail before the text even starts, so they
+        // need more room than a column of prose to breathe.
+        Column(modifier = Modifier.readableContentWidth(DetailReadableWidth)) {
+            // ── Meta block ───────────────────────────────────────────────────────
+            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                Text(
+                    text = uiState.title,
+                    style = TextStyle(
+                        fontFamily = InstrumentSerifFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 28.sp,
+                        lineHeight = 32.sp,
+                        letterSpacing = (-0.02).sp,
+                        color = TextPrimary,
+                    ),
+                )
+                Spacer(Modifier.height(6.dp))
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (uiState.year != null) {
+                        Text(
+                            text = uiState.year.toString(),
+                            style = TextStyle(
+                                fontFamily = GeistMonoFamily,
+                                fontWeight = FontWeight.Normal,
+                                fontSize = 12.sp,
+                                color = TextSecondary,
+                            ),
+                        )
+                    }
+                    if (uiState.year != null && uiState.rating != null) {
+                        Spacer(Modifier.width(8.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(3.dp)
+                                .clip(CircleShape)
+                                .background(TextTertiary),
+                        )
+                        Spacer(Modifier.width(8.dp))
+                    }
+                    if (uiState.rating != null) {
+                        Text(
+                            text = "★ %.1f".format(uiState.rating),
+                            style = TextStyle(
+                                fontFamily = GeistMonoFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 12.sp,
+                                color = Copper,
+                            ),
+                        )
+                    }
+                }
+
+                if (uiState.genres.isNotEmpty()) {
+                    Spacer(Modifier.height(11.dp))
+                    GenrePills(genres = uiState.genres)
+                }
+
+                val plotText = uiState.plot
+                if (!plotText.isNullOrBlank()) {
+                    Spacer(Modifier.height(14.dp))
                     Text(
-                        text = uiState.year.toString(),
+                        text = "Özet",
                         style = TextStyle(
-                            fontFamily = GeistMonoFamily,
+                            fontFamily = GeistFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 13.sp,
+                            color = TextPrimary,
+                        ),
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = plotText,
+                        style = TextStyle(
+                            fontFamily = GeistFamily,
                             fontWeight = FontWeight.Normal,
-                            fontSize = 12.sp,
+                            fontSize = 14.sp,
+                            lineHeight = 21.sp,
                             color = TextSecondary,
                         ),
                     )
                 }
-                if (uiState.year != null && uiState.rating != null) {
-                    Spacer(Modifier.width(8.dp))
-                    Box(
-                        modifier = Modifier
-                            .size(3.dp)
-                            .clip(CircleShape)
-                            .background(TextTertiary),
-                    )
-                    Spacer(Modifier.width(8.dp))
-                }
-                if (uiState.rating != null) {
-                    Text(
-                        text = "★ %.1f".format(uiState.rating),
-                        style = TextStyle(
-                            fontFamily = GeistMonoFamily,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 12.sp,
-                            color = Copper,
-                        ),
-                    )
+
+                if (!uiState.isSeries) {
+                    Spacer(Modifier.height(20.dp))
+                    PlayButton(onClick = onPlay)
                 }
             }
 
-            if (uiState.genres.isNotEmpty()) {
-                Spacer(Modifier.height(11.dp))
-                GenrePills(genres = uiState.genres)
-            }
-
-            val plotText = uiState.plot
-            if (!plotText.isNullOrBlank()) {
-                Spacer(Modifier.height(14.dp))
-                Text(
-                    text = "Özet",
-                    style = TextStyle(
-                        fontFamily = GeistFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 13.sp,
-                        color = TextPrimary,
-                    ),
-                )
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = plotText,
-                    style = TextStyle(
-                        fontFamily = GeistFamily,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 14.sp,
-                        lineHeight = 21.sp,
-                        color = TextSecondary,
-                    ),
-                )
-            }
-
+            // ── Cast bar — TMDb photos with serif initial fallback ───────────────
             if (!uiState.isSeries) {
-                Spacer(Modifier.height(20.dp))
-                PlayButton(onClick = onPlay)
+                val cast = uiState.displayCast
+                if (cast.isNotEmpty()) {
+                    Spacer(Modifier.height(24.dp))
+                    SectionTitle(title = "Oyuncular")
+                    Spacer(Modifier.height(12.dp))
+                    CastBar(cast = cast)
+                }
             }
-        }
 
-        // ── Cast bar — TMDb photos with serif initial fallback ───────────────
-        if (!uiState.isSeries) {
-            val cast = uiState.displayCast
-            if (cast.isNotEmpty()) {
+            // ── Similar movies / series ──────────────────────────────────────────
+            if (!uiState.isSeries && uiState.similarMovies.isNotEmpty()) {
                 Spacer(Modifier.height(24.dp))
-                SectionTitle(title = "Oyuncular")
+                SectionTitle(title = "Benzer Filmler")
                 Spacer(Modifier.height(12.dp))
-                CastBar(cast = cast)
+                SimilarRow(
+                    items = uiState.similarMovies.map { SimilarItem(it.id, it.title, it.posterUrl, it.year, it.rating) },
+                    onClick = onNavigateToSimilar,
+                )
             }
-        }
-
-        // ── Similar movies / series ──────────────────────────────────────────
-        if (!uiState.isSeries && uiState.similarMovies.isNotEmpty()) {
-            Spacer(Modifier.height(24.dp))
-            SectionTitle(title = "Benzer Filmler")
-            Spacer(Modifier.height(12.dp))
-            SimilarRow(
-                items = uiState.similarMovies.map { SimilarItem(it.id, it.title, it.posterUrl, it.year, it.rating) },
-                onClick = onNavigateToSimilar,
-            )
-        }
-        if (uiState.isSeries && uiState.similarSeries.isNotEmpty()) {
-            Spacer(Modifier.height(24.dp))
-            SectionTitle(title = "Benzer Diziler")
-            Spacer(Modifier.height(12.dp))
-            SimilarRow(
-                items = uiState.similarSeries.map { SimilarItem(it.id, it.title, it.posterUrl, it.year, it.rating) },
-                onClick = onNavigateToSimilar,
-            )
-        }
-
-        // ── Series cast (shown after similar bar) + episodes ─────────────────
-        if (uiState.isSeries) {
-            val cast = uiState.displayCast
-            if (cast.isNotEmpty()) {
+            if (uiState.isSeries && uiState.similarSeries.isNotEmpty()) {
                 Spacer(Modifier.height(24.dp))
-                SectionTitle(title = "Oyuncular")
+                SectionTitle(title = "Benzer Diziler")
                 Spacer(Modifier.height(12.dp))
-                CastBar(cast = cast)
+                SimilarRow(
+                    items = uiState.similarSeries.map { SimilarItem(it.id, it.title, it.posterUrl, it.year, it.rating) },
+                    onClick = onNavigateToSimilar,
+                )
             }
-            Spacer(Modifier.height(24.dp))
-            EpisodesSection(
-                episodes = uiState.episodes,
-                isLoading = uiState.isEpisodesLoading,
-                onPlayEpisode = onPlayEpisode,
-            )
-        }
 
-        Spacer(Modifier.height(24.dp))
+            // ── Series cast (shown after similar bar) + episodes ─────────────────
+            if (uiState.isSeries) {
+                val cast = uiState.displayCast
+                if (cast.isNotEmpty()) {
+                    Spacer(Modifier.height(24.dp))
+                    SectionTitle(title = "Oyuncular")
+                    Spacer(Modifier.height(12.dp))
+                    CastBar(cast = cast)
+                }
+                Spacer(Modifier.height(24.dp))
+                EpisodesSection(
+                    episodes = uiState.episodes,
+                    isLoading = uiState.isEpisodesLoading,
+                    onPlayEpisode = onPlayEpisode,
+                )
+            }
+
+            Spacer(Modifier.height(24.dp))
+        }
     }
 }
 
@@ -741,8 +756,8 @@ private fun EpisodeItem(
     onPlay: () -> Unit,
 ) {
     val accent = LocalAccentPalette.current
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
+
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
@@ -751,58 +766,98 @@ private fun EpisodeItem(
             .clickable(onClick = onPlay)
             .padding(11.dp),
     ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(36.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(accent.soft),
-        ) {
-            Text(
-                text = episode.episode.toString().padStart(2, '0'),
-                style = TextStyle(
-                    fontFamily = GeistMonoFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 13.sp,
-                    color = accent.primary,
-                ),
-            )
-        }
-        Spacer(Modifier.width(12.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = episode.title,
-                style = TextStyle(
-                    fontFamily = GeistFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 13.sp,
-                    color = TextPrimary,
-                ),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            val plot = episode.plot
-            if (!plot.isNullOrBlank()) {
-                Spacer(Modifier.height(2.dp))
+        // Centred against the still. When the title runs to two lines the text
+        // column simply grows taller than the image and the row follows it —
+        // Row lays its children side by side, so nothing can overlap; the
+        // image just re-centres against the taller text.
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            // Fixed 16:9 frame, cropped to fill. Letting each image keep its own
+            // aspect made the list ragged and turned portrait artwork into tall
+            // cards; a constant frame is what keeps the rhythm even, and it is
+            // what every streaming episode list does.
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .width(148.dp)
+                    .aspectRatio(16f / 9f)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(accent.soft),
+            ) {
+                if (!episode.thumbnailUrl.isNullOrBlank()) {
+                    AsyncImage(
+                        model = episode.thumbnailUrl,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                } else {
+                    Text(
+                        text = episode.episode.toString().padStart(2, '0'),
+                        style = TextStyle(
+                            fontFamily = GeistMonoFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 15.sp,
+                            color = accent.primary,
+                        ),
+                    )
+                }
+            }
+            Spacer(Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = plot,
+                    text = episodeDisplayTitle(episode.episode, episode.title),
                     style = TextStyle(
                         fontFamily = GeistFamily,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 11.sp,
-                        color = TextSecondary,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 13.sp,
+                        color = TextPrimary,
                     ),
-                    maxLines = 1,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
+                // Runtime only — the title already carries the episode number,
+                // and repeating it above the name was three ways of saying the
+                // same thing.
+                episode.durationSecs?.let { secs ->
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = "${secs / 60} dk",
+                        style = TextStyle(
+                            fontFamily = GeistMonoFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 11.sp,
+                            letterSpacing = 0.04.sp,
+                            color = TextTertiary,
+                        ),
+                    )
+                }
             }
+            Spacer(Modifier.width(8.dp))
+            Icon(
+                imageVector = Icons.Filled.PlayArrow,
+                contentDescription = "Oynat",
+                tint = accent.primary,
+                modifier = Modifier.size(20.dp),
+            )
         }
-        Icon(
-            imageVector = Icons.Filled.PlayArrow,
-            contentDescription = "Oynat",
-            tint = accent.primary,
-            modifier = Modifier.size(20.dp),
-        )
+
+        val plot = episode.plot
+        if (!plot.isNullOrBlank()) {
+            Spacer(Modifier.height(8.dp))
+            // Shown in full. Synopses run to a few sentences, so clamping them
+            // bought a shorter card at the cost of the one thing the card is
+            // there to tell you.
+            Text(
+                text = plot,
+                style = TextStyle(
+                    fontFamily = GeistFamily,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 11.sp,
+                    lineHeight = 16.sp,
+                    color = TextSecondary,
+                ),
+            )
+        }
     }
 }
 

@@ -55,6 +55,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -69,22 +70,61 @@ import com.genciptv.player.core.designsystem.Surface2
 import com.genciptv.player.core.designsystem.TextPrimary
 import com.genciptv.player.core.designsystem.TextSecondary
 import com.genciptv.player.core.designsystem.TextTertiary
+import com.genciptv.player.core.designsystem.WindowSize
+import com.genciptv.player.core.ui.DetailReadableWidth
 import com.genciptv.player.core.ui.EmptyState
 import com.genciptv.player.core.ui.GencAdaptiveScaffold
 import com.genciptv.player.core.ui.GencNavItem
 import com.genciptv.player.core.ui.LoadingState
+import com.genciptv.player.core.ui.readableContentWidth
 import com.genciptv.player.data.model.Program
 import com.genciptv.player.feature.guide.model.DayOption
 import com.genciptv.player.feature.guide.model.EpgGridRow
 import kotlinx.coroutines.launch
 
-// ── Grid constants ────────────────────────────────────────────────────────────
+// ── Grid geometry ─────────────────────────────────────────────────────────────
 
-private val HOUR_WIDTH_DP = 70.dp
-private val TOTAL_GRID_WIDTH_DP = HOUR_WIDTH_DP * 24  // 1680dp
-private val LOGO_COL_WIDTH_DP = 56.dp
-private val ROW_HEIGHT_DP = 60.dp
-private val MIN_BLOCK_WIDTH_DP = 40.dp
+/**
+ * Geometry of the EPG grid. Programme blocks are positioned absolutely inside a
+ * 24-hour canvas, so the time ruler and every channel row have to agree on these
+ * numbers exactly — they travel as one object rather than four loose parameters
+ * that could drift apart.
+ *
+ * Tablets get a wider hour and a wider channel column. With the phone geometry a
+ * 1200dp screen just reveals more empty hours while programme titles stay
+ * clipped inside 70dp blocks; widening the hour is what actually spends the
+ * extra room. Fewer hours are on screen at once (~10 instead of ~17), but that
+ * is still double what a phone shows and the titles become readable.
+ */
+private data class GuideMetrics(
+    val hourWidth: Dp,
+    val logoColWidth: Dp,
+    val rowHeight: Dp,
+    val minBlockWidth: Dp,
+    val logoSize: Dp,
+) {
+    val totalGridWidth: Dp get() = hourWidth * 24
+}
+
+private val PhoneGuideMetrics = GuideMetrics(
+    hourWidth = 70.dp,
+    logoColWidth = 56.dp,
+    rowHeight = 60.dp,
+    minBlockWidth = 40.dp,
+    logoSize = 40.dp,
+)
+
+private val TabletGuideMetrics = GuideMetrics(
+    hourWidth = 112.dp,
+    logoColWidth = 84.dp,
+    rowHeight = 72.dp,
+    minBlockWidth = 56.dp,
+    logoSize = 52.dp,
+)
+
+@Composable
+private fun guideMetrics(): GuideMetrics =
+    if (WindowSize.isTablet) TabletGuideMetrics else PhoneGuideMetrics
 
 // ── Stateful screen ───────────────────────────────────────────────────────────
 
@@ -132,6 +172,8 @@ fun GuideContent(
     val accent = LocalAccentPalette.current.primary
     val accentSoft = LocalAccentPalette.current.soft
     val accentMid = LocalAccentPalette.current.mid
+
+    val metrics = guideMetrics()
 
     // Shared horizontal scroll state — ruler + all program rows scroll together
     val sharedHScroll = rememberScrollState()
@@ -201,6 +243,7 @@ fun GuideContent(
                         currentHour = if (isToday) currentHour else -1,
                         sharedScroll = sharedHScroll,
                         accent = accent,
+                        metrics = metrics,
                     )
 
                     // ── D) Current Playing Card ───────────────────────────────
@@ -210,6 +253,8 @@ fun GuideContent(
                             p.startMillis <= now && p.stopMillis > now
                         }
                         if (currentProgram != null) {
+                            // Capped: a single hero card stretched across a
+                            // 1200dp tablet reads as a banner, not a card.
                             CurrentPlayingCard(
                                 row = featured,
                                 program = currentProgram,
@@ -218,6 +263,7 @@ fun GuideContent(
                                 accentSoft = accentSoft,
                                 accentMid = accentMid,
                                 onPlayClick = { onNavigateToPlayer(featured.channelId) },
+                                modifier = Modifier.readableContentWidth(DetailReadableWidth),
                             )
                         }
                     }
@@ -236,6 +282,7 @@ fun GuideContent(
                                 dayStartMillis = dayStart,
                                 nowMillis = now,
                                 sharedScroll = sharedHScroll,
+                                metrics = metrics,
                                 accent = accent,
                                 accentSoft = accentSoft,
                                 accentMid = accentMid,
@@ -407,6 +454,7 @@ private fun TimeRuler(
     currentHour: Int, // -1 if not today
     sharedScroll: androidx.compose.foundation.ScrollState,
     accent: Color,
+    metrics: GuideMetrics,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -414,33 +462,36 @@ private fun TimeRuler(
             .fillMaxWidth()
             .background(Surface)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(sharedScroll)
-                .padding(vertical = 8.dp)
-        ) {
-            for (hour in 0..23) {
-                val isCurrentHour = hour == currentHour
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier.width(HOUR_WIDTH_DP),
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        if (isCurrentHour) {
+        Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+            // The channel rows below start their scrolling area after a pinned
+            // logo column, so the ruler needs the same pinned gutter. Without it
+            // both scroll by the same amount but from origins one logo column
+            // apart, and every hour label sits to the left of its own slot.
+            Spacer(Modifier.width(metrics.logoColWidth))
+
+            Row(modifier = Modifier.weight(1f).horizontalScroll(sharedScroll)) {
+                for (hour in 0..23) {
+                    val isCurrentHour = hour == currentHour
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.width(metrics.hourWidth),
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            if (isCurrentHour) {
+                                Text(
+                                    text = "\u25BC",
+                                    fontSize = 8.sp,
+                                    color = accent,
+                                )
+                            } else {
+                                Spacer(Modifier.height(11.dp))
+                            }
                             Text(
-                                text = "\u25BC",
-                                fontSize = 8.sp,
-                                color = accent,
+                                text = "%02d:00".format(hour),
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+                                color = if (isCurrentHour) accent else TextSecondary,
                             )
-                        } else {
-                            Spacer(Modifier.height(11.dp))
                         }
-                        Text(
-                            text = "%02d:00".format(hour),
-                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
-                            color = if (isCurrentHour) accent else TextSecondary,
-                        )
                     }
                 }
             }
@@ -551,6 +602,7 @@ private fun EpgChannelRow(
     dayStartMillis: Long,
     nowMillis: Long,
     sharedScroll: androidx.compose.foundation.ScrollState,
+    metrics: GuideMetrics,
     accent: Color,
     accentSoft: Color,
     accentMid: Color,
@@ -561,20 +613,20 @@ private fun EpgChannelRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(ROW_HEIGHT_DP)
+                .height(metrics.rowHeight)
         ) {
-            // Logo column (fixed 56dp, left-anchored)
+            // Logo column — pinned, does not scroll with the programmes
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .width(LOGO_COL_WIDTH_DP)
-                    .height(ROW_HEIGHT_DP)
+                    .width(metrics.logoColWidth)
+                    .height(metrics.rowHeight)
                     .background(Surface)
                     .border(width = 1.dp, color = Border)
             ) {
                 ChannelLogoBox(
                     logoUrl = row.logoUrl,
-                    size = 40.dp,
+                    size = metrics.logoSize,
                 )
             }
 
@@ -582,22 +634,22 @@ private fun EpgChannelRow(
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .height(ROW_HEIGHT_DP)
+                    .height(metrics.rowHeight)
                     .horizontalScroll(sharedScroll)
             ) {
-                // 1680dp wide canvas for absolute positioning
+                // Full-day canvas for absolute positioning
                 Box(
                     modifier = Modifier
-                        .width(TOTAL_GRID_WIDTH_DP)
-                        .height(ROW_HEIGHT_DP)
+                        .width(metrics.totalGridWidth)
+                        .height(metrics.rowHeight)
                         .background(Bg)
                 ) {
                     row.programs.forEach { program ->
                         val startFraction = (program.startMillis - dayStartMillis).toFloat() / 3_600_000f
                         val durationFraction = (program.stopMillis - program.startMillis).toFloat() / 3_600_000f
-                        val xOffset = (startFraction * HOUR_WIDTH_DP.value).dp
-                        val rawWidth = (durationFraction * HOUR_WIDTH_DP.value).dp
-                        val blockWidth = rawWidth.coerceAtLeast(MIN_BLOCK_WIDTH_DP)
+                        val xOffset = (startFraction * metrics.hourWidth.value).dp
+                        val rawWidth = (durationFraction * metrics.hourWidth.value).dp
+                        val blockWidth = rawWidth.coerceAtLeast(metrics.minBlockWidth)
 
                         val blockState = when {
                             nowMillis >= program.stopMillis -> ProgramBlockState.PAST
@@ -609,6 +661,7 @@ private fun EpgChannelRow(
                             program = program,
                             state = blockState,
                             width = blockWidth,
+                            height = metrics.rowHeight,
                             accent = accent,
                             accentSoft = accentSoft,
                             accentMid = accentMid,
@@ -637,7 +690,8 @@ private enum class ProgramBlockState { PAST, NOW, FUTURE }
 private fun ProgramBlock(
     program: Program,
     state: ProgramBlockState,
-    width: androidx.compose.ui.unit.Dp,
+    width: Dp,
+    height: Dp,
     accent: Color,
     accentSoft: Color,
     accentMid: Color,
@@ -667,7 +721,7 @@ private fun ProgramBlock(
     Column(
         modifier = modifier
             .width(width)
-            .height(ROW_HEIGHT_DP)
+            .height(height)
             .clip(RoundedCornerShape(0.dp))
             .background(bgColor.copy(alpha = contentAlpha))
             .border(width = 1.5.dp, color = borderColor)

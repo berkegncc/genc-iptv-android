@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -18,6 +19,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
@@ -55,6 +57,8 @@ import com.genciptv.player.core.ui.EmptyState
 import com.genciptv.player.core.ui.GencAdaptiveScaffold
 import com.genciptv.player.core.ui.GencNavItem
 import com.genciptv.player.core.ui.LoadingState
+import com.genciptv.player.core.ui.posterGridMinWidth
+import com.genciptv.player.core.ui.readableContentWidth
 import com.genciptv.player.data.model.Channel
 import com.genciptv.player.data.model.FavoriteTargetType
 import com.genciptv.player.data.model.Series
@@ -280,17 +284,20 @@ private fun FavoriteChannelsTab(
         )
         else -> {
             val brushes = channelBrushes()
+            // Capped: these are single-line rows with the name hard left and the
+            // star hard right, so at full tablet width the two ends of every row
+            // end up a screen apart.
             LazyColumn(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxHeight().readableContentWidth(),
             ) {
-                items(channels, key = { it.id }) { channel ->
+                itemsIndexed(channels, key = { _, channel -> channel.id }) { index, channel ->
                     ChannelListItem(
                         name = channel.name,
                         program = "",
                         isFavorite = true,
                         logoUrl = channel.logoUrl,
-                        thumbBrush = brushes[channels.indexOf(channel) % brushes.size],
+                        thumbBrush = brushes[index % brushes.size],
                         isHd = channel.isHd,
                         onClick = { onChannelClick(channel.id) },
                         onFavoriteClick = { onUnfavorite(channel.id) },
@@ -319,7 +326,7 @@ private fun FavoriteMoviesTab(
             modifier = Modifier.fillMaxSize(),
         )
         else -> LazyVerticalGrid(
-            columns = GridCells.Adaptive(minSize = 120.dp),
+            columns = GridCells.Adaptive(minSize = posterGridMinWidth()),
             contentPadding = PaddingValues(12.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -358,7 +365,7 @@ private fun FavoriteSeriesTab(
             modifier = Modifier.fillMaxSize(),
         )
         else -> LazyVerticalGrid(
-            columns = GridCells.Adaptive(minSize = 120.dp),
+            columns = GridCells.Adaptive(minSize = posterGridMinWidth()),
             contentPadding = PaddingValues(12.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),

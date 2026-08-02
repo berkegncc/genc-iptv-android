@@ -48,6 +48,12 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+    fun setTmdbApiKey(key: String) {
+        viewModelScope.launch {
+            userPreferencesRepository.setTmdbApiKey(key)
+        }
+    }
+
     fun toggleAutoUpdate(enabled: Boolean) {
         viewModelScope.launch {
             userPreferencesRepository.setAutoUpdateEnabled(enabled)

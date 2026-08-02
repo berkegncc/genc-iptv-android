@@ -38,6 +38,9 @@ interface UserPreferencesRepository {
     suspend fun setActivePlaylistId(id: Long)
     suspend fun setAutoUpdateEnabled(enabled: Boolean)
 
+    /** The user's own TMDb key; blank turns the TMDb features off. */
+    suspend fun setTmdbApiKey(key: String)
+
     suspend fun addRecentChannel(id: String)
     suspend fun clearRecentChannels()
 }
@@ -70,6 +73,7 @@ class UserPreferencesRepositoryImpl @Inject constructor(
     override suspend fun setOnboardingCompleted(done: Boolean) = userDs.setOnboardingCompleted(done)
     override suspend fun setActivePlaylistId(id: Long) = userDs.setActivePlaylistId(id)
     override suspend fun setAutoUpdateEnabled(enabled: Boolean) = userDs.setAutoUpdateEnabled(enabled)
+    override suspend fun setTmdbApiKey(key: String) = userDs.setTmdbApiKey(key)
 
     override suspend fun addRecentChannel(id: String) = recentChannelsDs.addRecent(id)
     override suspend fun clearRecentChannels() = recentChannelsDs.clear()

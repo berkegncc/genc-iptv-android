@@ -12,6 +12,7 @@ import com.genciptv.player.data.repository.ContinueWatchingRepository
 import com.genciptv.player.data.repository.FavoriteRepository
 import com.genciptv.player.data.repository.TmdbRepository
 import com.genciptv.player.data.repository.UserPreferencesRepository
+import com.genciptv.player.core.util.rankBySharedGenres
 import com.genciptv.player.data.repository.VodRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -150,18 +151,21 @@ class VodPlayerViewModel @Inject constructor(
             }
             _uiState.update { it.copy(castWithPhotos = cast, isCastLoading = false) }
         }
-        val categoryId = movie.categoryId
-        if (!categoryId.isNullOrBlank()) {
-            viewModelScope.launch {
-                val similar = runCatching {
-                    vodRepository
-                        .observeMovies(playlistId = movie.playlistId, categoryId = categoryId, query = "")
+        // Same genre ranking the detail screen uses — the old category filter
+        // grouped by provider ("NETFLIX", "EXXEN") rather than by content, so
+        // the row was effectively random. Off the main dispatcher: this reads
+        // the whole catalogue.
+        viewModelScope.launch {
+            val similar = withContext(Dispatchers.Default) {
+                runCatching {
+                    val catalogue = vodRepository
+                        .observeMovies(playlistId = movie.playlistId, categoryId = null, query = "")
                         .first()
                         .filter { it.id != movie.id }
-                        .take(15)
+                    rankBySharedGenres(movie.genres, catalogue, VodItem::genres, VodItem::rating)
                 }.getOrDefault(emptyList())
-                _uiState.update { it.copy(similarMovies = similar) }
             }
+            _uiState.update { it.copy(similarMovies = similar) }
         }
     }
 

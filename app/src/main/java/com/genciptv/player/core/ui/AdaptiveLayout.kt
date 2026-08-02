@@ -27,6 +27,7 @@ import com.genciptv.player.core.designsystem.Bg
 import com.genciptv.player.core.designsystem.Border
 import com.genciptv.player.core.designsystem.GeistFamily
 import com.genciptv.player.core.designsystem.TextTertiary
+import com.genciptv.player.core.designsystem.WindowSize
 
 /**
  * Adaptive layout helpers shared across screens for tablet / large-screen
@@ -76,6 +77,18 @@ fun ContentColumn(
         content = content,
     )
 }
+
+/**
+ * Minimum cell width for poster grids, used with `GridCells.Adaptive`.
+ *
+ * `Adaptive` already grows the column count with the available width, so a grid
+ * never breaks on a tablet — but left at the phone size it turns a 1280dp screen
+ * into ten columns of phone-sized posters, which reads as a wall of stamps and
+ * makes the titles underneath unreadable. Raising the minimum on larger windows
+ * spends the extra width on bigger artwork instead of more of it.
+ */
+@Composable
+fun posterGridMinWidth(): Dp = if (WindowSize.isTablet) 150.dp else 116.dp
 
 /** Which pane of a [TwoPaneRow] keeps a fixed width; the other one fills. */
 enum class TwoPaneSide { Start, End }

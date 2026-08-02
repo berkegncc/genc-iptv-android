@@ -60,6 +60,46 @@ object XtreamMapper {
         }
     }
 
+    /**
+     * Parse the provider's "when was this added" field into epoch millis.
+     * Returns 0 when the value is missing or unparseable — callers then fall
+     * back to the numeric stream id for ordering.
+     *
+     * Panels are inconsistent here: most send unix **seconds** as a string
+     * (`"1615478400"`), a few send milliseconds, and some send a formatted
+     * date (`"2023-11-08 21:04:35"`).
+     */
+    internal fun parseAddedMillis(raw: String?): Long {
+        val text = raw?.trim().orEmpty()
+        if (text.isEmpty()) return 0L
+
+        text.toLongOrNull()?.let { n ->
+            if (n <= 0L) return 0L
+            // Anything past ~year 5138 in seconds is really milliseconds.
+            return if (n > 100_000_000_000L) n else n * 1000L
+        }
+
+        // "yyyy-MM-dd" optionally followed by " HH:mm:ss".
+        val parts = text.take(10).split("-")
+        if (parts.size != 3) return 0L
+        val year = parts[0].toIntOrNull() ?: return 0L
+        val month = parts[1].toIntOrNull() ?: return 0L
+        val day = parts[2].toIntOrNull() ?: return 0L
+        if (year < 1970 || month !in 1..12 || day !in 1..31) return 0L
+        val time = text.drop(11).split(":")
+        return java.util.GregorianCalendar(java.util.TimeZone.getTimeZone("UTC")).apply {
+            clear()
+            set(
+                year,
+                month - 1,
+                day,
+                time.getOrNull(0)?.toIntOrNull() ?: 0,
+                time.getOrNull(1)?.toIntOrNull() ?: 0,
+                time.getOrNull(2)?.toIntOrNull() ?: 0,
+            )
+        }.timeInMillis
+    }
+
     /** Safe Base64 decode. Returns null for empty/invalid input. */
     internal fun decodeBase64(text: String?): String? {
         if (text.isNullOrBlank()) return null
@@ -71,16 +111,6 @@ object XtreamMapper {
         }
     }
 
-    /** Testable Base64 decoder using java.util.Base64 (JVM-only). */
-    internal fun decodeBase64Jvm(text: String?): String? {
-        if (text.isNullOrBlank()) return null
-        return try {
-            val bytes = java.util.Base64.getDecoder().decode(text.trim())
-            String(bytes, Charsets.UTF_8)
-        } catch (_: Exception) {
-            null
-        }
-    }
 
     // ── User info / auth ──────────────────────────────────────────────────────
 
@@ -190,6 +220,8 @@ object XtreamMapper {
             rating = jsonElementToDoubleOrNull(dto.rating),
             plot = dto.plot,
             categoryId = catId?.let { "${playlist.id}:MOVIE:$it" },
+            addedAt = parseAddedMillis(dto.added),
+            providerId = dto.streamId.toLong(),
         )
     }
 
@@ -237,6 +269,11 @@ object XtreamMapper {
             cast = dto.cast?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() }
                 ?: emptyList(),
             categoryId = catId?.let { "${playlist.id}:SERIES:$it" },
+            // get_series has no `added` field; `last_modified` is the only
+            // freshness signal panels expose (it also bumps when a new
+            // episode lands, which is exactly what "Son Eklenen" should show).
+            addedAt = parseAddedMillis(dto.lastModified),
+            providerId = dto.seriesId.toLong(),
         )
     }
 
@@ -245,17 +282,26 @@ object XtreamMapper {
     fun toProgram(
         dto: XtreamEpgEntryDto,
         playlistId: Long,
-        useAndroidBase64: Boolean = true,
+        /**
+         * Base64 decoder seam. Defaults to Android's, which is available on
+         * every API level. Unit tests pass a JVM decoder so they can run off
+         * device.
+         *
+         * This used to be a Boolean choosing between two implementations, the
+         * second of which called java.util.Base64 — API 26, above this
+         * module's minSdk 24. Nothing in production took that branch, but it
+         * sat there as a crash waiting for a caller; the seam keeps the
+         * testability without keeping the trap.
+         */
+        decode: (String?) -> String? = ::decodeBase64,
     ): Program? {
         val start = dto.startTimestamp?.toLongOrNull()?.let { it * 1000L }
             ?: return null
         val stop = dto.stopTimestamp?.toLongOrNull()?.let { it * 1000L }
             ?: return null
         val channelEpg = dto.epgId ?: dto.channelId ?: return null
-        val title = (if (useAndroidBase64) decodeBase64(dto.title) else decodeBase64Jvm(dto.title))
-            ?: dto.title ?: ""
-        val desc = (if (useAndroidBase64) decodeBase64(dto.description) else decodeBase64Jvm(dto.description))
-            ?: dto.description
+        val title = decode(dto.title) ?: dto.title ?: ""
+        val desc = decode(dto.description) ?: dto.description
         return Program(
             channelEpgId = channelEpg,
             playlistId = playlistId,

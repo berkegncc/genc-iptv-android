@@ -1,6 +1,7 @@
 package com.genciptv.player.feature.vod
 
 import android.util.Log
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.genciptv.player.data.model.ContinueWatching
@@ -12,6 +13,7 @@ import com.genciptv.player.data.repository.PosterEnricher
 import com.genciptv.player.data.repository.UserPreferencesRepository
 import com.genciptv.player.data.repository.VodRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -20,12 +22,20 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+/**
+ * Nav argument naming which tab a VOD destination opens. Movies and Series are
+ * separate routes; each declares this as a default argument so the ViewModel
+ * knows its kind at construction time.
+ */
+const val VOD_KIND_ARG = "kind"
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -35,6 +45,7 @@ class VodListViewModel @Inject constructor(
     private val userPreferencesRepository: UserPreferencesRepository,
     private val playlistRepository: PlaylistRepository,
     private val posterEnricher: PosterEnricher,
+    savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
     private val _isRefreshing = MutableStateFlow(false)
@@ -42,7 +53,16 @@ class VodListViewModel @Inject constructor(
 
     // ── Local mutable state ───────────────────────────────────────────────────
 
-    private val _kind = MutableStateFlow(VodKind.MOVIE)
+    /**
+     * Fixed for this ViewModel's lifetime — the route owns it. Switching tabs
+     * navigates to the other destination, which gets its own ViewModel, so the
+     * route and what's on screen can never drift apart.
+     */
+    private val _kind = MutableStateFlow(
+        savedStateHandle.get<String>(VOD_KIND_ARG)
+            ?.let { runCatching { VodKind.valueOf(it) }.getOrNull() }
+            ?: VodKind.MOVIE
+    )
     private val _selectedCategoryId = MutableStateFlow<String?>(null)
     private val _query = MutableStateFlow("")
     private val _selectedCwIds =
@@ -55,7 +75,11 @@ class VodListViewModel @Inject constructor(
 
     // ── Movies flow ───────────────────────────────────────────────────────────
 
-    private val moviesFlow = combine(
+    // Only the kind this route renders. `_kind` is fixed for the ViewModel's
+    // lifetime, so the other catalogue would be queried, mapped and handed to
+    // PosterEnricher — firing TMDb lookups and DB writes — for a list nobody
+    // is looking at.
+    private val moviesFlow = if (_kind.value != VodKind.MOVIE) flowOf(emptyList()) else combine(
         activePlaylistIdFlow,
         _selectedCategoryId,
         _query,
@@ -68,7 +92,7 @@ class VodListViewModel @Inject constructor(
 
     // ── Series flow ───────────────────────────────────────────────────────────
 
-    private val seriesFlow = combine(
+    private val seriesFlow = if (_kind.value != VodKind.SERIES) flowOf(emptyList()) else combine(
         activePlaylistIdFlow,
         _selectedCategoryId,
         _query,
@@ -135,22 +159,22 @@ class VodListViewModel @Inject constructor(
             selectedCwIds = selectedCwIds,
         )
     }
+    // The catalogue lists are the largest in the app and Room's rows are
+    // mapped to domain objects by an operator upstream of here — without this
+    // that work lands on the main dispatcher, which is where viewModelScope
+    // collects. Every other list screen already does this.
+    .flowOn(Dispatchers.Default)
     .catch { e -> emit(VodListUiState(isLoading = false, error = e.message)) }
     .stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = VodListUiState.INITIAL,
+        // Carry the kind into the placeholder state too, otherwise the tab row
+        // and bottom nav would highlight "Filmler" for one frame on the Diziler
+        // route before the first real emission lands.
+        initialValue = VodListUiState.INITIAL.copy(kind = _kind.value),
     )
 
     // ── Actions ───────────────────────────────────────────────────────────────
-
-    fun setKind(kind: VodKind) {
-        _kind.value = kind
-        _selectedCategoryId.value = null
-        _query.value = ""
-        // Selection mode shouldn't survive a tab switch — always start fresh on the new tab.
-        _selectedCwIds.value = emptySet()
-    }
 
     fun selectCategory(categoryId: String?) {
         _selectedCategoryId.value = categoryId

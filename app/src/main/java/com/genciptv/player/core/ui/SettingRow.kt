@@ -1,8 +1,6 @@
 package com.genciptv.player.core.ui
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,93 +9,108 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Autorenew
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.outlined.DeleteOutline
+import androidx.compose.material.icons.automirrored.outlined.PlaylistPlay
+import androidx.compose.material.icons.outlined.Wifi
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.genciptv.player.core.designsystem.GeistFamily
 import com.genciptv.player.core.designsystem.GencIptvTheme
-import com.genciptv.player.core.designsystem.IcBlueSoft
-import com.genciptv.player.core.designsystem.LiveSoft
 import com.genciptv.player.core.designsystem.LocalAccentPalette
-import com.genciptv.player.core.designsystem.OrangeSoft
-import com.genciptv.player.core.designsystem.Surface2
 import com.genciptv.player.core.designsystem.TextPrimary
 import com.genciptv.player.core.designsystem.TextSecondary
 import com.genciptv.player.core.designsystem.TextTertiary
 
-private val IconRadius = RoundedCornerShape(8.dp)
-
 /**
- * Single row inside a settings group card, matching `.set-row` CSS.
+ * Single row inside a settings group card.
  *
- * Structure:
- *   [32dp icon box] | [label + optional subtitle] | [trailing slot: ›, pill, toggle, custom]
+ *   [20dp icon] | [label + optional subtitle] | [trailing: ›, toggle, value…]
  *
- * The [trailing] composable slot lets callers pass GencToggle, Text("›"), or a pill.
+ * The icon is a vector drawn in a single colour — no tinted box behind it.
+ * Emoji in coloured tiles is what the settings screens used to do, and it read
+ * as a template: emoji render differently per device, sit off the text
+ * baseline, and carry weights that fight the rest of the type. Five different
+ * pastel backgrounds on one screen also meant colour signalled nothing. Here
+ * colour is reserved for meaning — [tint] defaults to the accent, and callers
+ * override it only where it says something, like a destructive action.
  */
 @Composable
 fun SettingRow(
-    icon: String,
-    iconBgColor: Color,
+    icon: ImageVector,
     label: String,
     modifier: Modifier = Modifier,
     subtitle: String? = null,
+    tint: Color? = null,
     onClick: () -> Unit = {},
     trailing: @Composable () -> Unit = {
         Text(
             text = "›",
-            style = MaterialTheme.typography.bodyLarge.copy(color = TextTertiary)
+            style = TextStyle(
+                fontFamily = GeistFamily,
+                fontSize = 18.sp,
+                color = TextTertiary,
+            ),
         )
-    }
+    },
 ) {
+    val iconTint = tint ?: LocalAccentPalette.current.primary
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 11.dp)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
     ) {
-        // Icon box — 32×32dp rounded
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(32.dp)
-                .clip(IconRadius)
-                .background(iconBgColor)
-        ) {
-            Text(
-                text = icon,
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = iconTint,
+            modifier = Modifier.size(20.dp),
+        )
 
-        Spacer(Modifier.width(10.dp))
+        Spacer(Modifier.width(14.dp))
 
-        // Text column
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = label,
-                style = MaterialTheme.typography.titleSmall.copy(color = TextPrimary)
+                style = TextStyle(
+                    fontFamily = GeistFamily,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 15.sp,
+                    color = if (tint != null) tint else TextPrimary,
+                ),
             )
             if (subtitle != null) {
-                Spacer(Modifier.height(1.dp))
+                Spacer(Modifier.height(2.dp))
                 Text(
                     text = subtitle,
-                    style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary),
-                    maxLines = 1
+                    style = TextStyle(
+                        fontFamily = GeistFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 12.sp,
+                        lineHeight = 16.sp,
+                        color = TextSecondary,
+                    ),
+                    maxLines = 1,
                 )
             }
         }
 
-        Spacer(Modifier.width(8.dp))
+        Spacer(Modifier.width(12.dp))
 
-        // Trailing slot
         trailing()
     }
 }
@@ -108,12 +121,10 @@ fun SettingRow(
 @Composable
 private fun SettingRowChevronPreview() {
     GencIptvTheme {
-        val accent = LocalAccentPalette.current.soft
         SettingRow(
-            icon = "📋",
-            iconBgColor = accent,
+            icon = Icons.AutoMirrored.Outlined.PlaylistPlay,
             label = "Playlist Yönetimi",
-            subtitle = "2 playlist aktif"
+            subtitle = "2 playlist aktif",
         )
     }
 }
@@ -123,10 +134,9 @@ private fun SettingRowChevronPreview() {
 private fun SettingRowTogglePreview() {
     GencIptvTheme {
         SettingRow(
-            icon = "🔄",
-            iconBgColor = OrangeSoft,
+            icon = Icons.Filled.Autorenew,
             label = "Otomatik Güncelleme",
-            trailing = { GencToggle(checked = true, onCheckedChange = {}) }
+            trailing = { GencToggle(checked = true, onCheckedChange = {}) },
         )
     }
 }
@@ -136,9 +146,13 @@ private fun SettingRowTogglePreview() {
 private fun SettingRowVariantsPreview() {
     GencIptvTheme {
         Column {
-            SettingRow(icon = "🔔", iconBgColor = LiveSoft, label = "Bildirimler")
-            SettingRow(icon = "🌐", iconBgColor = IcBlueSoft, label = "Ağ Ayarları", subtitle = "Wi-Fi bağlı")
-            SettingRow(icon = "🗑️", iconBgColor = Surface2, label = "Önbelleği Temizle")
+            SettingRow(icon = Icons.Filled.Notifications, label = "Bildirimler")
+            SettingRow(
+                icon = Icons.Outlined.Wifi,
+                label = "Ağ Ayarları",
+                subtitle = "Wi-Fi bağlı",
+            )
+            SettingRow(icon = Icons.Outlined.DeleteOutline, label = "Önbelleği Temizle")
         }
     }
 }

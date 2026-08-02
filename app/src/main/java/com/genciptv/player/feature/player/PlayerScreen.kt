@@ -12,6 +12,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -32,19 +33,18 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Forward10
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.FullscreenExit
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Replay10
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material.icons.filled.Subtitles
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.automirrored.filled.VolumeDown
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Slider
@@ -105,6 +105,7 @@ import com.genciptv.player.core.designsystem.SheetTopShape
 import com.genciptv.player.core.designsystem.TextPrimary
 import com.genciptv.player.core.designsystem.TextSecondary
 import com.genciptv.player.core.designsystem.TextTertiary
+import com.genciptv.player.core.designsystem.WindowSize
 import com.genciptv.player.core.player.buildIptvDataSourceFactory
 import com.genciptv.player.core.player.buildIptvMediaSource
 import com.genciptv.player.core.player.swapToTsExtension
@@ -114,6 +115,7 @@ import com.genciptv.player.core.ui.ErrorState
 import com.genciptv.player.core.ui.LoadingState
 import com.genciptv.player.core.ui.QualityPill
 import com.genciptv.player.core.ui.applySubtitleStyle
+import com.genciptv.player.core.util.restoreUserOrientation
 import com.genciptv.player.data.model.Channel
 import com.genciptv.player.data.model.Program
 import com.genciptv.player.data.model.SubtitleStyle
@@ -172,11 +174,21 @@ fun PlayerScreen(
     //   "progressive_ts_variant"   → tried both above; tried progressive on .ts URL
     //   "exhausted"                → no further fallbacks possible
     var fallbackForUrl by remember { mutableStateOf<String?>(null) }
+    /**
+     * Mirrors the player's buffering state. ExoPlayer is not observable by
+     * Compose, so reading `exoPlayer.playbackState` inline would only be
+     * re-evaluated when some unrelated recomposition happened to occur.
+     */
+    var isBuffering by remember { mutableStateOf(false) }
     var fallbackStage by remember { mutableStateOf<String?>(null) }
     val dataSourceFactory = remember(userAgent) { buildIptvDataSourceFactory(userAgent) }
 
     DisposableEffect(exoPlayer) {
         val listener = object : Player.Listener {
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                isBuffering = playbackState == Player.STATE_BUFFERING
+            }
+
             override fun onPlayerError(error: PlaybackException) {
                 val url = state.channel?.streamUrl
                 val isParseError = error.errorCode == PlaybackException.ERROR_CODE_PARSING_MANIFEST_MALFORMED ||
@@ -227,6 +239,8 @@ fun PlayerScreen(
                 }
             }
         }
+        // Seed it: buffering may already be under way by the time we attach.
+        isBuffering = exoPlayer.playbackState == Player.STATE_BUFFERING
         exoPlayer.addListener(listener)
         onDispose { exoPlayer.removeListener(listener) }
     }
@@ -267,6 +281,7 @@ fun PlayerScreen(
             state = state,
             exoPlayer = exoPlayer,
             playbackError = playbackError,
+            isBuffering = isBuffering,
             subtitleStyle = subtitleStyle,
             onBack = onBack,
             onToggleFavorite = viewModel::toggleFavorite,
@@ -283,6 +298,8 @@ fun PlayerContent(
     state: PlayerUiState,
     exoPlayer: ExoPlayer,
     playbackError: String? = null,
+    /** Player is buffering; mirrored from the listener in [PlayerScreen]. */
+    isBuffering: Boolean = false,
     subtitleStyle: SubtitleStyle = SubtitleStyle.Default,
     onBack: () -> Unit,
     onToggleFavorite: () -> Unit,
@@ -293,10 +310,18 @@ fun PlayerContent(
     val configuration = LocalConfiguration.current
     val isInPipMode by PipController.isInPipMode.collectAsState()
 
-    // Tablet landscape gets the side-by-side master-detail layout; everything
-    // else keeps the stacked video-over-panel layout.
+    // Two different questions, deliberately answered by two different values:
+    //
+    //  - isTabletDevice asks about the *hardware*, and drives whether rotating
+    //    the device should force fullscreen. That has to stay device-based:
+    //    a tablet shouldn't start auto-fullscreening just because the user
+    //    dragged it into a split-screen pane.
+    //  - hasRoomForSidePanel asks about the *window*, and drives the layout.
+    //    The master-detail branch hands a fixed width to the side panel, which
+    //    leaves the video almost nothing in a narrow split-screen pane.
     val isTabletDevice = configuration.smallestScreenWidthDp >= 600
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val hasRoomForSidePanel = isTabletDevice && WindowSize.isExpanded
 
     var isFullscreen by remember { mutableStateOf(false) }
     var controlsVisible by remember { mutableStateOf(true) }
@@ -315,7 +340,18 @@ fun PlayerContent(
     fun enterFullscreen() {
         isFullscreen = true
         val activity = context as? ComponentActivity ?: return
-        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+        // Pin the orientation only when the request came from portrait on a
+        // phone — that means the fullscreen button, and the user wants
+        // landscape however they are holding it. When we are already landscape
+        // the device put us here, so leave the orientation free; pinning it
+        // would make turning back to portrait unable to exit. Tablets are
+        // excluded outright: a 10" screen held upright still gives the video
+        // plenty of width, so spinning the whole UI under a propped-up or
+        // docked tablet is a worse answer than simply going fullscreen where
+        // it is.
+        if (!isLandscape && !isTabletDevice) {
+            activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+        }
         val window = activity.window
         WindowCompat.setDecorFitsSystemWindows(window, false)
         WindowInsetsControllerCompat(window, window.decorView).apply {
@@ -326,20 +362,36 @@ fun PlayerContent(
 
     fun exitFullscreen() {
         isFullscreen = false
-        val activity = context as? ComponentActivity ?: return
-        // Tablets follow the sensor so the side-by-side landscape layout stays
-        // reachable after exiting fullscreen; phones snap back to portrait.
-        activity.requestedOrientation = if (isTabletDevice) {
-            ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-        } else {
-            ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-        }
-        val window = activity.window
-        WindowCompat.setDecorFitsSystemWindows(window, true)
-        WindowInsetsControllerCompat(window, window.decorView).show(WindowInsetsCompat.Type.systemBars())
+        // Hand the orientation back to the device rather than pinning portrait.
+        // Pinning is what stopped rotation from ever reaching us again, so the
+        // screen could only be turned once.
+        (context as? ComponentActivity)?.restoreUserOrientation()
     }
 
-    val handleBack: () -> Unit = { if (isFullscreen) exitFullscreen() else onBack() }
+    // Turning the phone is the natural way to ask for fullscreen, so follow it.
+    // Phones only: on tablets landscape means the side-by-side layout, not
+    // fullscreen. With auto-rotate switched off the system never reports a
+    // landscape configuration, so this stays dormant — exactly the behaviour
+    // wanted there, with the button still available.
+    LaunchedEffect(isLandscape) {
+        if (isTabletDevice) return@LaunchedEffect
+        if (isLandscape) enterFullscreen() else exitFullscreen()
+    }
+
+    // Leaving the player by any route — in-app back, system back gesture,
+    // navigating elsewhere — has to undo what enterFullscreen() did. Doing it
+    // here rather than in the back handler is what covers the system gesture,
+    // which never runs our own back code.
+    DisposableEffect(Unit) {
+        onDispose {
+            (context as? ComponentActivity)?.restoreUserOrientation()
+        }
+    }
+
+    // Back always leaves the screen. Fullscreen is a display mode, not a step
+    // in the navigation history — treating it as one made the user press back
+    // twice to get out of the player.
+    val handleBack: () -> Unit = onBack
     val handleToggleFullscreen: () -> Unit = { if (isFullscreen) exitFullscreen() else enterFullscreen() }
     val handleTap: () -> Unit = {
         controlsVisible = !controlsVisible
@@ -348,14 +400,6 @@ fun PlayerContent(
     val handlePlayPause: () -> Unit = {
         isPlaying = !isPlaying
         if (isPlaying) exoPlayer.play() else exoPlayer.pause()
-        inactivityTick++
-    }
-    val handlePrev: () -> Unit = {
-        state.upcomingOtherChannels.lastOrNull()?.channel?.id?.let { onSwitchChannel(it) }
-        inactivityTick++
-    }
-    val handleNext: () -> Unit = {
-        state.upcomingOtherChannels.firstOrNull()?.channel?.id?.let { onSwitchChannel(it) }
         inactivityTick++
     }
     val handleVolume: (Float) -> Unit = { v ->
@@ -372,6 +416,7 @@ fun PlayerContent(
                     exoPlayer = exoPlayer,
                     subtitleStyle = subtitleStyle,
                     playbackError = playbackError,
+                    isBuffering = isBuffering,
                     isFullscreen = isFullscreen,
                     controlsVisible = controlsVisible,
                     isInPipMode = isInPipMode,
@@ -380,8 +425,6 @@ fun PlayerContent(
                     onBack = handleBack,
                     onToggleFullscreen = handleToggleFullscreen,
                     onPlayPause = handlePlayPause,
-                    onPrevChannel = handlePrev,
-                    onNextChannel = handleNext,
                     modifier = Modifier.fillMaxSize(),
                 )
             }
@@ -389,13 +432,14 @@ fun PlayerContent(
 
         // Tablet landscape — video on the left, channel/info panel on the right
         // (live-TV master-detail).
-        isTabletDevice && isLandscape -> {
+        hasRoomForSidePanel && isLandscape -> {
             Row(modifier = Modifier.fillMaxSize().background(Color.Black)) {
                 PlayerVideoArea(
                     state = state,
                     exoPlayer = exoPlayer,
                     subtitleStyle = subtitleStyle,
                     playbackError = playbackError,
+                    isBuffering = isBuffering,
                     isFullscreen = isFullscreen,
                     controlsVisible = controlsVisible,
                     isInPipMode = isInPipMode,
@@ -404,8 +448,6 @@ fun PlayerContent(
                     onBack = handleBack,
                     onToggleFullscreen = handleToggleFullscreen,
                     onPlayPause = handlePlayPause,
-                    onPrevChannel = handlePrev,
-                    onNextChannel = handleNext,
                     modifier = Modifier.weight(1f).fillMaxHeight(),
                 )
                 VerticalDivider(thickness = 1.dp, color = Line)
@@ -430,6 +472,7 @@ fun PlayerContent(
                     exoPlayer = exoPlayer,
                     subtitleStyle = subtitleStyle,
                     playbackError = playbackError,
+                    isBuffering = isBuffering,
                     isFullscreen = isFullscreen,
                     controlsVisible = controlsVisible,
                     isInPipMode = isInPipMode,
@@ -438,8 +481,6 @@ fun PlayerContent(
                     onBack = handleBack,
                     onToggleFullscreen = handleToggleFullscreen,
                     onPlayPause = handlePlayPause,
-                    onPrevChannel = handlePrev,
-                    onNextChannel = handleNext,
                     modifier = Modifier.fillMaxWidth().weight(2f),
                 )
                 PlayerInfoPanel(
@@ -465,6 +506,7 @@ private fun PlayerVideoArea(
     exoPlayer: ExoPlayer,
     subtitleStyle: SubtitleStyle,
     playbackError: String?,
+    isBuffering: Boolean,
     isFullscreen: Boolean,
     controlsVisible: Boolean,
     isInPipMode: Boolean,
@@ -473,8 +515,6 @@ private fun PlayerVideoArea(
     onBack: () -> Unit,
     onToggleFullscreen: () -> Unit,
     onPlayPause: () -> Unit,
-    onPrevChannel: () -> Unit,
-    onNextChannel: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     VideoAreaBox(
@@ -494,6 +534,16 @@ private fun PlayerVideoArea(
             modifier = Modifier.fillMaxSize(),
         )
 
+        // Live streams stall often — without this the picture just freezes
+        // with no sign the app is still working.
+        if (isBuffering && playbackError == null && !isInPipMode) {
+            CircularProgressIndicator(
+                color = Color.White,
+                strokeWidth = 1.5.dp,
+                modifier = Modifier.size(32.dp).align(Alignment.Center),
+            )
+        }
+
         if (playbackError != null) {
             ErrorOverlay(
                 errorCode = playbackError,
@@ -511,8 +561,6 @@ private fun PlayerVideoArea(
                 onBack = onBack,
                 onToggleFullscreen = onToggleFullscreen,
                 onPlayPause = onPlayPause,
-                onPrevChannel = onPrevChannel,
-                onNextChannel = onNextChannel,
             )
         }
     }
@@ -708,7 +756,7 @@ private fun VideoAreaBox(
     isFullscreen: Boolean,
     onTap: () -> Unit,
     modifier: Modifier = Modifier,
-    content: @Composable () -> Unit,
+    content: @Composable BoxScope.() -> Unit,
 ) {
     Box(
         modifier = modifier
@@ -732,8 +780,6 @@ private fun PlayerOverlay(
     onBack: () -> Unit,
     onToggleFullscreen: () -> Unit,
     onPlayPause: () -> Unit,
-    onPrevChannel: () -> Unit,
-    onNextChannel: () -> Unit,
 ) {
     AnimatedVisibility(
         visible = visible,
@@ -809,43 +855,22 @@ private fun PlayerOverlay(
                 }
             }
 
-            // Center controls
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(28.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.align(Alignment.Center),
+            // Live streams keep only play/pause; seeking belongs to the VOD player.
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(60.dp)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.14f))
+                    .clickable(onClick = onPlayPause),
             ) {
-                CenterCtrlButton(onClick = onPrevChannel) {
-                    Icon(
-                        imageVector = Icons.Default.Replay10,
-                        contentDescription = "Önceki kanal",
-                        tint = Color.White,
-                        modifier = Modifier.size(22.dp),
-                    )
-                }
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .size(60.dp)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.14f))
-                        .clickable(onClick = onPlayPause),
-                ) {
-                    Icon(
-                        imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                        contentDescription = if (isPlaying) "Duraklat" else "Oynat",
-                        tint = Color.White,
-                        modifier = Modifier.size(26.dp),
-                    )
-                }
-                CenterCtrlButton(onClick = onNextChannel) {
-                    Icon(
-                        imageVector = Icons.Default.Forward10,
-                        contentDescription = "Sonraki kanal",
-                        tint = Color.White,
-                        modifier = Modifier.size(22.dp),
-                    )
-                }
+                Icon(
+                    imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                    contentDescription = if (isPlaying) "Duraklat" else "Oynat",
+                    tint = Color.White,
+                    modifier = Modifier.size(26.dp),
+                )
             }
 
             // Bottom: thin live progress bar (current EPG program)
@@ -884,23 +909,6 @@ private fun GlassIconButton(
             .size(36.dp)
             .clip(CircleShape)
             .background(Color.Black.copy(alpha = 0.40f))
-            .clickable(onClick = onClick),
-    ) {
-        content()
-    }
-}
-
-@Composable
-private fun CenterCtrlButton(
-    onClick: () -> Unit,
-    content: @Composable () -> Unit,
-) {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .size(44.dp)
-            .clip(CircleShape)
-            .background(Color.White.copy(alpha = 0.08f))
             .clickable(onClick = onClick),
     ) {
         content()

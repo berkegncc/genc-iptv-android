@@ -26,6 +26,14 @@ data class VodEntity(
     val director: String? = null,
     val durationSecs: Int? = null,
     val categoryId: String? = null,
+    /**
+     * Provider's `added` timestamp in epoch millis (0 = unknown). Sorting
+     * "newest first" on [id] is wrong — it is TEXT, so SQLite compares it
+     * lexicographically ("999" > "3500") and the row freezes.
+     */
+    val addedAt: Long = 0L,
+    /** Numeric Xtream stream id — tiebreaker when [addedAt] is unknown. */
+    val providerId: Long = 0L,
 )
 
 @Entity(
@@ -44,6 +52,10 @@ data class SeriesEntity(
     val genres: List<String> = emptyList(),
     val cast: List<String> = emptyList(),
     val categoryId: String? = null,
+    /** Provider's `last_modified` timestamp in epoch millis (0 = unknown). */
+    val addedAt: Long = 0L,
+    /** Numeric Xtream series id — tiebreaker when [addedAt] is unknown. */
+    val providerId: Long = 0L,
 )
 
 @Entity(

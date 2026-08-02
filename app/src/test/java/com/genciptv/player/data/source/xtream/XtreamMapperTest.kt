@@ -5,8 +5,10 @@ import com.genciptv.player.data.model.PlaylistType
 import com.genciptv.player.data.source.xtream.dto.XtreamAuthResponse
 import com.genciptv.player.data.source.xtream.dto.XtreamEpgEntryDto
 import com.genciptv.player.data.source.xtream.dto.XtreamLiveStreamDto
+import com.genciptv.player.data.source.xtream.dto.XtreamSeriesDto
 import com.genciptv.player.data.source.xtream.dto.XtreamServerInfoDto
 import com.genciptv.player.data.source.xtream.dto.XtreamUserInfoDto
+import com.genciptv.player.data.source.xtream.dto.XtreamVodDto
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.JsonElement
 import org.junit.Assert.assertEquals
@@ -152,20 +154,62 @@ class XtreamMapperTest {
         assertNull(XtreamMapper.toChannel(dto, bad, 0))
     }
 
+    // ── VOD / series ordering keys ────────────────────────────────────────────
+
+    @Test
+    fun `toVodItem carries added timestamp and numeric stream id`() {
+        val dto = XtreamVodDto(
+            name = "Ayla",
+            streamId = 3500,
+            added = "1615478400",
+        )
+        val movie = XtreamMapper.toVodItem(dto, testPlaylist)
+        assertNotNull(movie)
+        assertEquals(1615478400L * 1000L, movie!!.addedAt)
+        assertEquals(3500L, movie.providerId)
+    }
+
+    @Test
+    fun `toSeries carries last_modified and numeric series id`() {
+        val dto = XtreamSeriesDto(
+            name = "Behzat Ç.",
+            seriesId = 3500,
+            lastModified = "1700000000",
+        )
+        val series = XtreamMapper.toSeries(dto, testPlaylist)
+        assertEquals(1700000000L * 1000L, series.addedAt)
+        assertEquals(3500L, series.providerId)
+    }
+
+    /**
+     * The bug this guards: ids are stored as TEXT, so ordering on them sorts
+     * "999" above "3500". providerId is numeric, so a newer (higher) id must
+     * compare greater no matter how many digits it has.
+     */
+    @Test
+    fun `providerId orders numerically not lexicographically`() {
+        val older = XtreamMapper.toSeries(XtreamSeriesDto(name = "Eski", seriesId = 999), testPlaylist)
+        val newer = XtreamMapper.toSeries(XtreamSeriesDto(name = "Yeni", seriesId = 3500), testPlaylist)
+        assertTrue(newer.providerId > older.providerId)
+        // …while the raw id string compares the other way round.
+        assertTrue(newer.id < older.id)
+    }
+
+    @Test
+    fun `parseAddedMillis handles seconds, millis, dates and junk`() {
+        assertEquals(1615478400L * 1000L, XtreamMapper.parseAddedMillis("1615478400"))
+        assertEquals(1615478400000L, XtreamMapper.parseAddedMillis("1615478400000"))
+        assertEquals(1699477475000L, XtreamMapper.parseAddedMillis("2023-11-08 21:04:35"))
+        assertEquals(1699401600000L, XtreamMapper.parseAddedMillis("2023-11-08"))
+        assertEquals(0L, XtreamMapper.parseAddedMillis(null))
+        assertEquals(0L, XtreamMapper.parseAddedMillis(""))
+        assertEquals(0L, XtreamMapper.parseAddedMillis("0"))
+        assertEquals(0L, XtreamMapper.parseAddedMillis("n/a"))
+    }
+
     // ── Base64 decoding for short EPG ─────────────────────────────────────────
 
-    @Test
-    fun `decodeBase64Jvm decodes a base64 title`() {
-        val plain = "Şampiyonlar Ligi"
-        val encoded = Base64.getEncoder().encodeToString(plain.toByteArray(Charsets.UTF_8))
-        assertEquals(plain, XtreamMapper.decodeBase64Jvm(encoded))
-    }
 
-    @Test
-    fun `decodeBase64Jvm returns null for blank`() {
-        assertNull(XtreamMapper.decodeBase64Jvm(null))
-        assertNull(XtreamMapper.decodeBase64Jvm(""))
-    }
 
     @Test
     fun `toProgram parses EPG entry with base64 fields`() {
@@ -181,7 +225,7 @@ class XtreamMapperTest {
             startTimestamp = "1800000000",
             stopTimestamp = "1800003600",
         )
-        val program = XtreamMapper.toProgram(dto, playlistId = 42L, useAndroidBase64 = false)
+        val program = XtreamMapper.toProgram(dto, playlistId = 42L, decode = ::jvmDecode)
         assertNotNull(program)
         program!!
         assertEquals("Ana Haber", program.title)
@@ -198,7 +242,7 @@ class XtreamMapperTest {
             startTimestamp = null,
             stopTimestamp = null,
         )
-        assertNull(XtreamMapper.toProgram(dto, playlistId = 1L, useAndroidBase64 = false))
+        assertNull(XtreamMapper.toProgram(dto, playlistId = 1L, decode = ::jvmDecode))
     }
 
     // ── JSON helpers ──────────────────────────────────────────────────────────
@@ -209,5 +253,17 @@ class XtreamMapperTest {
         assertEquals(7.0, XtreamMapper.jsonElementToDoubleOrNull(JsonPrimitive("7.0")))
         assertNull(XtreamMapper.jsonElementToDoubleOrNull(JsonPrimitive("not a num")))
         assertNull(XtreamMapper.jsonElementToDoubleOrNull(null))
+    }
+
+    /**
+     * Stand-in for android.util.Base64, which returns 0 under the unit-test
+     * stubs. Lives here rather than in the mapper: java.util.Base64 needs API
+     * 26 and the app's minSdk is 24, so it has no business in production code.
+     */
+    private fun jvmDecode(text: String?): String? {
+        if (text.isNullOrBlank()) return null
+        return runCatching {
+            String(Base64.getDecoder().decode(text.trim()), Charsets.UTF_8)
+        }.getOrNull()
     }
 }

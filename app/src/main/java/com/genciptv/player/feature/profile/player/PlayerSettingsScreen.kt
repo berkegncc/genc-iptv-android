@@ -21,6 +21,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Dns
+import androidx.compose.material.icons.outlined.GraphicEq
+import androidx.compose.material.icons.outlined.HighQuality
+import androidx.compose.material.icons.outlined.Language
+import androidx.compose.material.icons.outlined.Memory
+import androidx.compose.material.icons.outlined.PictureInPictureAlt
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -154,16 +160,14 @@ fun PlayerSettingsContent(
             Spacer(Modifier.height(8.dp))
             SettingGroupCard {
                 SettingRow(
-                    icon = "🎥",
-                    iconBgColor = accent.soft,
+                    icon = Icons.Outlined.HighQuality,
                     label = "Varsayılan Kalite",
                     subtitle = player.defaultQuality.label(),
                     onClick = { showQualitySheet = true },
                 )
                 SettingRowDivider()
                 SettingRow(
-                    icon = "🧩",
-                    iconBgColor = IcBlueSoft,
+                    icon = Icons.Outlined.Memory,
                     label = "Decoder Tercihi",
                     subtitle = player.decoderPref.label(),
                     onClick = { showDecoderSheet = true },
@@ -175,16 +179,14 @@ fun PlayerSettingsContent(
             Spacer(Modifier.height(8.dp))
             SettingGroupCard {
                 SettingRow(
-                    icon = "🔊",
-                    iconBgColor = OrangeSoft,
+                    icon = Icons.Outlined.Language,
                     label = "Tercih Edilen Audio Dili",
                     subtitle = player.preferredAudioLang ?: "Yok",
                     onClick = { showAudioLangDialog = true },
                 )
                 SettingRowDivider()
                 SettingRow(
-                    icon = "🔊",
-                    iconBgColor = OrangeSoft,
+                    icon = Icons.Outlined.GraphicEq,
                     label = "Ses Normalleştirme",
                     trailing = {
                         GencToggle(
@@ -200,8 +202,7 @@ fun PlayerSettingsContent(
             Spacer(Modifier.height(8.dp))
             SettingGroupCard {
                 SettingRow(
-                    icon = "🌐",
-                    iconBgColor = IcBlueSoft,
+                    icon = Icons.Outlined.Dns,
                     label = "User-Agent Override",
                     subtitle = player.userAgent ?: "Varsayılan",
                     onClick = { showUserAgentDialog = true },
@@ -213,8 +214,7 @@ fun PlayerSettingsContent(
             Spacer(Modifier.height(8.dp))
             SettingGroupCard {
                 SettingRow(
-                    icon = "📺",
-                    iconBgColor = accent.soft,
+                    icon = Icons.Outlined.PictureInPictureAlt,
                     label = "Resim İçinde Resim",
                     trailing = {
                         GencToggle(

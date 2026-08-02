@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.genciptv.player.core.designsystem.GencIptvTheme
 import com.genciptv.player.core.designsystem.LocalAccentPalette
+import com.genciptv.player.core.designsystem.TextPrimary
 import com.genciptv.player.core.designsystem.TextSecondary
 
 /**
@@ -43,9 +44,13 @@ fun EmptyState(
     ) {
         Text(text = icon, fontSize = 48.sp)
         Spacer(Modifier.height(16.dp))
+        // Colour comes from the design system, like the description below it.
+        // Left to Material's default this resolved to a near-black that was
+        // invisible against the dark theme's background — the empty state read
+        // as a stray paragraph with its headline missing.
         Text(
             text = title,
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.titleMedium.copy(color = TextPrimary),
             textAlign = TextAlign.Center
         )
         if (description != null) {

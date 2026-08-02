@@ -143,6 +143,8 @@ fun VodEntity.toDomain(): VodItem = VodItem(
     director = director,
     durationSecs = durationSecs,
     categoryId = categoryId,
+    addedAt = addedAt,
+    providerId = providerId,
 )
 
 fun VodItem.toEntity(): VodEntity = VodEntity(
@@ -161,6 +163,8 @@ fun VodItem.toEntity(): VodEntity = VodEntity(
     director = director,
     durationSecs = durationSecs,
     categoryId = categoryId,
+    addedAt = addedAt,
+    providerId = providerId,
 )
 
 fun SeriesEntity.toDomain(): Series = Series(
@@ -175,6 +179,8 @@ fun SeriesEntity.toDomain(): Series = Series(
     genres = genres,
     cast = cast,
     categoryId = categoryId,
+    addedAt = addedAt,
+    providerId = providerId,
 )
 
 fun Series.toEntity(): SeriesEntity = SeriesEntity(
@@ -189,6 +195,8 @@ fun Series.toEntity(): SeriesEntity = SeriesEntity(
     genres = genres,
     cast = cast,
     categoryId = categoryId,
+    addedAt = addedAt,
+    providerId = providerId,
 )
 
 fun EpisodeEntity.toDomain(): Episode = Episode(

@@ -13,19 +13,34 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
+# ── Release logging ────────────────────────────────────────────────────────────
+# Strip verbose/debug/info logging from release builds. These carry stream URLs,
+# sync counts and diagnostics that are useful while developing and are a data
+# leak in a shipped app — logcat is readable via `adb` and lands in bug reports,
+# and Xtream endpoints embed the subscription username and password.
+#
+# Warnings and errors stay: they are what makes a crash report diagnosable.
+-assumenosideeffects class android.util.Log {
+    public static int v(...);
+    public static int d(...);
+    public static int i(...);
+}
+
 # ── Kotlin ─────────────────────────────────────────────────────────────────────
 -keepattributes *Annotation*, InnerClasses
 -dontnote kotlinx.serialization.AnnotationsKt
 
 # ── kotlinx.serialization ──────────────────────────────────────────────────────
-# Narrowed to the only package that actually hosts @Serializable DTOs — the
-# rest of `com.genciptv.player.**` is now free to shrink/obfuscate normally.
+# Scoped to the `dto` package under every remote source (xtream, tmdb, github)
+# rather than all of `com.genciptv.player.**`, so the rest of the app still
+# shrinks and obfuscates normally. Was xtream-only, which left the tmdb and
+# github DTOs to be stripped in release builds.
 -keepattributes RuntimeVisibleAnnotations, AnnotationDefault
--keep,includedescriptorclasses class com.genciptv.player.data.source.xtream.dto.**$$serializer { *; }
--keepclassmembers class com.genciptv.player.data.source.xtream.dto.** {
+-keep,includedescriptorclasses class com.genciptv.player.data.source.**.dto.**$$serializer { *; }
+-keepclassmembers class com.genciptv.player.data.source.**.dto.** {
     *** Companion;
 }
--keepclasseswithmembers class com.genciptv.player.data.source.xtream.dto.** {
+-keepclasseswithmembers class com.genciptv.player.data.source.**.dto.** {
     kotlinx.serialization.KSerializer serializer(...);
 }
 

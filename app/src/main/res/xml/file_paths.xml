@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  FileProvider surface for the in-app updater. Only the updates folder inside
+  the app cache is shared, so no storage permission is involved and the system
+  can reclaim the APK when space runs low.
+-->
+<paths>
+    <cache-path name="updates" path="updates/" />
+</paths>

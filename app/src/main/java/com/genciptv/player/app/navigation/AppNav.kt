@@ -23,6 +23,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -46,6 +47,7 @@ import com.genciptv.player.feature.profile.subtitle.SubtitleSettingsScreen
 import com.genciptv.player.feature.profile.theme.ThemeSettingsScreen
 import com.genciptv.player.feature.search.SearchScreen
 import com.genciptv.player.feature.syncing.SyncingScreen
+import com.genciptv.player.feature.vod.VOD_KIND_ARG
 import com.genciptv.player.feature.vod.VodDetailScreen
 import com.genciptv.player.feature.vod.VodListScreen
 import com.genciptv.player.feature.vodplayer.VodPlayerScreen
@@ -67,11 +69,18 @@ sealed class AppRoute(val route: String) {
     object ProfileSubtitle : AppRoute("profile/subtitle")
     object ProfileTheme : AppRoute("profile/theme")
 
-    /** VOD list with optional kind query arg: vod?kind=MOVIE or vod?kind=SERIES */
-    object VodList : AppRoute("vod") {
-        const val PATTERN = "vod?kind={kind}"
-        fun route(kind: VodKind = VodKind.MOVIE) = "vod?kind=${kind.name}"
-    }
+    /**
+     * Filmler and Diziler are deliberately two *separate* destinations.
+     *
+     * They used to share one `vod?kind={kind}` destination. Tab switching goes
+     * through [navigateBottomNav], which relies on `popUpTo(saveState)` +
+     * `restoreState` — and Navigation keys saved state by destination id, not
+     * by arguments. So tapping "Diziler" restored the saved "Filmler" entry,
+     * arguments and all, and the user had to tap a second time to actually get
+     * there. Distinct routes give each tab its own saved state and ViewModel.
+     */
+    object Movies : AppRoute("vod/movies")
+    object Series : AppRoute("vod/series")
 
     data class Player(val channelId: String) : AppRoute("player/$channelId") {
         companion object { const val PATTERN = "player/{channelId}" }
@@ -94,10 +103,17 @@ sealed class AppRoute(val route: String) {
 private val navItemRouteMap = mapOf(
     GencNavItem.HOME     to AppRoute.Home.route,
     GencNavItem.CHANNELS to AppRoute.Channels.route,
-    GencNavItem.MOVIES   to AppRoute.VodList.route(com.genciptv.player.data.model.VodKind.MOVIE),
-    GencNavItem.SERIES   to AppRoute.VodList.route(com.genciptv.player.data.model.VodKind.SERIES),
+    GencNavItem.MOVIES   to AppRoute.Movies.route,
+    GencNavItem.SERIES   to AppRoute.Series.route,
     GencNavItem.PROFILE  to AppRoute.Profile.route,
 )
+
+/** The two VOD tabs, for transition decisions. */
+private val VodRoutes = setOf(AppRoute.Movies.route, AppRoute.Series.route)
+
+/** Screens hand us a [VodKind] name; map it to the matching tab route. */
+private fun vodRouteFor(kind: String): String =
+    if (kind == VodKind.SERIES.name) AppRoute.Series.route else AppRoute.Movies.route
 
 private fun routeToNavItem(route: String?): GencNavItem? = navItemRouteMap
     .entries
@@ -231,11 +247,7 @@ private fun GencAppNavHost(startDestination: String) {
                     navController.navigateBottomNav(AppRoute.Profile.route)
                 },
                 onNavigateToVod = { kind ->
-                    navController.navigateBottomNav(
-                        AppRoute.VodList.route(
-                            if (kind == "SERIES") VodKind.SERIES else VodKind.MOVIE
-                        )
-                    )
+                    navController.navigateBottomNav(vodRouteFor(kind))
                 },
                 onNavigateToVodDetail = { id ->
                     navController.navigate("vod/detail/$id")
@@ -273,11 +285,7 @@ private fun GencAppNavHost(startDestination: String) {
                     navController.navigateBottomNav(AppRoute.Home.route)
                 },
                 onNavigateToVod = { kind ->
-                    navController.navigateBottomNav(
-                        AppRoute.VodList.route(
-                            if (kind == "SERIES") VodKind.SERIES else VodKind.MOVIE
-                        )
-                    )
+                    navController.navigateBottomNav(vodRouteFor(kind))
                 },
             )
         }
@@ -304,11 +312,7 @@ private fun GencAppNavHost(startDestination: String) {
                     navController.navigateBottomNav(AppRoute.Profile.route)
                 },
                 onNavigateToVod = { kind ->
-                    navController.navigateBottomNav(
-                        AppRoute.VodList.route(
-                            if (kind == "SERIES") VodKind.SERIES else VodKind.MOVIE
-                        )
-                    )
+                    navController.navigateBottomNav(vodRouteFor(kind))
                 },
             )
         }
@@ -338,11 +342,7 @@ private fun GencAppNavHost(startDestination: String) {
                     navController.navigateBottomNav(AppRoute.Profile.route)
                 },
                 onNavigateToVod = { kind ->
-                    navController.navigateBottomNav(
-                        AppRoute.VodList.route(
-                            if (kind == "SERIES") VodKind.SERIES else VodKind.MOVIE
-                        )
-                    )
+                    navController.navigateBottomNav(vodRouteFor(kind))
                 },
             )
         }
@@ -381,11 +381,7 @@ private fun GencAppNavHost(startDestination: String) {
                     navController.navigate(AppRoute.Favorites.route)
                 },
                 onNavigateToVod = { kind ->
-                    navController.navigateBottomNav(
-                        AppRoute.VodList.route(
-                            if (kind == "SERIES") VodKind.SERIES else VodKind.MOVIE
-                        )
-                    )
+                    navController.navigateBottomNav(vodRouteFor(kind))
                 },
             )
         }
@@ -418,41 +414,9 @@ private fun GencAppNavHost(startDestination: String) {
             )
         }
 
-        // ── VOD List ──────────────────────────────────────────────────────────
-        composable(
-            route = AppRoute.VodList.PATTERN,
-            arguments = listOf(
-                navArgument("kind") {
-                    type = NavType.StringType
-                    defaultValue = VodKind.MOVIE.name
-                }
-            ),
-        ) { backStackEntry ->
-            val kindStr = backStackEntry.arguments?.getString("kind") ?: VodKind.MOVIE.name
-            val kind = runCatching { VodKind.valueOf(kindStr) }.getOrDefault(VodKind.MOVIE)
-            VodListScreen(
-                onBack = { navController.popBackStack() },
-                onNavigateToDetail = { id ->
-                    navController.navigate("vod/detail/$id")
-                },
-                onNavigateToVodPlayer = { vodId ->
-                    navController.navigate("vodplayer/movie/$vodId")
-                },
-                onNavigateToEpisodePlayer = { episodeId ->
-                    navController.navigate("vodplayer/episode/$episodeId")
-                },
-                onNavigateToHome = {
-                    navController.navigateBottomNav(AppRoute.Home.route)
-                },
-                onNavigateToChannels = {
-                    navController.navigateBottomNav(AppRoute.Channels.route)
-                },
-                onNavigateToProfile = {
-                    navController.navigateBottomNav(AppRoute.Profile.route)
-                },
-                initialKind = kind,
-            )
-        }
+        // ── VOD List — one destination per tab ────────────────────────────────
+        vodListDestination(AppRoute.Movies.route, VodKind.MOVIE, navController)
+        vodListDestination(AppRoute.Series.route, VodKind.SERIES, navController)
 
         // ── Player ────────────────────────────────────────────────────────────
         composable(
@@ -506,6 +470,76 @@ private fun GencAppNavHost(startDestination: String) {
         ) {
             VodPlayerScreen(onBack = { navController.popBackStack() })
         }
+    }
+}
+
+// ── VOD tab destination ───────────────────────────────────────────────────────
+
+/**
+ * Registers one of the two VOD tabs. Both render the same screen; the route is
+ * what decides which kind it shows, and the tab row navigates between them so
+ * route and content can't drift apart.
+ */
+private fun NavGraphBuilder.vodListDestination(
+    route: String,
+    kind: VodKind,
+    navController: NavHostController,
+) {
+    composable(
+        route = route,
+        // `kind` isn't in the path — it rides along as a default argument so
+        // VodListViewModel can read it from its SavedStateHandle and be correct
+        // on its very first emission.
+        arguments = listOf(
+            navArgument(VOD_KIND_ARG) {
+                type = NavType.StringType
+                defaultValue = kind.name
+            }
+        ),
+        // Filmler ⇄ Diziler reads as one screen with a tab row, so switching
+        // between them shouldn't cross-fade; only animate arrivals from
+        // elsewhere.
+        enterTransition = {
+            if (initialState.destination.route in VodRoutes) EnterTransition.None
+            else DefaultEnterTransition(this)
+        },
+        exitTransition = {
+            if (targetState.destination.route in VodRoutes) ExitTransition.None
+            else DefaultExitTransition(this)
+        },
+        popEnterTransition = {
+            if (initialState.destination.route in VodRoutes) EnterTransition.None
+            else DefaultEnterTransition(this)
+        },
+        popExitTransition = {
+            if (targetState.destination.route in VodRoutes) ExitTransition.None
+            else DefaultExitTransition(this)
+        },
+    ) {
+        VodListScreen(
+            onBack = { navController.popBackStack() },
+            onNavigateToDetail = { id ->
+                navController.navigate("vod/detail/$id")
+            },
+            onNavigateToVodPlayer = { vodId ->
+                navController.navigate("vodplayer/movie/$vodId")
+            },
+            onNavigateToEpisodePlayer = { episodeId ->
+                navController.navigate("vodplayer/episode/$episodeId")
+            },
+            onNavigateToHome = {
+                navController.navigateBottomNav(AppRoute.Home.route)
+            },
+            onNavigateToChannels = {
+                navController.navigateBottomNav(AppRoute.Channels.route)
+            },
+            onNavigateToProfile = {
+                navController.navigateBottomNav(AppRoute.Profile.route)
+            },
+            onSelectKind = { selected ->
+                navController.navigateBottomNav(vodRouteFor(selected.name))
+            },
+        )
     }
 }
 

@@ -100,20 +100,82 @@ Terminal üzerinden:
 
 #### TMDB API anahtarı (opsiyonel)
 
-Genç IPTV temel kullanım için TMDB'siz çalışır — Xtream sağlayıcı kendi
-poster'ları ve metadata'sını döner. Ancak:
+Genç IPTV temel kullanım için TMDB'siz çalışır. Afişlerin, bölüm karelerinin
+ve arka planların neredeyse tamamı zaten Xtream sağlayıcıdan geliyor —
+TMDB yalnızca iki şey için kullanılıyor:
 
-- Xtream'in **dönmediği** posterler için TMDB fallback aktif
-- Film ve dizi detay sayfasındaki **oyuncu kadrosu** TMDB'den çekiliyor
+- **Oyuncu fotoğrafları** (film ve dizi detay sayfasındaki kadro)
+- Sağlayıcının **afiş vermediği** içerikler için yedek afiş
 
-Bu özellikleri istiyorsan:
-1. https://www.themoviedb.org/settings/api adresinden ücretsiz API key al
-2. `local.properties.example` dosyasını `local.properties` olarak kopyala
-3. `TMDB_API_KEY=...` satırına anahtarını ekle
-4. Projeyi yeniden derle
+**Yayınlanan APK'lar anahtar içermez.** Anahtarı APK'ya gömmek, indiren
+herkesin onu çıkarabilmesi ve tüm kurulumların tek bir kotayı paylaşması
+demek olurdu. Bu yüzden bu iki özellik isteğe bağlıdır ve kendi anahtarınızla
+çalışır:
 
-Anahtar yoksa uygulama bu özellikleri sessizce atlar — temel oynatma
-fonksiyonları etkilenmez.
+1. https://www.themoviedb.org/settings/api adresinden ücretsiz anahtar alın
+2. Uygulamada **Profil → Hakkında → TMDB API Anahtarı**
+3. Anahtarı yapıştırıp kaydedin
+
+Anahtar yalnızca cihazda saklanır, hiçbir yere gönderilmez. "Kaldır" ile
+silebilirsiniz; sildiğinizde bu iki özellik kapanır, gerisi normal çalışır.
+
+> Kaynaktan derleyenler için: `local.properties` içine `TMDB_API_KEY=...`
+> yazılırsa derlemeye gömülür ve uygulama içi ayara gerek kalmaz. Bu dosya
+> gitignore'da — **anahtarınızı asla commit etmeyin.** Uygulama içi ayar
+> her zaman derlemedeki anahtarın önüne geçer.
+
+---
+
+## Release yayınlama
+
+Yayın elle yapılıyor. Sürüm numaralarını doğru ayarlamak kritik: uygulama içi
+güncelleme sistemi bunlara bakıyor, yanlış olursa kullanıcılar güncellemeyi ya
+hiç göremez ya da kuramaz.
+
+### 1. Sürümü ayarla
+
+`app/build.gradle.kts` → `defaultConfig`:
+
+- **`versionCode`** — her yayında bir artır. Android güncelleme kararını buna
+  göre verir; artırmazsan kurulum `INSTALL_FAILED_VERSION_DOWNGRADE` ile
+  reddedilir.
+- **`versionName`** — üç haneli semver (`1.3.0`). Git etiketi bunun başına `v`
+  eklenmiş hali olmalı: `v1.3.0`.
+
+### 2. İmzalı APK üret
+
+```bash
+./gradlew :app:assembleRelease
+```
+
+Çıktı: `app/build/outputs/apk/release/app-release.apk`
+
+İmzanın doğru anahtarla atıldığını doğrulamak istersen:
+
+```bash
+apksigner verify --print-certs app/build/outputs/apk/release/app-release.apk
+```
+
+`CN=Genc IPTV` görmelisin. `CN=Android Debug` görüyorsan APK'yı **yayınlama** —
+mevcut kullanıcıların hiçbirine kurulmaz. (Derleme bu duruma düşerse zaten
+hata verip duracak, ama kontrol etmek zarar vermez.)
+
+### 3. GitHub Release oluştur
+
+`Releases → Draft a new release` → yeni tag olarak `v1.3.0` gir → APK'yı asset
+olarak yükle → yayınla.
+
+Uygulama içi güncelleme sistemi `latest` release'i okuyor ve **ilk `.apk`
+uzantılı asset'i** indiriyor. Ön sürüm (pre-release) işaretlenen release'ler
+atlanır.
+
+### Dikkat
+
+- **Keystore asla değişmemeli.** `genciptv-release.jks` kaybolursa veya
+  değişirse tüm kullanıcılar uygulamayı kaldırıp yeniden kurmak ve verilerini
+  kaybetmek zorunda kalır.
+- **Veritabanı şeması değiştiyse migration yaz.** Ayrıntı için
+  [CLAUDE.md](CLAUDE.md).
 
 ---
 

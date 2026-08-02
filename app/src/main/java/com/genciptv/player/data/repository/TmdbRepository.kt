@@ -3,7 +3,9 @@ package com.genciptv.player.data.repository
 import android.util.Log
 import com.genciptv.player.BuildConfig
 import com.genciptv.player.data.model.CastMember
+import com.genciptv.player.data.source.local.prefs.UserPreferencesDataSource
 import com.genciptv.player.data.source.tmdb.TmdbApi
+import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -36,9 +38,25 @@ interface TmdbRepository {
 @Singleton
 class TmdbRepositoryImpl @Inject constructor(
     private val api: TmdbApi,
+    private val userPrefs: UserPreferencesDataSource,
 ) : TmdbRepository {
 
-    private val apiKey: String = BuildConfig.TMDB_API_KEY
+    /**
+     * The key to use: whichever one the user pasted into Settings, falling back
+     * to a key compiled in via BuildConfig.
+     *
+     * Published builds are compiled without one — the repository must never
+     * carry a key, and shipping the maintainer's would put everyone's requests
+     * on a single quota. So for anyone but the developer this resolves to their
+     * own key, or to blank, in which case every TMDb feature stays off and the
+     * app falls back to what the IPTV provider supplies.
+     *
+     * Read per call rather than cached, so pasting a key takes effect at once.
+     */
+    private suspend fun resolveApiKey(): String {
+        val userKey = runCatching { userPrefs.flow.first().tmdbApiKey }.getOrDefault("")
+        return userKey.ifBlank { BuildConfig.TMDB_API_KEY }.trim()
+    }
 
     override suspend fun fetchMovieCast(title: String, year: Int?): List<CastMember> =
         fetchCastInternal(title, year, isSeries = false)
@@ -63,6 +81,7 @@ class TmdbRepositoryImpl @Inject constructor(
         year: Int?,
         isSeries: Boolean,
     ): String? {
+        val apiKey = resolveApiKey()
         if (apiKey.isBlank()) return null
         if (title.isBlank()) return null
 
@@ -99,8 +118,9 @@ class TmdbRepositoryImpl @Inject constructor(
         year: Int?,
         isSeries: Boolean,
     ): List<CastMember> {
+        val apiKey = resolveApiKey()
         if (apiKey.isBlank()) {
-            Log.w(TAG, "TMDB_API_KEY is empty — skipping cast fetch")
+            Log.i(TAG, "No TMDb key set — skipping cast fetch")
             return emptyList()
         }
         if (title.isBlank()) return emptyList()

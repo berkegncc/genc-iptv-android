@@ -24,6 +24,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.BorderColor
+import androidx.compose.material.icons.outlined.BorderStyle
+import androidx.compose.material.icons.outlined.Crop169
+import androidx.compose.material.icons.outlined.FontDownload
+import androidx.compose.material.icons.outlined.FormatBold
+import androidx.compose.material.icons.outlined.FormatColorFill
+import androidx.compose.material.icons.outlined.FormatSize
+import androidx.compose.material.icons.outlined.Opacity
+import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.VerticalAlignBottom
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -225,24 +235,21 @@ fun SubtitleSettingsContent(
             Spacer(Modifier.height(8.dp))
             SettingGroupCard {
                 SettingRow(
-                    icon = "🔤",
-                    iconBgColor = accent.soft,
+                    icon = Icons.Outlined.FontDownload,
                     label = "Font Ailesi",
                     subtitle = style.fontFamily.label(),
                     onClick = { showFontFamilySheet = true },
                 )
                 SettingRowDivider()
                 SettingRow(
-                    icon = "🅱",
-                    iconBgColor = IcBlueSoft,
+                    icon = Icons.Outlined.FormatBold,
                     label = "Font Stili",
                     subtitle = style.fontStyle.label(),
                     onClick = { showFontStyleSheet = true },
                 )
                 SettingRowDivider()
                 SettingRow(
-                    icon = "📏",
-                    iconBgColor = OrangeSoft,
+                    icon = Icons.Outlined.FormatSize,
                     label = "Metin Boyutu",
                     subtitle = "${style.textSizePercent}%",
                     trailing = {},
@@ -267,8 +274,7 @@ fun SubtitleSettingsContent(
             Spacer(Modifier.height(8.dp))
             SettingGroupCard {
                 SettingRow(
-                    icon = "🎨",
-                    iconBgColor = accent.soft,
+                    icon = Icons.Outlined.Palette,
                     label = "Metin Rengi",
                     trailing = {
                         ColorSwatch(color = style.textColor.toComposeColor(), onClick = { showTextColorPicker = true })
@@ -276,8 +282,7 @@ fun SubtitleSettingsContent(
                 )
                 SettingRowDivider()
                 SettingRow(
-                    icon = "🔲",
-                    iconBgColor = IcBlueSoft,
+                    icon = Icons.Outlined.Opacity,
                     label = "Metin Opaklığı",
                     subtitle = "${style.textColor.alphaPercent()}%",
                     trailing = {},
@@ -297,8 +302,7 @@ fun SubtitleSettingsContent(
                 }
                 SettingRowDivider()
                 SettingRow(
-                    icon = "🎨",
-                    iconBgColor = OrangeSoft,
+                    icon = Icons.Outlined.FormatColorFill,
                     label = "Arka Plan Rengi",
                     trailing = {
                         ColorSwatch(color = style.backgroundColor.toComposeColor(), onClick = { showBgColorPicker = true })
@@ -306,8 +310,7 @@ fun SubtitleSettingsContent(
                 )
                 SettingRowDivider()
                 SettingRow(
-                    icon = "🔲",
-                    iconBgColor = IcBlueSoft,
+                    icon = Icons.Outlined.Opacity,
                     label = "Arka Plan Opaklığı",
                     subtitle = "${style.backgroundColor.alphaPercent()}%",
                     trailing = {},
@@ -327,8 +330,7 @@ fun SubtitleSettingsContent(
                 }
                 SettingRowDivider()
                 SettingRow(
-                    icon = "🪟",
-                    iconBgColor = accent.soft,
+                    icon = Icons.Outlined.Crop169,
                     label = "Pencere Rengi",
                     trailing = {
                         ColorSwatch(color = style.windowColor.toComposeColor(), onClick = { showWindowColorPicker = true })
@@ -336,8 +338,7 @@ fun SubtitleSettingsContent(
                 )
                 SettingRowDivider()
                 SettingRow(
-                    icon = "🪟",
-                    iconBgColor = IcBlueSoft,
+                    icon = Icons.Outlined.Opacity,
                     label = "Pencere Opaklığı",
                     subtitle = "${style.windowColor.alphaPercent()}%",
                     trailing = {},
@@ -364,16 +365,14 @@ fun SubtitleSettingsContent(
             Spacer(Modifier.height(8.dp))
             SettingGroupCard {
                 SettingRow(
-                    icon = "🔲",
-                    iconBgColor = accent.soft,
+                    icon = Icons.Outlined.BorderStyle,
                     label = "Kenar Tipi",
                     subtitle = style.edgeType.label(),
                     onClick = { showEdgeTypeSheet = true },
                 )
                 SettingRowDivider()
                 SettingRow(
-                    icon = "🎨",
-                    iconBgColor = IcBlueSoft,
+                    icon = Icons.Outlined.BorderColor,
                     label = "Kenar Rengi",
                     trailing = {
                         ColorSwatch(
@@ -392,8 +391,7 @@ fun SubtitleSettingsContent(
             Spacer(Modifier.height(8.dp))
             SettingGroupCard {
                 SettingRow(
-                    icon = "📍",
-                    iconBgColor = accent.soft,
+                    icon = Icons.Outlined.VerticalAlignBottom,
                     label = "Dikey Konum",
                     subtitle = style.verticalPosition.label(),
                     onClick = { showVerticalPosSheet = true },

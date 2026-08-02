@@ -8,40 +8,42 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.genciptv.player.core.designsystem.GeistMonoFamily
 import com.genciptv.player.core.designsystem.GencIptvTheme
+import com.genciptv.player.core.designsystem.InstrumentSerifFamily
 import com.genciptv.player.core.designsystem.LocalAccentPalette
-import com.genciptv.player.core.designsystem.OutfitFamily
+import com.genciptv.player.core.designsystem.TextPrimary
+import com.genciptv.player.core.designsystem.TextTertiary
 
-private val CardRadius   = RoundedCornerShape(16.dp)
-private val AvatarRadius = CircleShape
-private val PlanRadius   = RoundedCornerShape(20.dp)
+private val CardRadius = RoundedCornerShape(16.dp)
 
 /**
- * Gradient profile card matching `.set-profile` CSS.
+ * Identity block at the top of Settings.
  *
- * Structure:
- *   - Gradient bg (accent → gradientEnd), 16dp radius, accent shadow
- *   - 48dp avatar circle (white22%, initials, border)
- *   - Name (titleSmall white) + "✨ Premium Plan" pill
- *   - Right: 30dp edit button circle (white18%)
+ * Was a saturated accent-gradient banner with white text and an emoji pencil —
+ * the loudest thing on the screen and the main reason it read as a template.
+ * Now it speaks the same language as the rest of the app: serif name, mono
+ * plan line, accent used as a quiet tint rather than a full-bleed fill.
  */
 @Composable
 fun GradientProfileCard(
@@ -49,90 +51,89 @@ fun GradientProfileCard(
     plan: String,
     initials: String,
     modifier: Modifier = Modifier,
-    onEditClick: () -> Unit = {}
+    onEditClick: () -> Unit = {},
 ) {
     val palette = LocalAccentPalette.current
-    val gradient = Brush.linearGradient(
-        colors = listOf(palette.primary, palette.gradientEnd)
-    )
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
             .fillMaxWidth()
-            .shadow(
-                elevation = 8.dp,
-                shape = CardRadius,
-                spotColor = palette.primary.copy(alpha = 0.28f),
-                ambientColor = palette.primary.copy(alpha = 0.12f)
-            )
             .clip(CardRadius)
-            .background(gradient)
-            .padding(16.dp)
+            // A soft accent wash rather than a solid gradient: enough to mark
+            // this as the identity block, not enough to shout.
+            .background(
+                Brush.horizontalGradient(
+                    listOf(palette.soft, palette.soft.copy(alpha = 0.35f)),
+                )
+            )
+            .border(width = 1.dp, color = palette.mid, shape = CardRadius)
+            .padding(horizontal = 18.dp, vertical = 20.dp),
     ) {
-        // Avatar circle
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
-                .size(48.dp)
-                .clip(AvatarRadius)
-                .background(Color.White.copy(alpha = 0.22f))
-                .border(
-                    width = 2.dp,
-                    color = Color.White.copy(alpha = 0.38f),
-                    shape = AvatarRadius
-                )
+                .size(52.dp)
+                .clip(CircleShape)
+                .background(palette.primary),
         ) {
             Text(
                 text = initials.take(2).uppercase(),
-                fontFamily = OutfitFamily,
-                fontWeight = FontWeight.Black,
-                fontSize = 15.sp,
-                color = Color.White
+                style = TextStyle(
+                    fontFamily = GeistMonoFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 17.sp,
+                    letterSpacing = 0.04.sp,
+                    // The accent is bright in dark mode and deep in light mode,
+                    // so the initials flip to keep contrast either way.
+                    color = if (palette.isDark) TextPrimary else androidx.compose.ui.graphics.Color.White,
+                ),
+            )
+        }
+
+        Spacer(Modifier.width(16.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = name,
+                style = TextStyle(
+                    fontFamily = InstrumentSerifFamily,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 26.sp,
+                    lineHeight = 30.sp,
+                    letterSpacing = (-0.01).sp,
+                    color = TextPrimary,
+                ),
+                maxLines = 1,
+            )
+            Spacer(Modifier.height(5.dp))
+            Text(
+                text = plan.uppercase(),
+                style = TextStyle(
+                    fontFamily = GeistMonoFamily,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 10.sp,
+                    letterSpacing = 0.08.sp,
+                    color = TextTertiary,
+                ),
+                maxLines = 1,
             )
         }
 
         Spacer(Modifier.width(12.dp))
 
-        // Name + plan column
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = name,
-                style = MaterialTheme.typography.titleSmall.copy(
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
-            )
-            Box(
-                modifier = Modifier
-                    .padding(top = 4.dp)
-                    .clip(PlanRadius)
-                    .background(Color.White.copy(alpha = 0.20f))
-                    .padding(horizontal = 9.dp, vertical = 2.dp)
-            ) {
-                Text(
-                    text = plan,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        color = Color.White.copy(alpha = 0.90f),
-                        fontWeight = FontWeight.SemiBold,
-                        letterSpacing = 0.06.sp
-                    )
-                )
-            }
-        }
-
-        // Edit button — 30dp circle, white18%
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
-                .size(30.dp)
+                .size(36.dp)
                 .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.18f))
-                .clickable(onClick = onEditClick)
+                .clickable(onClick = onEditClick),
         ) {
-            Text(
-                text = "✏️",
-                fontSize = 12.sp
+            Icon(
+                imageVector = Icons.Outlined.Edit,
+                contentDescription = "Adı düzenle",
+                tint = palette.primary,
+                modifier = Modifier.size(18.dp),
             )
         }
     }
@@ -140,28 +141,28 @@ fun GradientProfileCard(
 
 // ── Previews ─────────────────────────────────────────────────────────────────
 
-@Preview(showBackground = true, backgroundColor = 0xFFF5F6FA)
+@Preview(showBackground = true, backgroundColor = 0xFFF6F2EC)
 @Composable
-private fun GradientProfileCardPreview() {
+private fun ProfileCardPreview() {
     GencIptvTheme {
         GradientProfileCard(
             name = "Mehmet Kaya",
-            plan = "✨ Premium Plan",
+            plan = "Premium Plan · Son: 07 Ağu 2026",
             initials = "MK",
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(16.dp),
         )
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFFF5F6FA)
+@Preview(showBackground = true, backgroundColor = 0xFF0E1213)
 @Composable
-private fun GradientProfileCardTealPreview() {
-    GencIptvTheme(accentPalette = com.genciptv.player.core.designsystem.AccentPalette.TEAL) {
+private fun ProfileCardDarkPreview() {
+    GencIptvTheme(darkTheme = true) {
         GradientProfileCard(
             name = "Ahmet Yılmaz",
-            plan = "🆓 Ücretsiz Plan",
+            plan = "Ücretsiz Plan",
             initials = "AY",
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(16.dp),
         )
     }
 }

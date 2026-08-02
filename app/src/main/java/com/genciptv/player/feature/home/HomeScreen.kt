@@ -1,5 +1,6 @@
 package com.genciptv.player.feature.home
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -23,7 +24,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -32,12 +33,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -71,6 +74,9 @@ import com.genciptv.player.core.ui.GencAdaptiveScaffold
 import com.genciptv.player.core.ui.GencNavItem
 import com.genciptv.player.core.ui.Poster
 import com.genciptv.player.core.ui.readableContentWidth
+import com.genciptv.player.core.util.Feedback
+import com.genciptv.player.feature.update.UpdateDialogHost
+import com.genciptv.player.feature.update.rememberUpdateViewModel
 import com.genciptv.player.data.model.Channel
 import com.genciptv.player.data.model.Series
 import com.genciptv.player.data.model.VodItem
@@ -94,6 +100,14 @@ fun HomeScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
+
+    // Silent update check. Home is the first real screen after splash, and
+    // onboarding/syncing are separate destinations — so getting here means the
+    // user is past setup and can be asked. Throttled to once a day inside the
+    // repository, and it stays quiet on any failure.
+    val updateViewModel = rememberUpdateViewModel()
+    LaunchedEffect(Unit) { updateViewModel.check(force = false) }
+    UpdateDialogHost(updateViewModel)
 
     HomeContent(
         state = state,
@@ -372,26 +386,48 @@ private fun HomeHeader(
 
         Spacer(Modifier.weight(1f))
 
-        // Bell with copper notification dot
-        IconButton(
-            onClick = { /* notifications */ },
-            modifier = Modifier.size(36.dp),
+        // Feedback — replaces a bell that never had anything behind it. The
+        // copper dot went with it: an unread marker over a button that opened
+        // nothing promised a notification that did not exist.
+        //
+        // Labelled rather than icon-only. A speech bubble alone reads as chat,
+        // or support, or nothing in particular; the word is what makes people
+        // press it. The outline turns the pair into one object that looks
+        // pressable, which a floating word beside an icon would not.
+        val context = LocalContext.current
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .clip(RoundedCornerShape(50))
+                .border(width = 1.dp, color = Line, shape = RoundedCornerShape(50))
+                .clickable {
+                    if (!Feedback.open(context)) {
+                        Toast.makeText(
+                            context,
+                            "Formu açacak bir tarayıcı bulunamadı",
+                            Toast.LENGTH_SHORT,
+                        ).show()
+                    }
+                }
+                .padding(horizontal = 10.dp, vertical = 6.dp),
         ) {
-            Box {
-                Icon(
-                    imageVector = Icons.Default.Notifications,
-                    contentDescription = "Bildirimler",
-                    tint = TextSecondary,
-                    modifier = Modifier.size(20.dp),
-                )
-                Box(
-                    modifier = Modifier
-                        .size(6.dp)
-                        .clip(CircleShape)
-                        .background(Copper)
-                        .align(Alignment.TopEnd),
-                )
-            }
+            Icon(
+                imageVector = Icons.Outlined.ChatBubbleOutline,
+                contentDescription = null,
+                tint = TextSecondary,
+                modifier = Modifier.size(15.dp),
+            )
+            Spacer(Modifier.width(6.dp))
+            Text(
+                text = "Geri Bildirim",
+                style = TextStyle(
+                    fontFamily = GeistFamily,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 12.sp,
+                    color = TextSecondary,
+                ),
+                maxLines = 1,
+            )
         }
 
         Spacer(Modifier.width(2.dp))

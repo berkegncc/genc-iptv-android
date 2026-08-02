@@ -1,5 +1,6 @@
 package com.genciptv.player.feature.vod
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,6 +13,8 @@ import com.genciptv.player.data.repository.PlaylistRepository
 import com.genciptv.player.data.repository.TmdbRepository
 import com.genciptv.player.data.repository.VodRepository
 import com.genciptv.player.data.source.xtream.XtreamApi
+import com.genciptv.player.core.util.rankBySharedGenres
+import com.genciptv.player.data.source.xtream.XtreamMapper
 import com.genciptv.player.data.source.xtream.XtreamUrlBuilder
 import com.genciptv.player.data.source.local.dao.EpisodeDao
 import com.genciptv.player.data.source.local.entity.EpisodeEntity
@@ -36,6 +39,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -169,37 +173,47 @@ class VodDetailViewModel @Inject constructor(
     }
 
     /**
-     * Fetch up to 15 other movies in the same Xtream category (locally — no
-     * network). Falls back to an empty list when the movie has no category id
-     * or the playlist hasn't synced yet.
+     * Up to 15 movies sharing a genre with this one, ranked by overlap. Local
+     * only — no network. Empty when the movie carries no genres, which hides
+     * the row rather than filling it with unrelated titles.
      */
     private fun loadSimilarMovies(movie: VodItem) {
-        val categoryId = movie.categoryId
-        if (categoryId.isNullOrBlank()) return
         viewModelScope.launch {
-            val similar = runCatching {
-                vodRepository
-                    .observeMovies(playlistId = movie.playlistId, categoryId = categoryId, query = "")
-                    .first()
-                    .filter { it.id != movie.id }
-                    .take(15)
-            }.getOrDefault(emptyList())
+            val similar = withContext(Dispatchers.Default) {
+                runCatching {
+                    val catalogue = vodRepository
+                        .observeMovies(playlistId = movie.playlistId, categoryId = null, query = "")
+                        .first()
+                        .filter { it.id != movie.id }
+                    rankBySharedGenres(movie.genres, catalogue, VodItem::genres, VodItem::rating)
+                }.getOrDefault(emptyList())
+            }
+            Log.i(
+                "GencIPTV/Similar",
+                "movie '${movie.title}' genres=${movie.genres} → ${similar.size} match",
+            )
             _state.update { it.copy(similarMovies = similar) }
         }
     }
 
     /** Mirror of [loadSimilarMovies] for series — same Xtream category, current series excluded. */
     private fun loadSimilarSeries(series: Series) {
-        val categoryId = series.categoryId
-        if (categoryId.isNullOrBlank()) return
         viewModelScope.launch {
-            val similar = runCatching {
-                vodRepository
-                    .observeSeries(playlistId = series.playlistId, categoryId = categoryId, query = "")
-                    .first()
-                    .filter { it.id != series.id }
-                    .take(15)
-            }.getOrDefault(emptyList())
+            // Whole-catalogue read plus the ranking pass — both far too heavy
+            // for the main dispatcher, which is where viewModelScope lands.
+            val similar = withContext(Dispatchers.Default) {
+                runCatching {
+                    val catalogue = vodRepository
+                        .observeSeries(playlistId = series.playlistId, categoryId = null, query = "")
+                        .first()
+                        .filter { it.id != series.id }
+                    rankBySharedGenres(series.genres, catalogue, Series::genres, Series::rating)
+                }.getOrDefault(emptyList())
+            }
+            Log.i(
+                "GencIPTV/Similar",
+                "series '${series.title}' genres=${series.genres} → ${similar.size} match",
+            )
             _state.update { it.copy(similarSeries = similar) }
         }
     }
@@ -240,7 +254,19 @@ class VodDetailViewModel @Inject constructor(
                             val title = obj["title"]?.jsonPrimitive?.content ?: "Bölüm $episodeId"
                             val ext = obj["container_extension"]?.jsonPrimitive?.content ?: "mp4"
                             val episodeNum = obj["episode_num"]?.jsonPrimitive?.intOrNull ?: 0
-                            val plot = obj["info"]?.jsonObject?.get("plot")?.jsonPrimitive?.content
+                            // `info` also carries the runtime and a still frame.
+                            // Both were being read past and dropped, which is
+                            // why the episode list could never show a duration.
+                            val epInfo = obj["info"] as? JsonObject
+                            val plot = epInfo?.get("plot")?.jsonPrimitive?.contentOrNull
+                                ?.takeIf { it.isNotBlank() }
+                            val durationSecs = epInfo?.get("duration_secs")?.jsonPrimitive?.intOrNull
+                                ?: epInfo?.get("duration")?.jsonPrimitive?.contentOrNull
+                                    ?.let(::parseClockDuration)
+                            val thumbnail = epInfo?.get("movie_image")?.jsonPrimitive?.contentOrNull
+                                ?.takeIf { it.isNotBlank() }
+                                ?.let { XtreamMapper.normaliseImageUrl(it, playlist.url) }
+                                ?.let(::preferWideTmdbSize)
 
                             // Build stream URL
                             val streamUrl = XtreamUrlBuilder.seriesStream(
@@ -261,6 +287,8 @@ class VodDetailViewModel @Inject constructor(
                                     title = title,
                                     streamUrl = streamUrl,
                                     plot = plot,
+                                    durationSecs = durationSecs,
+                                    thumbnailUrl = thumbnail,
                                 )
                             )
                         }
@@ -270,6 +298,22 @@ class VodDetailViewModel @Inject constructor(
                 withContext(Dispatchers.IO) {
                     episodeDao.insertAll(episodes)
                 }
+
+                // Which of these fields a provider actually fills varies a lot,
+                // and the episode list design depends on the answer — log it
+                // rather than guess.
+                // The sample URL and the distinct count say whether these are
+                // real per-episode stills or the series poster repeated — which
+                // decides how the episode list should frame them.
+                val images = episodes.mapNotNull { it.thumbnailUrl?.takeIf { u -> u.isNotBlank() } }
+                Log.i(
+                    "GencIPTV/Series",
+                    "Episodes parsed: ${episodes.size} — " +
+                        "plot ${episodes.count { !it.plot.isNullOrBlank() }}, " +
+                        "duration ${episodes.count { it.durationSecs != null }}, " +
+                        "image ${images.size} (distinct ${images.distinct().size}) " +
+                        "sample=${images.firstOrNull()}",
+                )
 
             } catch (e: Exception) {
                 // Episodes are optional; don't surface the error to the main state
@@ -303,3 +347,39 @@ class VodDetailViewModel @Inject constructor(
         thumbnailUrl = thumbnailUrl,
     )
 }
+
+/**
+ * Xtream reports episode runtime either as `duration_secs` or as a `HH:MM:SS`
+ * (occasionally `MM:SS`) string, depending on the panel. Returns null when the
+ * value is missing or unparseable, which is common enough that the UI must
+ * cope with no duration at all.
+ */
+private fun parseClockDuration(raw: String): Int? {
+    val parts = raw.trim().split(":").map { it.trim().toIntOrNull() }
+    if (parts.any { it == null }) return null
+    val nums = parts.filterNotNull()
+    val seconds = when (nums.size) {
+        3 -> nums[0] * 3600 + nums[1] * 60 + nums[2]
+        2 -> nums[0] * 60 + nums[1]
+        else -> return null
+    }
+    return seconds.takeIf { it > 0 }
+}
+
+/**
+ * Ask TMDB for the still in its own framing.
+ *
+ * Providers hand us episode images through TMDB's poster-shaped size segment
+ * (`w600_and_h900_bestv2`), which force-crops a 1920x1080 still down to a 2:3
+ * portrait. Swapping the segment for a width-only one returns the original
+ * 16:9 framing — 780x439 here — so the episode list no longer has to crop a
+ * crop. It downloads less, too.
+ *
+ * Non-TMDB URLs are returned untouched.
+ */
+private fun preferWideTmdbSize(url: String): String =
+    if (url.contains("image.tmdb.org")) {
+        url.replace(Regex("/t/p/[^/]+/"), "/t/p/w780/")
+    } else {
+        url
+    }

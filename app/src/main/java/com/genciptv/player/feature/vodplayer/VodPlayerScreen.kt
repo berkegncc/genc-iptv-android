@@ -2,7 +2,6 @@ package com.genciptv.player.feature.vodplayer
 
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
-import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -13,6 +12,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -23,31 +24,36 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.AspectRatio
 import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.Forward10
+import androidx.compose.material.icons.filled.FastForward
+import androidx.compose.material.icons.filled.FastRewind
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.FullscreenExit
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Replay10
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Subtitles
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.CircularProgressIndicator
@@ -76,7 +82,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
@@ -88,6 +98,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.WindowCompat
@@ -122,12 +133,15 @@ import com.genciptv.player.core.designsystem.SheetTopShape
 import com.genciptv.player.core.designsystem.TextPrimary
 import com.genciptv.player.core.designsystem.TextSecondary
 import com.genciptv.player.core.designsystem.TextTertiary
+import com.genciptv.player.core.designsystem.WindowSize
 import com.genciptv.player.core.player.buildIptvDataSourceFactory
 import com.genciptv.player.core.player.buildIptvMediaSource
 import com.genciptv.player.core.ui.ErrorState
 import com.genciptv.player.core.ui.LoadingState
 import com.genciptv.player.core.ui.Poster
 import com.genciptv.player.core.ui.applySubtitleStyle
+import com.genciptv.player.core.util.restoreUserOrientation
+import com.genciptv.player.core.util.episodeDisplayTitle
 import com.genciptv.player.data.model.CastMember
 import com.genciptv.player.data.model.Episode
 import com.genciptv.player.data.model.SubtitleStyle
@@ -141,7 +155,9 @@ import java.util.concurrent.TimeUnit
 private data class AudioTrackInfo(val groupIndex: Int, val trackIndex: Int, val displayName: String)
 private data class SubtitleTrackInfo(val groupIndex: Int, val trackIndex: Int, val displayName: String)
 
-private enum class PlayerSheet { SPEED, AUDIO, SUBTITLE, SCALE, SEASON }
+/** TRACKS merges audio and subtitles into one sheet, matching the single
+ *  "Seslendirme ve Alt Yazı" control in the overlay. */
+private enum class PlayerSheet { SPEED, TRACKS, SCALE, SEASON, EPISODES }
 
 private enum class VideoScale(val label: String) {
     ORIGINAL("Orijinal"),
@@ -152,6 +168,14 @@ private enum class VideoScale(val label: String) {
 }
 
 private val SPEED_PRESETS = listOf(0.25f, 0.5f, 0.75f, 1f, 1.25f, 1.5f, 2f, 3f, 4f)
+
+/**
+ * Width one control in the player's bottom row may occupy. The row is capped at
+ * this times however many controls it is showing, so a film's three and a
+ * series' five each get the same room rather than sharing one fixed width.
+ * Enough for the longest label ("Ses ve Altyazı") plus its icon and padding.
+ */
+private val MaxActionSlotWidth = 240.dp
 
 private fun speedLabel(speed: Float): String = when (speed) {
     0.25f -> "0.25x (Çok Yavaş)"
@@ -223,9 +247,20 @@ fun VodPlayerScreen(
 
     var playbackError by remember { mutableStateOf<String?>(null) }
     var fallbackTriedFor by remember { mutableStateOf<String?>(null) }
+    /** Mirrors the player's buffering state; kept in sync by the listener below. */
+    var isBuffering by remember { mutableStateOf(false) }
 
     DisposableEffect(exoPlayer) {
         val listener = object : Player.Listener {
+            // ExoPlayer is not observable by Compose, so reading
+            // `exoPlayer.playbackState` inline leaves the spinner stuck: it is
+            // drawn when some unrelated recomposition happens to catch
+            // STATE_BUFFERING, and nothing re-evaluates it once buffering ends.
+            // Mirroring the state here is what actually drives the UI.
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                isBuffering = playbackState == Player.STATE_BUFFERING
+            }
+
             override fun onPlayerError(error: PlaybackException) {
                 val url = state.streamUrl.takeIf { it.isNotBlank() }
                 val isParseError = error.errorCode == PlaybackException.ERROR_CODE_PARSING_MANIFEST_MALFORMED ||
@@ -242,6 +277,8 @@ fun VodPlayerScreen(
                 playbackError = error.errorCodeName + " — " + (error.message ?: "Akış oynatılamadı")
             }
         }
+        // Seed it: buffering may already be under way by the time we attach.
+        isBuffering = exoPlayer.playbackState == Player.STATE_BUFFERING
         exoPlayer.addListener(listener)
         onDispose { exoPlayer.removeListener(listener) }
     }
@@ -257,20 +294,11 @@ fun VodPlayerScreen(
 
     DisposableEffect(Unit) {
         onDispose {
-            val activity = context as? ComponentActivity ?: return@onDispose
-            val autoRotateOn = Settings.System.getInt(
-                activity.contentResolver,
-                Settings.System.ACCELEROMETER_ROTATION,
-                1,
-            ) == 1
-            activity.requestedOrientation = if (autoRotateOn) {
-                ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-            } else {
-                ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-            }
-            val window = activity.window
-            WindowCompat.setDecorFitsSystemWindows(window, true)
-            WindowInsetsControllerCompat(window, window.decorView).show(WindowInsetsCompat.Type.systemBars())
+            // Was UNSPECIFIED-or-PORTRAIT depending on the auto-rotate setting,
+            // read by hand. SCREEN_ORIENTATION_USER expresses the same intent
+            // and the platform applies it reliably — UNSPECIFIED could leave a
+            // phone stuck in the landscape fullscreen had requested.
+            (context as? ComponentActivity)?.restoreUserOrientation()
         }
     }
 
@@ -318,6 +346,7 @@ fun VodPlayerScreen(
             exoPlayer = exoPlayer,
             playbackSpeed = playbackSpeed,
             playbackError = playbackError,
+            isBuffering = isBuffering,
             subtitleStyle = subtitleStyle,
             onBack = onBack,
             onToggleFavorite = viewModel::toggleFavorite,
@@ -343,6 +372,8 @@ private fun VodPlayerContent(
     exoPlayer: ExoPlayer,
     playbackSpeed: Float,
     playbackError: String? = null,
+    /** Player is buffering; mirrored from the listener in [VodPlayerScreen]. */
+    isBuffering: Boolean = false,
     subtitleStyle: SubtitleStyle = SubtitleStyle.Default,
     onBack: () -> Unit,
     onToggleFavorite: () -> Unit,
@@ -356,10 +387,18 @@ private fun VodPlayerContent(
 
     val isInPipMode by PipController.isInPipMode.collectAsState()
 
-    // Tablet landscape gets the side-by-side layout (video left, info/episodes
-    // right); everything else keeps the stacked layout.
+    // Two different questions, deliberately answered by two different values:
+    //
+    //  - isTabletDevice asks about the *hardware*, and drives whether rotating
+    //    the device should force fullscreen. That has to stay device-based:
+    //    a tablet shouldn't start auto-fullscreening just because the user
+    //    dragged it into a split-screen pane.
+    //  - hasRoomForSidePanel asks about the *window*, and drives the layout.
+    //    The side-by-side branch hands a fixed 380dp to the info panel, so on a
+    //    400dp split-screen pane it would leave the video about 19dp wide.
     val isTabletDevice = configuration.smallestScreenWidthDp >= 600
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val hasRoomForSidePanel = isTabletDevice && WindowSize.isExpanded
 
     var isFullscreen by remember { mutableStateOf(false) }
     var overlayVisible by remember { mutableStateOf(true) }
@@ -406,25 +445,38 @@ private fun VodPlayerContent(
         }
     }
 
+    // Turning the phone is the natural way to ask for fullscreen, so follow it.
+    // Phones only: on tablets landscape means the side-by-side layout. With
+    // auto-rotate switched off the system never reports a landscape
+    // configuration, so this stays dormant and the button remains the way in.
+    LaunchedEffect(isLandscape) {
+        if (isTabletDevice) return@LaunchedEffect
+        isFullscreen = isLandscape
+    }
+
     LaunchedEffect(isFullscreen) {
         val activity = context as? ComponentActivity ?: return@LaunchedEffect
         val window = activity.window
         val controller = WindowInsetsControllerCompat(window, window.decorView)
         if (isFullscreen) {
-            activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+            // Pin the orientation only when the request came from portrait on
+            // a phone — that means the button, and the user wants landscape
+            // however they are holding it. When we are already landscape the
+            // device put us here; pinning would stop a turn back to portrait
+            // from ever exiting. Tablets are excluded outright: a 10" screen
+            // held upright still gives the video plenty of width, so spinning
+            // the whole UI under a propped-up or docked tablet is a worse
+            // answer than simply going fullscreen where it is.
+            if (!isLandscape && !isTabletDevice) {
+                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+            }
             WindowCompat.setDecorFitsSystemWindows(window, false)
             controller.hide(WindowInsetsCompat.Type.systemBars())
             controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         } else {
-            // Tablets follow the sensor so the landscape side-by-side layout
-            // stays reachable; phones snap back to portrait.
-            activity.requestedOrientation = if (isTabletDevice) {
-                ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-            } else {
-                ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-            }
-            WindowCompat.setDecorFitsSystemWindows(window, true)
-            controller.show(WindowInsetsCompat.Type.systemBars())
+            // Hand the orientation back to the device rather than pinning
+            // portrait — pinning is what stopped rotation reaching us again.
+            activity.restoreUserOrientation()
         }
     }
 
@@ -538,8 +590,9 @@ private fun VodPlayerContent(
                     )
             }
 
-            // Buffering spinner
-            if (exoPlayer.playbackState == ExoPlayer.STATE_BUFFERING && playbackError == null) {
+            // Buffering spinner — driven by the listener above, not by reading
+            // the player directly.
+            if (isBuffering && playbackError == null) {
                 CircularProgressIndicator(
                     color = Color.White,
                     strokeWidth = 1.5.dp,
@@ -608,7 +661,7 @@ private fun VodPlayerContent(
         }
 
         // Tablet landscape — video on the left, info/episodes on the right.
-        isTabletDevice && isLandscape -> {
+        hasRoomForSidePanel && isLandscape -> {
             Row(modifier = Modifier.fillMaxSize().background(Color.Black)) {
                 VideoArea(Modifier.weight(1f).fillMaxHeight())
                 VerticalDivider(thickness = 1.dp, color = Line)
@@ -638,8 +691,7 @@ private fun VodPlayerContent(
                     currentSpeed = playbackSpeed,
                     onSelect = { speed -> onSpeedSelected(speed); openSheet = null },
                 )
-                PlayerSheet.AUDIO -> AudioSheet(exoPlayer = exoPlayer, onDismiss = { openSheet = null })
-                PlayerSheet.SUBTITLE -> SubtitleSheet(exoPlayer = exoPlayer, onDismiss = { openSheet = null })
+                PlayerSheet.TRACKS -> TracksSheet(exoPlayer = exoPlayer, onDismiss = { openSheet = null })
                 PlayerSheet.SCALE -> ScaleSheet(
                     current = videoScale,
                     onSelect = { scale -> videoScale = scale; openSheet = null },
@@ -648,6 +700,11 @@ private fun VodPlayerContent(
                     seasons = state.availableSeasons,
                     selected = state.selectedSeason,
                     onSelect = { season -> onSelectSeason(season); openSheet = null },
+                )
+                PlayerSheet.EPISODES -> EpisodesSheet(
+                    state = state,
+                    onSelectSeason = onSelectSeason,
+                    onSelectEpisode = { id -> onSelectEpisode(id); openSheet = null },
                 )
                 null -> {}
             }
@@ -679,19 +736,50 @@ private fun VodPlayerOverlay(
     onOpenSheet: (PlayerSheet) -> Unit,
 ) {
     val accent = LocalAccentPalette.current
-    Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.45f))) {
-        // Top bar — back + serif title + favourite
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Scrims instead of a flat wash. A single 45%-black sheet over the
+        // whole frame dulled every scene; darkening only the strips the
+        // controls actually occupy keeps the picture open in the middle and is
+        // what makes the overlay read as premium rather than cheap.
+        Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.12f)))
+        Box(
+            Modifier
+                .align(Alignment.TopCenter)
+                .fillMaxWidth()
+                .height(132.dp)
+                .background(
+                    Brush.verticalGradient(
+                        listOf(Color.Black.copy(alpha = 0.78f), Color.Transparent),
+                    )
+                )
+        )
+        Box(
+            Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .height(190.dp)
+                .background(
+                    Brush.verticalGradient(
+                        listOf(Color.Transparent, Color.Black.copy(alpha = 0.88f)),
+                    )
+                )
+        )
+
+        // Top bar — back + serif title + favourite + fullscreen
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
                 .statusBarsPadding()
-                .padding(horizontal = 12.dp, vertical = 8.dp),
+                .padding(horizontal = 8.dp, vertical = 4.dp),
         ) {
-            GlassIconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Geri", tint = Color.White, modifier = Modifier.size(20.dp))
-            }
-            Spacer(Modifier.width(10.dp))
+            FlatIconButton(
+                icon = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Geri",
+                onClick = onBack,
+                size = 24.dp,
+            )
+            Spacer(Modifier.width(6.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = state.title,
@@ -722,56 +810,44 @@ private fun VodPlayerOverlay(
                     )
                 }
             }
-            GlassIconButton(onClick = onToggleFavorite) {
-                Icon(
-                    imageVector = if (state.isFavorite) Icons.Filled.Star else Icons.Filled.StarBorder,
-                    contentDescription = if (state.isFavorite) "Favorilerden çıkar" else "Favorilere ekle",
-                    tint = if (state.isFavorite) Copper else Color.White,
-                    modifier = Modifier.size(20.dp),
-                )
-            }
+            FlatIconButton(
+                icon = if (state.isFavorite) Icons.Filled.Star else Icons.Filled.StarBorder,
+                contentDescription = if (state.isFavorite) "Favorilerden çıkar" else "Favorilere ekle",
+                onClick = onToggleFavorite,
+                tint = if (state.isFavorite) Copper else Color.White,
+            )
+            FlatIconButton(
+                icon = if (isFullscreen) Icons.Filled.FullscreenExit else Icons.Filled.Fullscreen,
+                contentDescription = "Tam ekran",
+                onClick = onToggleFullscreen,
+            )
         }
 
-        // Centre controls — 10 s rewind / play-pause / 10 s forward
+        // Centre controls — 10 s rewind / play-pause / 10 s forward.
+        // Skip-next moved to the labelled row below, where "Sonraki Bölüm"
+        // says what it does instead of leaving the user to decode an icon.
         Row(
-            horizontalArrangement = Arrangement.spacedBy(28.dp),
+            horizontalArrangement = Arrangement.spacedBy(40.dp),
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.align(Alignment.Center),
         ) {
-            CenterCtrl(onClick = onRewind) {
-                Icon(Icons.Filled.Replay10, "-10 saniye", tint = Color.White, modifier = Modifier.size(22.dp))
-            }
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .size(60.dp)
-                    .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.14f))
-                    .clickable(onClick = onPlayPause),
-            ) {
-                Icon(
-                    imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                    contentDescription = if (isPlaying) "Duraklat" else "Oynat",
-                    tint = Color.White,
-                    modifier = Modifier.size(26.dp),
-                )
-            }
-            CenterCtrl(onClick = onForward) {
-                Icon(Icons.Filled.Forward10, "+10 saniye", tint = Color.White, modifier = Modifier.size(22.dp))
-            }
-            // Skip-next is series-only — for movies and series finales the
-            // callback is null, so we drop the icon entirely instead of
-            // showing a disabled stub.
-            if (onSkipNext != null) {
-                CenterCtrl(onClick = onSkipNext) {
-                    Icon(
-                        imageVector = Icons.Filled.SkipNext,
-                        contentDescription = "Sonraki bölüm",
-                        tint = Color.White,
-                        modifier = Modifier.size(24.dp),
-                    )
-                }
-            }
+            SeekButton(
+                icon = Icons.Filled.FastRewind,
+                contentDescription = "10 saniye geri",
+                onClick = onRewind,
+            )
+            FlatIconButton(
+                icon = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                contentDescription = if (isPlaying) "Duraklat" else "Oynat",
+                onClick = onPlayPause,
+                size = 52.dp,
+                touchTarget = 68.dp,
+            )
+            SeekButton(
+                icon = Icons.Filled.FastForward,
+                contentDescription = "10 saniye ileri",
+                onClick = onForward,
+            )
         }
 
         // Bottom strip — scrub bar + action row
@@ -813,85 +889,252 @@ private fun VodPlayerOverlay(
                     ),
                 )
             }
-            Spacer(Modifier.height(2.dp))
-            // Action row — speed (mono pill) | audio | subtitle | scale | spacer | fullscreen
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .size(width = 44.dp, height = 32.dp)
-                        .clickable(onClick = { onOpenSheet(PlayerSheet.SPEED) }),
-                ) {
-                    Text(
-                        text = "${playbackSpeed}×",
-                        style = TextStyle(
-                            fontFamily = GeistMonoFamily,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 12.sp,
-                            color = if (playbackSpeed != 1f) Copper else Color.White,
-                        ),
+            Spacer(Modifier.height(4.dp))
+            // Labelled action row. Spread across the full width where there is
+            // room — in fullscreen landscape the controls otherwise bunch up on
+            // the left with a third of the bar empty. Narrow layouts (the
+            // portrait inline player) scroll instead, since five labels cannot
+            // fit however they are arranged.
+            // How many controls this title actually shows. The row's width cap
+            // is derived from it below, so the two have to be counted the same
+            // way — hence the conditions mirroring the ones inside [actionRow].
+            val actionCount = 3 +
+                (if (!state.isMovie && state.seriesEpisodes.isNotEmpty()) 1 else 0) +
+                (if (onSkipNext != null) 1 else 0)
+
+            // [itemModifier] is how the two branches below differ: the wide one
+            // hands every control an equal slice of the row, the scrolling one
+            // lets each size to its own label.
+            val actionRow: @Composable RowScope.(itemModifier: Modifier) -> Unit = { itemModifier ->
+                PlayerActionButton(
+                    icon = Icons.Filled.AspectRatio,
+                    label = "Ölçek",
+                    onClick = { onOpenSheet(PlayerSheet.SCALE) },
+                    modifier = itemModifier,
+                )
+                PlayerActionButton(
+                    icon = Icons.Filled.Speed,
+                    label = "Hız (${formatSpeed(playbackSpeed)})",
+                    onClick = { onOpenSheet(PlayerSheet.SPEED) },
+                    modifier = itemModifier,
+                    tint = if (playbackSpeed != 1f) Copper else Color.White,
+                )
+                if (!state.isMovie && state.seriesEpisodes.isNotEmpty()) {
+                    PlayerActionButton(
+                        icon = Icons.AutoMirrored.Filled.List,
+                        label = "Bölümler",
+                        onClick = { onOpenSheet(PlayerSheet.EPISODES) },
+                        modifier = itemModifier,
                     )
                 }
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier.size(40.dp).clickable(onClick = { onOpenSheet(PlayerSheet.AUDIO) }),
-                ) {
-                    Icon(Icons.AutoMirrored.Filled.VolumeUp, "Ses", tint = Color.White, modifier = Modifier.size(20.dp))
-                }
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier.size(40.dp).clickable(onClick = { onOpenSheet(PlayerSheet.SUBTITLE) }),
-                ) {
-                    Icon(Icons.Filled.Subtitles, "Altyazı", tint = Color.White, modifier = Modifier.size(20.dp))
-                }
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier.size(40.dp).clickable(onClick = { onOpenSheet(PlayerSheet.SCALE) }),
-                ) {
-                    Icon(Icons.Filled.AspectRatio, "Ölçek", tint = Color.White, modifier = Modifier.size(20.dp))
-                }
-                Spacer(Modifier.weight(1f))
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier.size(40.dp).clickable(onClick = onToggleFullscreen),
-                ) {
-                    Icon(
-                        imageVector = if (isFullscreen) Icons.Filled.FullscreenExit else Icons.Filled.Fullscreen,
-                        contentDescription = "Tam ekran",
-                        tint = Color.White,
-                        modifier = Modifier.size(22.dp),
+                // "Seslendirme ve Alt Yazı" was too long to survive an equal
+                // slice once a series adds its two extra controls, and it is
+                // the audio *track* being chosen here, not dubbing specifically.
+                PlayerActionButton(
+                    icon = Icons.Filled.Subtitles,
+                    label = "Ses ve Altyazı",
+                    onClick = { onOpenSheet(PlayerSheet.TRACKS) },
+                    modifier = itemModifier,
+                )
+                // Series-only, and gone on the finale — the parent passes null
+                // rather than us showing a dead control.
+                if (onSkipNext != null) {
+                    PlayerActionButton(
+                        icon = Icons.Filled.SkipNext,
+                        label = "Sonraki Bölüm",
+                        onClick = onSkipNext,
+                        modifier = itemModifier,
                     )
+                }
+            }
+
+            BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                if (maxWidth >= 600.dp) {
+                    // Equal slices, each centred in its own slice. SpaceBetween
+                    // was the obvious choice and it looks wrong here: it evens
+                    // out the *gaps*, but the labels differ a lot in length, so
+                    // equal gaps leave the controls themselves unevenly spaced.
+                    // Giving each the same width puts their centres on a
+                    // regular rhythm, which is what actually reads as aligned.
+                    //
+                    // The cap scales with the number of controls rather than
+                    // being one fixed width. A flat cap has to serve both a
+                    // film's three controls and a series' five: sized for three
+                    // it starves the five, sized for five it strands the three
+                    // in opposite corners of a tablet. Per-control instead, so
+                    // both end up with the same room each.
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .widthIn(max = MaxActionSlotWidth * actionCount)
+                            .fillMaxWidth(),
+                    ) {
+                        actionRow(Modifier.weight(1f))
+                    }
+                } else {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                    ) {
+                        // No weights here — the row is wider than the screen and
+                        // scrolls, so each control keeps its natural width.
+                        actionRow(Modifier)
+                    }
                 }
             }
         }
     }
 }
 
+/** Trims "1.0" to "1x" while keeping "1.5x" readable. */
+private fun formatSpeed(speed: Float): String =
+    if (speed % 1f == 0f) "${speed.toInt()}x" else "${speed}x"
+
+/**
+ * Bare icon control. No pill, no circle, and deliberately no `Modifier.shadow`
+ * either — that draws a shadow *in the given shape*, so a CircleShape shadow
+ * put a dark disc behind every glyph, re-creating the very backgrounds this
+ * was meant to remove. Contrast comes from the scrims instead.
+ *
+ * [touchTarget] stays at least 44dp even when the glyph is small, so dropping
+ * the backgrounds costs nothing in tap accuracy.
+ */
 @Composable
-private fun GlassIconButton(onClick: () -> Unit, content: @Composable () -> Unit) {
+private fun FlatIconButton(
+    icon: ImageVector,
+    contentDescription: String?,
+    onClick: () -> Unit,
+    tint: Color = Color.White,
+    size: Dp = 22.dp,
+    touchTarget: Dp = 44.dp,
+) {
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
-            .size(36.dp)
+            .size(touchTarget)
             .clip(CircleShape)
-            .background(Color.Black.copy(alpha = 0.40f))
             .clickable(onClick = onClick),
     ) {
-        content()
+        GlyphIcon(icon = icon, contentDescription = contentDescription, tint = tint, size = size)
     }
 }
 
+/**
+ * Icon with a drop shadow that follows the glyph instead of a shape behind it.
+ *
+ * `Modifier.shadow` and `graphicsLayer.shadowElevation` both shade an *outline*
+ * — pass CircleShape and you get a disc behind the icon, which is exactly the
+ * background we are trying to be rid of. Drawing the vector twice, once in
+ * black and nudged down, gives a shadow in the shape of the glyph itself and
+ * works on every API level (Modifier.blur is API 31+).
+ */
 @Composable
-private fun CenterCtrl(onClick: () -> Unit, content: @Composable () -> Unit) {
+private fun GlyphIcon(
+    icon: ImageVector,
+    contentDescription: String?,
+    tint: Color,
+    size: Dp,
+) {
+    Icon(
+        imageVector = icon,
+        contentDescription = null,
+        tint = Color.Black.copy(alpha = 0.55f),
+        modifier = Modifier.size(size).offset(y = 1.5.dp),
+    )
+    Icon(
+        imageVector = icon,
+        contentDescription = contentDescription,
+        tint = tint,
+        modifier = Modifier.size(size),
+    )
+}
+
+/**
+ * 10-second seek. Uses the plain double-triangle rather than Material's
+ * `Replay10`/`Forward10`, whose glyphs are drawn as a ring with the number
+ * inside — a circle we do not want. The interval moves to a small caption so
+ * the meaning survives the change.
+ */
+@Composable
+private fun SeekButton(
+    icon: ImageVector,
+    contentDescription: String,
+    onClick: () -> Unit,
+) {
+    // Box, not Column: a Column would size itself around glyph + caption and
+    // centring *that* in the row leaves the glyph sitting higher than the play
+    // icon next to it. Matching the play button's box and floating the caption
+    // with an offset keeps every glyph on one centre line.
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
-            .size(44.dp)
+            .size(68.dp)
             .clip(CircleShape)
-            .background(Color.White.copy(alpha = 0.08f))
             .clickable(onClick = onClick),
     ) {
-        content()
+        GlyphIcon(
+            icon = icon,
+            contentDescription = contentDescription,
+            tint = Color.White,
+            size = 30.dp,
+        )
+        Text(
+            text = "10",
+            style = TextStyle(
+                fontFamily = GeistMonoFamily,
+                fontWeight = FontWeight.Medium,
+                fontSize = 10.sp,
+                color = Color.White.copy(alpha = 0.85f),
+                shadow = Shadow(
+                    color = Color.Black.copy(alpha = 0.65f),
+                    offset = Offset(0f, 1f),
+                    blurRadius = 4f,
+                ),
+            ),
+            modifier = Modifier.align(Alignment.Center).offset(y = 20.dp),
+        )
+    }
+}
+
+/** Icon + label control for the bottom row, styled after the reference layout. */
+@Composable
+private fun PlayerActionButton(
+    icon: ImageVector,
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    tint: Color = Color.White,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center,
+        modifier = modifier
+            .clip(RoundedCornerShape(6.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 10.dp, vertical = 10.dp),
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            GlyphIcon(icon = icon, contentDescription = null, tint = tint, size = 18.dp)
+        }
+        Spacer(Modifier.width(7.dp))
+        Text(
+            text = label,
+            style = TextStyle(
+                fontFamily = GeistFamily,
+                fontWeight = FontWeight.Medium,
+                fontSize = 13.sp,
+                color = tint,
+                shadow = Shadow(
+                    color = Color.Black.copy(alpha = 0.65f),
+                    offset = Offset(0f, 1f),
+                    blurRadius = 5f,
+                ),
+            ),
+            maxLines = 1,
+        )
     }
 }
 
@@ -913,10 +1156,13 @@ private fun VodPlayerErrorOverlay(
                 .statusBarsPadding()
                 .padding(horizontal = 12.dp, vertical = 8.dp),
         ) {
-            GlassIconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Geri", tint = Color.White, modifier = Modifier.size(20.dp))
-            }
-            Spacer(Modifier.width(10.dp))
+            FlatIconButton(
+                icon = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Geri",
+                onClick = onBack,
+                size = 24.dp,
+            )
+            Spacer(Modifier.width(6.dp))
             Text(
                 text = title,
                 style = TextStyle(
@@ -929,14 +1175,12 @@ private fun VodPlayerErrorOverlay(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f),
             )
-            GlassIconButton(onClick = onToggleFullscreen) {
-                Icon(
-                    imageVector = if (isFullscreen) Icons.Filled.FullscreenExit else Icons.Filled.Fullscreen,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(18.dp),
-                )
-            }
+            FlatIconButton(
+                icon = if (isFullscreen) Icons.Filled.FullscreenExit else Icons.Filled.Fullscreen,
+                contentDescription = "Tam ekran",
+                onClick = onToggleFullscreen,
+                size = 20.dp,
+            )
         }
 
         Column(
@@ -1280,39 +1524,21 @@ private fun EpisodeRow(
             .clickable(onClick = onClick)
             .padding(horizontal = 11.dp, vertical = 10.dp),
     ) {
-        // Episode number badge — accent mono
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(36.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(if (isCurrent) accent.primary else accent.soft),
-        ) {
-            Text(
-                text = episode.episode.toString().padStart(2, '0'),
-                style = TextStyle(
-                    fontFamily = GeistMonoFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 13.sp,
-                    color = if (isCurrent) {
-                        if (accent.isDark) Color(0xFF0E1213) else Color.White
-                    } else accent.primary,
-                ),
-            )
-        }
-        Spacer(Modifier.width(12.dp))
+        // No number badge: the title already begins with the episode number,
+        // and the accent background marks the one that is playing.
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = episode.title,
+                text = episodeDisplayTitle(episode.episode, episode.title),
                 style = TextStyle(
                     fontFamily = GeistFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 13.sp,
                     color = TextPrimary,
                 ),
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
+            // Runtime under the title, matching the detail screen's card.
             val sub = buildString {
                 episode.durationSecs?.let { append("${it / 60} dk") }
                 if (isCurrent) {
@@ -1326,14 +1552,31 @@ private fun EpisodeRow(
                     style = TextStyle(
                         fontFamily = GeistMonoFamily,
                         fontWeight = FontWeight.Normal,
-                        fontSize = 9.sp,
-                        letterSpacing = 0.06.sp,
+                        fontSize = 11.sp,
+                        letterSpacing = 0.04.sp,
                         color = if (isCurrent) accent.primary else TextTertiary,
                     ),
-                    modifier = Modifier.padding(top = 2.dp),
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+            }
+            // Shown in full here too, so the two episode lists read the same.
+            // Costs vertical room in a short sheet, but the list scrolls.
+            val plot = episode.plot
+            if (!plot.isNullOrBlank()) {
+                Text(
+                    text = plot,
+                    style = TextStyle(
+                        fontFamily = GeistFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 11.sp,
+                        lineHeight = 15.sp,
+                        color = TextSecondary,
+                    ),
+                    modifier = Modifier.padding(top = 3.dp),
                 )
             }
         }
+        Spacer(Modifier.width(8.dp))
         Icon(
             imageVector = Icons.Filled.PlayArrow,
             contentDescription = "Oynat",
@@ -1486,6 +1729,126 @@ private fun SeasonSheet(
     }
 }
 
+/**
+ * "Seslendirme ve Alt Yazı" — one control in the overlay, so one sheet here.
+ *
+ * Tabbed rather than stacked: each list is a fixed-height LazyColumn, and two
+ * of them plus headers overflow a bottom sheet on a phone held landscape,
+ * which is exactly when this sheet gets used.
+ */
+@Composable
+private fun TracksSheet(exoPlayer: ExoPlayer, onDismiss: () -> Unit) {
+    var showSubtitles by remember { mutableStateOf(false) }
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = "Seslendirme ve Alt Yazı",
+            style = TextStyle(
+                fontFamily = InstrumentSerifFamily,
+                fontWeight = FontWeight.Normal,
+                fontSize = 22.sp,
+                color = TextPrimary,
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            textAlign = TextAlign.Center,
+        )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+        ) {
+            SheetTab(label = "Ses", selected = !showSubtitles) { showSubtitles = false }
+            SheetTab(label = "Alt Yazı", selected = showSubtitles) { showSubtitles = true }
+        }
+        if (showSubtitles) {
+            SubtitleSheet(exoPlayer = exoPlayer, onDismiss = onDismiss, showHeader = false)
+        } else {
+            AudioSheet(exoPlayer = exoPlayer, onDismiss = onDismiss, showHeader = false)
+        }
+    }
+}
+
+@Composable
+private fun SheetTab(label: String, selected: Boolean, onClick: () -> Unit) {
+    val accent = LocalAccentPalette.current
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(if (selected) accent.soft else BgElev2)
+            .border(
+                width = if (selected) 1.dp else 0.5.dp,
+                color = if (selected) accent.primary else Line,
+                shape = RoundedCornerShape(8.dp),
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+    ) {
+        Text(
+            text = label,
+            style = TextStyle(
+                fontFamily = GeistFamily,
+                fontWeight = FontWeight.Medium,
+                fontSize = 13.sp,
+                color = if (selected) accent.primary else TextSecondary,
+            ),
+        )
+    }
+}
+
+/** Episode picker reachable from the overlay, so switching episodes no longer
+ *  means leaving the player. Reuses [EpisodeRow] from the info panel. */
+@Composable
+private fun EpisodesSheet(
+    state: VodPlayerUiState,
+    onSelectSeason: (Int) -> Unit,
+    onSelectEpisode: (String) -> Unit,
+) {
+    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Text(
+            text = "Bölümler",
+            style = TextStyle(
+                fontFamily = InstrumentSerifFamily,
+                fontWeight = FontWeight.Normal,
+                fontSize = 22.sp,
+                color = TextPrimary,
+            ),
+            modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
+            textAlign = TextAlign.Center,
+        )
+        if (state.availableSeasons.size > 1) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
+                    .padding(bottom = 10.dp),
+            ) {
+                state.availableSeasons.forEach { season ->
+                    SheetTab(
+                        label = "Sezon $season",
+                        selected = season == state.selectedSeason,
+                        onClick = { onSelectSeason(season) },
+                    )
+                }
+            }
+        }
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth().heightForSheet(),
+        ) {
+            items(state.episodesInSelectedSeason, key = { it.id }) { ep ->
+                EpisodeRow(
+                    episode = ep,
+                    isCurrent = ep.id == state.episode?.id,
+                    onClick = { onSelectEpisode(ep.id) },
+                )
+            }
+        }
+        Spacer(Modifier.navigationBarsPadding())
+    }
+}
+
 @Composable
 private fun ScaleSheet(current: VideoScale, onSelect: (VideoScale) -> Unit) {
     val accent = LocalAccentPalette.current
@@ -1569,7 +1932,12 @@ private fun SpeedSheet(currentSpeed: Float, onSelect: (Float) -> Unit) {
 }
 
 @Composable
-private fun AudioSheet(exoPlayer: ExoPlayer, onDismiss: () -> Unit) {
+private fun AudioSheet(
+    exoPlayer: ExoPlayer,
+    onDismiss: () -> Unit,
+    /** False when hosted inside [TracksSheet], which supplies its own title. */
+    showHeader: Boolean = true,
+) {
     val accent = LocalAccentPalette.current
     val tracks = remember(exoPlayer.currentTracks) {
         exoPlayer.currentTracks.groups
@@ -1587,7 +1955,7 @@ private fun AudioSheet(exoPlayer: ExoPlayer, onDismiss: () -> Unit) {
             .flatten()
     }
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
-        Text(
+        if (showHeader) Text(
             text = "Ses",
             style = TextStyle(
                 fontFamily = InstrumentSerifFamily,
@@ -1650,7 +2018,12 @@ private fun AudioSheet(exoPlayer: ExoPlayer, onDismiss: () -> Unit) {
 }
 
 @Composable
-private fun SubtitleSheet(exoPlayer: ExoPlayer, onDismiss: () -> Unit) {
+private fun SubtitleSheet(
+    exoPlayer: ExoPlayer,
+    onDismiss: () -> Unit,
+    /** False when hosted inside [TracksSheet], which supplies its own title. */
+    showHeader: Boolean = true,
+) {
     val accent = LocalAccentPalette.current
     val tracks = remember(exoPlayer.currentTracks) {
         exoPlayer.currentTracks.groups
@@ -1671,7 +2044,7 @@ private fun SubtitleSheet(exoPlayer: ExoPlayer, onDismiss: () -> Unit) {
         exoPlayer.trackSelectionParameters.disabledTrackTypes.contains(C.TRACK_TYPE_TEXT)
     }
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
-        Text(
+        if (showHeader) Text(
             text = "Altyazı",
             style = TextStyle(
                 fontFamily = InstrumentSerifFamily,

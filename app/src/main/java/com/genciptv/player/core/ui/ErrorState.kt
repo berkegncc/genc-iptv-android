@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.sp
 import com.genciptv.player.core.designsystem.GencIptvTheme
 import com.genciptv.player.core.designsystem.LocalAccentPalette
 import com.genciptv.player.core.designsystem.TextSecondary
+import com.genciptv.player.core.designsystem.TextPrimary
 
 /**
  * Centered error state with retry action.
@@ -43,7 +44,7 @@ fun ErrorState(
         Spacer(Modifier.height(16.dp))
         Text(
             text = title,
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.titleMedium.copy(color = TextPrimary),
             textAlign = TextAlign.Center
         )
         if (description != null) {

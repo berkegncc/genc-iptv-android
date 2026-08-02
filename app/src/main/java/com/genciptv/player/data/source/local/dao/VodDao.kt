@@ -21,13 +21,15 @@ interface VodDao {
           AND (:categoryId IS NULL OR categoryId = :categoryId)
           AND (:query = '' OR title LIKE '%' || :query || '%')
         ORDER BY
-          CASE WHEN :categoryId IS NULL THEN id END DESC,
+          CASE WHEN :categoryId IS NULL THEN addedAt END DESC,
+          CASE WHEN :categoryId IS NULL THEN providerId END DESC,
           title ASC
         """
     )
-    // "Tümü" view (categoryId = null): newest first by id (ids are
-    // monotonically increasing per Xtream stream_id, so id DESC ≈ newest
-    // first — same heuristic as observeLatest on the home screen).
+    // "Tümü" view (categoryId = null): newest first by the provider's `added`
+    // timestamp, falling back to the numeric stream id — same ordering as
+    // observeLatest on the home screen. NEVER order by `id`: it is TEXT, so
+    // SQLite sorts it lexicographically and "999" outranks "3500".
     // Inside a specific category: alphabetical, which is what users expect
     // when browsing within a topic.
     fun observeByKind(
@@ -49,7 +51,14 @@ interface VodDao {
     @Query("SELECT * FROM vod_items WHERE id IN (:ids)")
     suspend fun getByIds(ids: List<String>): List<VodEntity>
 
-    @Query("SELECT * FROM vod_items WHERE playlistId = :playlistId AND kind = :kind ORDER BY id DESC LIMIT :limit")
+    @Query(
+        """
+        SELECT * FROM vod_items
+        WHERE playlistId = :playlistId AND kind = :kind
+        ORDER BY addedAt DESC, providerId DESC
+        LIMIT :limit
+        """
+    )
     fun observeLatest(playlistId: Long, kind: String, limit: Int = 10): Flow<List<VodEntity>>
 
     @Query("UPDATE vod_items SET posterUrl = :url WHERE id = :id")
@@ -64,11 +73,12 @@ interface SeriesDao {
           AND (:query = '' OR title LIKE '%' || :query || '%')
           AND (:categoryId IS NULL OR categoryId = :categoryId)
         ORDER BY
-          CASE WHEN :categoryId IS NULL THEN id END DESC,
+          CASE WHEN :categoryId IS NULL THEN addedAt END DESC,
+          CASE WHEN :categoryId IS NULL THEN providerId END DESC,
           title ASC
     """)
-    // "Tümü" view: newest first by id; inside a specific category:
-    // alphabetical. Mirrors VodDao.observeByKind for consistency.
+    // "Tümü" view: newest first by `last_modified` then numeric series id;
+    // inside a specific category: alphabetical. Mirrors VodDao.observeByKind.
     fun observeByPlaylist(
         playlistId: Long,
         query: String = "",
@@ -87,7 +97,14 @@ interface SeriesDao {
     @Query("SELECT * FROM series WHERE id IN (:ids)")
     suspend fun getByIds(ids: List<String>): List<SeriesEntity>
 
-    @Query("SELECT * FROM series WHERE playlistId = :playlistId ORDER BY id DESC LIMIT :limit")
+    @Query(
+        """
+        SELECT * FROM series
+        WHERE playlistId = :playlistId
+        ORDER BY addedAt DESC, providerId DESC
+        LIMIT :limit
+        """
+    )
     fun observeLatest(playlistId: Long, limit: Int = 10): Flow<List<SeriesEntity>>
 
     @Query("UPDATE series SET posterUrl = :url WHERE id = :id")

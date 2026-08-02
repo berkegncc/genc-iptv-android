@@ -1,6 +1,7 @@
 package com.genciptv.player.data.repository
 
 import android.util.Log
+import com.genciptv.player.core.util.redactCredentials
 import com.genciptv.player.data.model.Program
 import com.genciptv.player.data.source.epg.EpgDownloader
 import com.genciptv.player.data.source.local.dao.ProgramDao
@@ -100,7 +101,9 @@ class EpgRepositoryImpl @Inject constructor(
 
     override suspend fun syncFromXmltv(playlistId: Long, xmltvUrl: String): Unit =
         withContext(Dispatchers.IO) {
-            Log.i(TAG, "Downloading XMLTV for playlist=$playlistId from $xmltvUrl")
+            // The XMLTV endpoint carries the subscription username and password
+            // as query parameters — never log it raw.
+            Log.i(TAG, "Downloading XMLTV for playlist=$playlistId from ${xmltvUrl.redactCredentials()}")
             val programs = epgDownloader.downloadAndParse(xmltvUrl, playlistId)
             val sampleEpgIds = programs.asSequence().map { it.channelEpgId }.distinct().take(5).toList()
             Log.i(

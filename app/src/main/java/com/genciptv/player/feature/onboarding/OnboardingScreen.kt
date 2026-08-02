@@ -59,6 +59,7 @@ import com.genciptv.player.core.designsystem.Bg
 import com.genciptv.player.core.designsystem.GencIptvTheme
 import com.genciptv.player.core.designsystem.LocalAccentPalette
 import com.genciptv.player.core.designsystem.TextSecondary
+import com.genciptv.player.core.designsystem.TextPrimary
 import com.genciptv.player.core.ui.readableContentWidth
 
 // ── Stateful screen ───────────────────────────────────────────────────────────
@@ -141,7 +142,7 @@ private fun Step1Welcome(
 
         Text(
             text = "Hoş Geldin!",
-            style = MaterialTheme.typography.displayMedium,
+            style = MaterialTheme.typography.displayMedium.copy(color = TextPrimary),
             textAlign = TextAlign.Center,
         )
 
@@ -227,7 +228,7 @@ private fun Step2Playlist(
         ) {
             Text(
                 text = "Playlist Ekle",
-                style = MaterialTheme.typography.displaySmall,
+                style = MaterialTheme.typography.displaySmall.copy(color = TextPrimary),
             )
             Spacer(Modifier.height(4.dp))
             Text(
@@ -435,7 +436,7 @@ private fun LoadingOverlay(channelCount: Int) {
             Spacer(Modifier.height(16.dp))
             Text(
                 text = "Playlist yükleniyor…",
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.bodyLarge.copy(color = TextSecondary),
             )
             if (channelCount > 0) {
                 Spacer(Modifier.height(4.dp))

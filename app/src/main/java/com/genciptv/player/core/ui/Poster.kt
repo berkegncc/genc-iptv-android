@@ -16,6 +16,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -38,12 +39,15 @@ import com.genciptv.player.core.designsystem.PosterShape
  *
  * Visual stack (back to front):
  *  1. Hash-derived diagonal gradient — stable per [title], muted jewel tones.
- *  2. Film-grain noise hint (very subtle horizontal lines).
- *  3. Bottom vignette gradient (transparent → 55% black).
- *  4. AsyncImage on top if [posterUrl] is provided.
- *  5. Optional [label] in the top-left (e.g. "DEVAM", "YENİ").
- *  6. Serif title in the bottom-left (Instrument Serif, white).
- *  7. Mono [year] in the bottom-right.
+ *  2. Placeholder only — film-grain hint + bottom vignette. These are
+ *     `drawWithContent` modifiers on the root Box, so they paint *after* its
+ *     children; applying them when artwork is present drew the grain lines
+ *     over the poster itself.
+ *  3. AsyncImage covering the frame if [posterUrl] is provided, with its own
+ *     vignette on top so the title stays legible.
+ *  4. Optional [label] in the top-left (e.g. "DEVAM", "YENİ").
+ *  5. Serif title in the bottom-left (Instrument Serif, white).
+ *  6. Mono [year] in the bottom-right.
  *
  * Pass `modifier = Modifier.fillMaxWidth()` (or any size override) to use
  * the poster inside a constrained parent (LazyRow item, grid cell, etc.). The
@@ -77,21 +81,31 @@ fun Poster(
     } else Modifier
 
     val isCompact = width != Dp.Unspecified && width < 120.dp
+    val hasArtwork = !posterUrl.isNullOrBlank()
     Box(
         modifier = modifier
             .then(sizeMod)
             .clip(PosterShape)
             .background(brush)
-            .drawFilmGrain()
-            .drawBottomVignette(),
+            // Placeholder texture only — see the stack note above. With artwork
+            // present the vignette is applied over the image instead, so adding
+            // it here as well would double-darken the bottom of the poster.
+            .then(
+                if (hasArtwork) Modifier
+                else Modifier.drawFilmGrain().drawBottomVignette()
+            ),
     ) {
-        if (!posterUrl.isNullOrBlank()) {
+        if (hasArtwork) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(posterUrl)
                     .crossfade(true)
                     .build(),
                 contentDescription = title,
+                // Fill the frame like VodPosterCard does; the default (Fit)
+                // letterboxes the artwork and leaves the backing gradient
+                // showing along the edges.
+                contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize(),
             )
             // Re-apply vignette on top of the image so the title remains legible.

@@ -9,6 +9,7 @@ import com.genciptv.player.data.source.local.prefs.AppearancePreferencesDataSour
 import com.genciptv.player.data.source.local.prefs.PlayerPreferencesDataSource
 import com.genciptv.player.data.source.local.prefs.RecentChannelsDataSource
 import com.genciptv.player.data.source.local.prefs.SubtitleStyleDataSource
+import com.genciptv.player.data.source.local.prefs.UpdatePreferencesDataSource
 import com.genciptv.player.data.source.local.prefs.UserPreferencesDataSource
 import dagger.Module
 import dagger.Provides
@@ -39,6 +40,10 @@ annotation class UserDataStore
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
 annotation class RecentChannelsDataStore
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class UpdateDataStore
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -97,4 +102,13 @@ object DataStoreModule {
     fun provideRecentChannelsDataSource(
         @RecentChannelsDataStore store: DataStore<Preferences>,
     ): RecentChannelsDataSource = RecentChannelsDataSource(store)
+
+    @Provides @Singleton @UpdateDataStore
+    fun provideUpdateStore(@ApplicationContext context: Context): DataStore<Preferences> =
+        createStore(context, UpdatePreferencesDataSource.FILE)
+
+    @Provides @Singleton
+    fun provideUpdateDataSource(
+        @UpdateDataStore store: DataStore<Preferences>,
+    ): UpdatePreferencesDataSource = UpdatePreferencesDataSource(store)
 }

@@ -22,6 +22,10 @@ data class VodItem(
     val director: String? = null,
     val durationSecs: Int? = null,
     val categoryId: String? = null,
+    /** Provider's "added" timestamp in epoch millis; 0 when unknown. */
+    val addedAt: Long = 0L,
+    /** Numeric Xtream stream id — the sort key behind "newest first". */
+    val providerId: Long = 0L,
 )
 
 data class Series(
@@ -36,6 +40,10 @@ data class Series(
     val genres: List<String> = emptyList(),
     val cast: List<String> = emptyList(),
     val categoryId: String? = null,
+    /** Provider's "last_modified" timestamp in epoch millis; 0 when unknown. */
+    val addedAt: Long = 0L,
+    /** Numeric Xtream series id — the sort key behind "newest first". */
+    val providerId: Long = 0L,
 )
 
 data class Episode(
