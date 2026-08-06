@@ -1,0 +1,55 @@
+<resources>
+    <!-- VOD (film & dizi) liste ve detay ekranları. -->
+
+    <!-- ── Liste başlığı / sekmeler ─────────────────────────────────────────── -->
+    <string name="vod_list_title">Film &amp; Dizi</string>
+
+    <string name="vod_tab_movies">Filmler</string>
+    <string name="vod_tab_series">Diziler</string>
+
+    <!-- ── Arama ────────────────────────────────────────────────────────────── -->
+    <string name="vod_search_movies_placeholder">Film ara…</string>
+    <string name="vod_search_series_placeholder">Dizi ara…</string>
+
+    <!-- ── Boş durumlar ─────────────────────────────────────────────────────── -->
+    <string name="vod_empty_movies_title">Film bulunamadı</string>
+    <string name="vod_empty_movies_body">Senkronizasyon tamamlandıktan sonra filmler burada görünecek.</string>
+
+    <string name="vod_empty_series_title">Dizi bulunamadı</string>
+    <string name="vod_empty_series_body">Senkronizasyon tamamlandıktan sonra diziler burada görünecek.</string>
+
+    <!-- ── Devam et ─────────────────────────────────────────────────────────── -->
+    <string name="vod_continue_watching_title">Devam Et</string>
+    <!-- Poster üzerindeki kısa rozet — kısa tutulmalı. -->
+    <string name="vod_continue_watching_badge">DEVAM</string>
+
+    <string name="vod_movie_count">%1$d FİLM</string>
+    <string name="vod_series_count">%1$d DİZİ</string>
+
+    <!-- ── Devam et seçim modu ──────────────────────────────────────────────── -->
+    <string name="vod_cancel_selection">Seçimi iptal et</string>
+    <string name="vod_selected_count">%1$d seçili</string>
+
+    <string name="vod_remove_dialog_title">Kaldırılsın mı?</string>
+    <string name="vod_remove_dialog_body">Seçili %1$d içerik \"Devam Et\" listesinden kaldırılacak.</string>
+
+    <!-- ── Oynatma snackbar'ları ────────────────────────────────────────────── -->
+    <string name="vod_movie_playback_preparing">Film oynatma hazırlanıyor</string>
+    <string name="vod_episode_playback_preparing">Bölüm oynatma hazırlanıyor</string>
+
+    <!-- ── Detay ekranı ─────────────────────────────────────────────────────── -->
+    <string name="vod_add_to_favorites">Favorilere ekle</string>
+    <string name="vod_remove_from_favorites">Favorilerden çıkar</string>
+
+    <string name="vod_plot_summary_label">Özet</string>
+    <string name="vod_cast_title">Oyuncular</string>
+    <string name="vod_similar_movies">Benzer Filmler</string>
+    <string name="vod_similar_series">Benzer Diziler</string>
+
+    <string name="vod_episode_count">%1$d BÖLÜM</string>
+    <string name="vod_episodes_unavailable">Bölüm bilgisi yüklenemiyor.</string>
+    <string name="vod_load_failed">Yüklenemedi</string>
+    <string name="vod_search_results_label">Sonuçlar</string>
+    <string name="vod_search_no_results_title">Sonuç bulunamadı</string>
+    <string name="vod_search_no_results_body">%1$s ile eşleşen bir şey yok. Yazımı kontrol edin ya da daha kısa bir kelime deneyin.</string>
+</resources>

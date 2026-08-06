@@ -45,6 +45,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -54,6 +55,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.genciptv.player.R
 import com.genciptv.player.core.designsystem.AppLogoIcon
 import com.genciptv.player.core.designsystem.Bg
 import com.genciptv.player.core.designsystem.GencIptvTheme
@@ -103,11 +105,11 @@ fun OnboardingContent(
         if (state.error != null) {
             AlertDialog(
                 onDismissRequest = { onAction(OnboardingAction.DismissError) },
-                title = { Text("Hata") },
+                title = { Text(stringResource(R.string.onboarding_error_title)) },
                 text = { Text(state.error) },
                 confirmButton = {
                     TextButton(onClick = { onAction(OnboardingAction.DismissError) }) {
-                        Text("Tekrar Dene")
+                        Text(stringResource(R.string.action_retry))
                     }
                 }
             )
@@ -141,7 +143,7 @@ private fun Step1Welcome(
         Spacer(Modifier.height(28.dp))
 
         Text(
-            text = "Hoş Geldin!",
+            text = stringResource(R.string.onboarding_welcome_title),
             style = MaterialTheme.typography.displayMedium.copy(color = TextPrimary),
             textAlign = TextAlign.Center,
         )
@@ -149,7 +151,7 @@ private fun Step1Welcome(
         Spacer(Modifier.height(8.dp))
 
         Text(
-            text = "Sana nasıl hitap edelim?",
+            text = stringResource(R.string.onboarding_welcome_subtitle),
             style = MaterialTheme.typography.bodyLarge.copy(color = TextSecondary),
             textAlign = TextAlign.Center,
         )
@@ -159,8 +161,8 @@ private fun Step1Welcome(
         OutlinedTextField(
             value = state.displayName,
             onValueChange = { onAction(OnboardingAction.SetDisplayName(it)) },
-            label = { Text("Adın") },
-            placeholder = { Text("Örn. Mehmet") },
+            label = { Text(stringResource(R.string.onboarding_name_label)) },
+            placeholder = { Text(stringResource(R.string.onboarding_name_placeholder)) },
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             colors = OutlinedTextFieldDefaults.colors(
@@ -183,7 +185,7 @@ private fun Step1Welcome(
                 .height(52.dp),
         ) {
             Text(
-                text = "Devam",
+                text = stringResource(R.string.onboarding_continue_button),
                 style = MaterialTheme.typography.labelLarge.copy(color = Color.White),
             )
         }
@@ -217,7 +219,7 @@ private fun Step2Playlist(
             IconButton(onClick = { onAction(OnboardingAction.BackToStep1) }) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Geri",
+                    contentDescription = stringResource(R.string.action_back),
                     tint = accent,
                 )
             }
@@ -227,12 +229,12 @@ private fun Step2Playlist(
             modifier = Modifier.padding(horizontal = 20.dp),
         ) {
             Text(
-                text = "Playlist Ekle",
+                text = stringResource(R.string.onboarding_playlist_title),
                 style = MaterialTheme.typography.displaySmall.copy(color = TextPrimary),
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text = "M3U listeni veya Xtream Codes hesabını ekle",
+                text = stringResource(R.string.onboarding_playlist_subtitle),
                 style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary),
             )
             Spacer(Modifier.height(20.dp))
@@ -285,8 +287,8 @@ private fun M3uTab(
         OnboardingTextField(
             value = state.m3uForm.name,
             onValueChange = { onAction(OnboardingAction.UpdateM3uName(it)) },
-            label = "Liste Adı",
-            placeholder = "Playlist 1",
+            label = stringResource(R.string.onboarding_list_name_label),
+            placeholder = stringResource(R.string.onboarding_m3u_name_placeholder),
             imeAction = ImeAction.Next,
         )
         Spacer(Modifier.height(12.dp))
@@ -304,8 +306,8 @@ private fun M3uTab(
         OnboardingTextField(
             value = state.m3uForm.epgUrl,
             onValueChange = { onAction(OnboardingAction.UpdateM3uEpgUrl(it)) },
-            label = "EPG URL (opsiyonel)",
-            placeholder = "XMLTV link",
+            label = stringResource(R.string.onboarding_epg_url_label),
+            placeholder = stringResource(R.string.onboarding_epg_url_placeholder),
             keyboardType = KeyboardType.Uri,
             imeAction = ImeAction.Done,
         )
@@ -321,7 +323,7 @@ private fun M3uTab(
                 .height(52.dp),
         ) {
             Text(
-                text = "Yükle ve Başla",
+                text = stringResource(R.string.onboarding_m3u_submit_button),
                 style = MaterialTheme.typography.labelLarge.copy(color = Color.White),
             )
         }
@@ -347,7 +349,7 @@ private fun XtreamTab(
         OnboardingTextField(
             value = form.name,
             onValueChange = { onAction(OnboardingAction.UpdateXtreamName(it)) },
-            label = "Liste Adı",
+            label = stringResource(R.string.onboarding_list_name_label),
             placeholder = "Xtream",
             imeAction = ImeAction.Next,
         )
@@ -356,7 +358,7 @@ private fun XtreamTab(
         OnboardingTextField(
             value = form.serverUrl,
             onValueChange = { onAction(OnboardingAction.UpdateXtreamServerUrl(it)) },
-            label = "Sunucu URL",
+            label = stringResource(R.string.onboarding_server_url_label),
             placeholder = "http://host:port",
             keyboardType = KeyboardType.Uri,
             imeAction = ImeAction.Next,
@@ -366,7 +368,7 @@ private fun XtreamTab(
         OnboardingTextField(
             value = form.username,
             onValueChange = { onAction(OnboardingAction.UpdateXtreamUsername(it)) },
-            label = "Kullanıcı Adı",
+            label = stringResource(R.string.onboarding_username_label),
             placeholder = "",
             imeAction = ImeAction.Next,
         )
@@ -376,7 +378,7 @@ private fun XtreamTab(
         OutlinedTextField(
             value = form.password,
             onValueChange = { onAction(OnboardingAction.UpdateXtreamPassword(it)) },
-            label = { Text("Şifre") },
+            label = { Text(stringResource(R.string.onboarding_password_label)) },
             singleLine = true,
             visualTransformation = if (form.passwordVisible) VisualTransformation.None
                                    else PasswordVisualTransformation(),
@@ -389,7 +391,7 @@ private fun XtreamTab(
                     Icon(
                         imageVector = if (form.passwordVisible) Icons.Default.VisibilityOff
                                       else Icons.Default.Visibility,
-                        contentDescription = if (form.passwordVisible) "Şifreyi gizle" else "Şifreyi göster",
+                        contentDescription = if (form.passwordVisible) stringResource(R.string.onboarding_password_hide) else stringResource(R.string.onboarding_password_show),
                     )
                 }
             },
@@ -413,7 +415,7 @@ private fun XtreamTab(
                 .height(52.dp),
         ) {
             Text(
-                text = "Bağlan ve Başla",
+                text = stringResource(R.string.onboarding_xtream_submit_button),
                 style = MaterialTheme.typography.labelLarge.copy(color = Color.White),
             )
         }
@@ -435,13 +437,13 @@ private fun LoadingOverlay(channelCount: Int) {
             CircularProgressIndicator(modifier = Modifier.size(48.dp))
             Spacer(Modifier.height(16.dp))
             Text(
-                text = "Playlist yükleniyor…",
+                text = stringResource(R.string.onboarding_loading_playlist),
                 style = MaterialTheme.typography.bodyLarge.copy(color = TextSecondary),
             )
             if (channelCount > 0) {
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = "$channelCount kanal yüklendi",
+                    text = stringResource(R.string.onboarding_channels_loaded_count, channelCount),
                     style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary),
                 )
             }

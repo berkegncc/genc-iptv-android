@@ -1,0 +1,49 @@
+<resources>
+    <!--
+      Turkish. The app's primary audience; English in values/ is the fallback
+      for every other language.
+
+      Every key that exists in values/ must exist here too — a key missing from
+      this file silently shows English to a Turkish user rather than failing.
+    -->
+
+    <!-- ── Actions ─────────────────────────────────────────────────────────── -->
+    <string name="action_back">Geri</string>
+    <string name="action_play">Oynat</string>
+    <string name="action_cancel">İptal</string>
+    <string name="action_save">Kaydet</string>
+    <string name="action_delete">Sil</string>
+    <string name="action_remove">Kaldır</string>
+    <string name="action_close">Kapat</string>
+    <string name="action_retry">Tekrar dene</string>
+    <string name="action_refresh">Yenile</string>
+    <string name="action_ok">Tamam</string>
+    <string name="action_all">Tümü</string>
+    <string name="action_see_all">Tümü</string>
+    <string name="action_add">Ekle</string>
+    <string name="action_edit">Düzenle</string>
+
+    <!-- ── Navigation ──────────────────────────────────────────────────────── -->
+    <string name="nav_home">Ana Sayfa</string>
+    <string name="nav_channels">Kanallar</string>
+    <string name="nav_movies">Filmler</string>
+    <string name="nav_series">Diziler</string>
+    <string name="nav_profile">Profil</string>
+
+    <!-- ── Shared content terms ────────────────────────────────────────────── -->
+    <string name="term_episodes">Bölümler</string>
+    <string name="term_favorites">Favoriler</string>
+    <string name="term_settings">Ayarlar</string>
+    <string name="term_search">Ara</string>
+
+    <string name="term_season_number">%1$d. Sezon</string>
+    <string name="term_episode_number">%1$d. Bölüm</string>
+    <string name="term_episode_titled">%1$d. %2$s</string>
+
+    <!-- ── Shared states ───────────────────────────────────────────────────── -->
+    <string name="state_loading">Yükleniyor…</string>
+    <string name="state_error_title">Bir şeyler ters gitti</string>
+
+    <!-- ── Units ───────────────────────────────────────────────────────────── -->
+    <string name="unit_minutes_short">%1$d dk</string>
+</resources>

@@ -28,12 +28,14 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
+import com.genciptv.player.R
 import com.genciptv.player.core.designsystem.Border
 import com.genciptv.player.core.designsystem.GencIptvTheme
 import com.genciptv.player.core.designsystem.LocalAccentPalette
@@ -168,7 +170,7 @@ fun ContinueWatchingItem(
         ) {
             Icon(
                 imageVector = Icons.Default.PlayArrow,
-                contentDescription = "Oynat",
+                contentDescription = stringResource(R.string.action_play),
                 tint = accent,
                 modifier = Modifier.size(16.dp)
             )

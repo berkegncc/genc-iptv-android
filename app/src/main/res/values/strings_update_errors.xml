@@ -1,0 +1,19 @@
+<resources>
+    <!--
+      Failure messages from the update download and installer. These live in
+      the data / util layers rather than a composable, so they are resolved
+      with context.getString rather than stringResource — both classes already
+      hold a Context.
+    -->
+
+    <string name="update_error_server_code">The server returned %1$d</string>
+    <string name="update_error_empty_response">The download came back empty</string>
+    <string name="update_error_empty_file">The downloaded file is empty</string>
+    <string name="update_error_download_failed">Download failed. Check your connection and try again.</string>
+
+    <string name="install_error_missing_file">The downloaded file is gone. Download the update again.</string>
+    <string name="install_error_unreadable">The downloaded file could not be read; it may be incomplete. Try again.</string>
+    <string name="install_error_wrong_package">This package does not belong to this app (%1$s). Install cancelled.</string>
+    <string name="install_error_downgrade">The published version (%1$d) is older than the one on your device (%2$d). Android does not allow going back.</string>
+    <string name="install_error_signature">This update was signed with a different key, so Android refuses to install it. You would have to remove the current app and install the new version by hand.</string>
+</resources>

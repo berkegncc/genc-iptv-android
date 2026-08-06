@@ -38,6 +38,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.genciptv.player.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -121,7 +123,11 @@ fun FavoritesContent(
     modifier: Modifier = Modifier,
 ) {
     val accent = LocalAccentPalette.current.primary
-    val tabs = listOf("Kanallar", "Filmler", "Diziler")
+    val tabs = listOf(
+        stringResource(R.string.favorites_tab_channels),
+        stringResource(R.string.favorites_tab_movies),
+        stringResource(R.string.favorites_tab_series),
+    )
 
     // Pager drives both the content area and the tab indicator. Two-way sync:
     //  - Tab tap (`onTabSelected` → VM → `uiState.selectedTab`) animates the
@@ -244,13 +250,13 @@ private fun FavoritesHeader(onBack: () -> Unit) {
         IconButton(onClick = onBack) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Geri",
+                contentDescription = stringResource(R.string.action_back),
                 tint = TextPrimary,
             )
         }
         Spacer(Modifier.width(4.dp))
         Text(
-            text = "Favoriler",
+            text = stringResource(R.string.favorites_title),
             style = MaterialTheme.typography.titleLarge.copy(
                 fontWeight = FontWeight.Bold,
                 color = TextPrimary,
@@ -278,8 +284,8 @@ private fun FavoriteChannelsTab(
         isLoading -> LoadingState(modifier = Modifier.fillMaxSize())
         channels.isEmpty() -> EmptyState(
             icon = "⭐",
-            title = "Henüz favori kanal yok",
-            description = "Kanallar ekranında ⭐ simgesine dokunarak favori ekleyebilirsin.",
+            title = stringResource(R.string.favorites_empty_channels_title),
+            description = stringResource(R.string.favorites_empty_channels_body),
             modifier = Modifier.fillMaxSize(),
         )
         else -> {
@@ -321,8 +327,8 @@ private fun FavoriteMoviesTab(
         isLoading -> LoadingState(modifier = Modifier.fillMaxSize())
         movies.isEmpty() -> EmptyState(
             icon = "🎬",
-            title = "Henüz favori film yok",
-            description = "Film listesinde ⭐ simgesine dokunarak favori ekleyebilirsin.",
+            title = stringResource(R.string.favorites_empty_movies_title),
+            description = stringResource(R.string.favorites_empty_movies_body),
             modifier = Modifier.fillMaxSize(),
         )
         else -> LazyVerticalGrid(
@@ -360,8 +366,8 @@ private fun FavoriteSeriesTab(
         isLoading -> LoadingState(modifier = Modifier.fillMaxSize())
         seriesList.isEmpty() -> EmptyState(
             icon = "📺",
-            title = "Henüz favori dizi yok",
-            description = "Dizi listesinde ⭐ simgesine dokunarak favori ekleyebilirsin.",
+            title = stringResource(R.string.favorites_empty_series_title),
+            description = stringResource(R.string.favorites_empty_series_body),
             modifier = Modifier.fillMaxSize(),
         )
         else -> LazyVerticalGrid(

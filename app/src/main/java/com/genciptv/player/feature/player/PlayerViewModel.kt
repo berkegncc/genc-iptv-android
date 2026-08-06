@@ -1,8 +1,10 @@
 package com.genciptv.player.feature.player
 
+import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.genciptv.player.R
 import com.genciptv.player.data.model.Channel
 import com.genciptv.player.data.model.FavoriteTargetType
 import com.genciptv.player.data.model.Program
@@ -13,6 +15,7 @@ import com.genciptv.player.data.repository.FavoriteRepository
 import com.genciptv.player.data.repository.UserPreferencesRepository
 import com.genciptv.player.feature.home.model.ChannelWithProgram
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,6 +38,7 @@ import javax.inject.Inject
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class PlayerViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle,
     private val channelRepository: ChannelRepository,
     private val epgRepository: EpgRepository,
@@ -146,7 +150,7 @@ class PlayerViewModel @Inject constructor(
             isFavorite = isFav,
             isPlaying = true,
             volume = volume,
-            error = if (channel == null && _channelId.value.isNotBlank()) "Kanal bulunamadı" else null,
+            error = if (channel == null && _channelId.value.isNotBlank()) context.getString(R.string.errors_player_channel_not_found) else null,
         )
     }
         .flowOn(Dispatchers.Default)

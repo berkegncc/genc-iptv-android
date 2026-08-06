@@ -1,0 +1,214 @@
+<resources>
+    <!-- Profile screen (ProfileScreen.kt). -->
+
+    <string name="profile_default_display_name">User</string>
+    <string name="profile_default_initials">U</string>
+
+    <string name="profile_section_discover">Discover</string>
+    <string name="profile_section_playlist">Playlist</string>
+    <string name="profile_section_player">Player</string>
+    <string name="profile_section_appearance">Appearance</string>
+    <string name="profile_section_about">About</string>
+    <string name="profile_section_account">Account</string>
+
+    <string name="profile_favorites_subtitle">My channels, my movies, my series</string>
+    <string name="profile_guide_label">Program Guide</string>
+    <string name="profile_guide_subtitle">Live TV EPG</string>
+
+    <string name="profile_playlist_management_label">Playlist Management</string>
+    <plurals name="profile_playlist_count">
+        <item quantity="one">%1$d playlist added</item>
+        <item quantity="other">%1$d playlists added</item>
+    </plurals>
+
+
+    <string name="profile_player_settings_label">Player Settings</string>
+    <string name="profile_player_settings_subtitle">Default quality, audio, decoder</string>
+    <string name="profile_subtitle_settings_label">Subtitle Appearance</string>
+    <string name="profile_subtitle_settings_subtitle">Font, color, size</string>
+    <string name="profile_loudness_label">Audio Normalization</string>
+    <string name="profile_loudness_subtitle">Balance the volume level</string>
+    <string name="profile_pip_label">Picture in Picture</string>
+    <string name="profile_pip_subtitle">Watch in the background</string>
+
+    <string name="profile_theme_color_label">Theme &amp; Color</string>
+    <!-- "Light" is currently always shown regardless of the real theme mode
+         (see buildThemeSubtitle) — %1$s is the accent color name. -->
+    <string name="profile_theme_subtitle">Light · %1$s</string>
+
+    <string name="profile_check_updates_label">Check for updates</string>
+    <string name="profile_check_updates_subtitle">Search for a new version on GitHub</string>
+
+    <string name="profile_tmdb_key_label">TMDB API Key</string>
+    <string name="profile_tmdb_key_subtitle_empty">For actor photos and missing posters</string>
+    <string name="profile_tmdb_key_subtitle_set">Defined — tap to change</string>
+    <string name="profile_tmdb_key_dialog_body">Used for actor photos and content the provider doesn\'t supply posters for. It\'s not required — leave it blank and the app skips these two features, everything else works normally.\n\nYou can get a free key by creating an account at themoviedb.org and going to Settings → API.</string>
+    <string name="profile_tmdb_key_placeholder">Paste the key here</string>
+    <string name="profile_tmdb_key_dismiss">Cancel</string>
+
+    <string name="profile_version_label">Version</string>
+
+    <string name="profile_logout_label">Log Out</string>
+    <string name="profile_logout_confirm_message">Are you sure you want to log out? The active playlist will be deleted.</string>
+
+    <string name="profile_edit_name_title">Edit Name</string>
+    <string name="profile_display_name_label">Display Name</string>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- Player settings screen (player/PlayerSettingsScreen.kt). -->
+
+    <string name="playersettings_title">Player Settings</string>
+
+    <string name="playersettings_section_quality">Quality &amp; Codec</string>
+    <string name="playersettings_default_quality_label">Default Quality</string>
+    <string name="playersettings_decoder_pref_label">Decoder Preference</string>
+
+    <string name="playersettings_section_audio_language">Audio &amp; Language</string>
+    <string name="playersettings_audio_lang_label">Preferred Audio Language</string>
+    <string name="playersettings_none">None</string>
+    <string name="playersettings_loudness_label">Audio Normalization</string>
+
+    <string name="playersettings_section_network">Network</string>
+    <string name="playersettings_user_agent_label">User-Agent Override</string>
+    <string name="playersettings_default">Default</string>
+
+    <string name="playersettings_section_playback">Playback</string>
+    <string name="playersettings_pip_label">Picture in Picture</string>
+
+    <string name="playersettings_audio_lang_code_label">Language code (ISO 639-1)</string>
+    <string name="playersettings_audio_lang_placeholder">tr, en, de...</string>
+    <string name="playersettings_audio_lang_example">Example: tr (Turkish), en (English)</string>
+
+    <string name="playersettings_user_agent_field_label">User-Agent</string>
+    <string name="playersettings_user_agent_placeholder">VLC/3.0 (empty = default)</string>
+
+    <string name="playersettings_automatic">Automatic</string>
+    <string name="playersettings_decoder_hw">Hardware</string>
+    <string name="playersettings_decoder_sw">Software</string>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- Subtitle settings screen (subtitle/SubtitleSettingsScreen.kt). -->
+
+    <string name="subtitle_title">Subtitle Appearance</string>
+    <string name="subtitle_reset_button">Reset</string>
+    <string name="subtitle_reset_confirm_message">Are you sure you want to reset the subtitle settings to default?</string>
+
+    <string name="subtitle_section_font">Font</string>
+    <string name="subtitle_font_family_label">Font Family</string>
+    <string name="subtitle_font_style_label">Font Style</string>
+    <string name="subtitle_text_size_label">Text Size</string>
+    <!-- Reused for every "N%" readout on this screen (text/bg/window opacity, text size). -->
+    <string name="subtitle_percent_value">%1$d%%</string>
+
+    <string name="subtitle_section_colors">Colors</string>
+    <string name="subtitle_text_color_label">Text Color</string>
+    <string name="subtitle_text_opacity_label">Text Opacity</string>
+    <string name="subtitle_bg_color_label">Background Color</string>
+    <string name="subtitle_bg_opacity_label">Background Opacity</string>
+    <string name="subtitle_window_color_label">Window Color</string>
+    <string name="subtitle_window_opacity_label">Window Opacity</string>
+
+    <string name="subtitle_section_edge">Edge</string>
+    <string name="subtitle_edge_type_label">Edge Type</string>
+    <string name="subtitle_edge_color_label">Edge Color</string>
+
+    <string name="subtitle_section_position">Position</string>
+    <string name="subtitle_vertical_position_label">Vertical Position</string>
+
+    <!-- SubtitleFontFamily.label() — the other branches (Sans-Serif, Serif,
+         Monospace, Casual, Cursive) are font-family identifiers, left as literals. -->
+    <string name="subtitle_font_family_system">System</string>
+
+    <!-- SubtitleFontStyle.label() -->
+    <string name="subtitle_font_style_normal">Normal</string>
+    <string name="subtitle_font_style_bold">Bold</string>
+    <string name="subtitle_font_style_italic">Italic</string>
+    <string name="subtitle_font_style_bold_italic">Bold Italic</string>
+
+    <!-- SubtitleEdgeType.label() -->
+    <string name="subtitle_edge_type_none">None</string>
+    <string name="subtitle_edge_type_outline">Outline</string>
+    <string name="subtitle_edge_type_drop_shadow">Shadow</string>
+    <string name="subtitle_edge_type_raised">Raised</string>
+    <string name="subtitle_edge_type_depressed">Depressed</string>
+
+    <!-- SubtitleVerticalPosition.label() -->
+    <string name="subtitle_position_bottom">Bottom</string>
+    <string name="subtitle_position_center">Center</string>
+    <string name="subtitle_position_top">Top</string>
+
+    <string name="subtitle_sample_text">This is a subtitle example.\nThe second line also appears here.</string>
+    <string name="subtitle_transparent_button">Transparent</string>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- Theme settings screen (theme/ThemeSettingsScreen.kt). -->
+
+    <string name="theme_title">Appearance &amp; Theme</string>
+
+    <string name="theme_section_mode">THEME MODE</string>
+    <string name="theme_section_accent">ACCENT COLOR</string>
+    <string name="theme_section_icon_preview">APP ICON PREVIEW</string>
+
+    <string name="theme_mode_light">Light</string>
+    <string name="theme_mode_dark">Dark</string>
+    <string name="theme_mode_system">System</string>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- Playlist manager + Add playlist sheet
+         (playlists/PlaylistManagerScreen.kt, playlists/AddPlaylistSheet.kt). -->
+
+    <string name="playlist_add_new">Add New</string>
+    <string name="playlist_manager_title">Playlist Management</string>
+
+    <string name="playlist_empty_title">No playlist added yet</string>
+    <string name="playlist_empty_description">Tap the + button below to add one</string>
+
+    <string name="playlist_delete_title">Delete Playlist</string>
+    <string name="playlist_delete_confirm_message">Are you sure you want to delete \"%1$s\"?</string>
+
+    <string name="playlist_error_dialog_title">Error</string>
+
+    <string name="playlist_active_badge">Active</string>
+    <plurals name="playlist_channel_count">
+        <item quantity="one">%1$d channel</item>
+        <item quantity="other">%1$d channels</item>
+    </plurals>
+
+    <string name="playlist_options_content_description">Options</string>
+    <string name="playlist_make_active">Make Active</string>
+    <string name="playlist_sync_now">Sync Now</string>
+
+    <string name="playlist_never_synced">Never synced</string>
+    <string name="playlist_just_now">Just now</string>
+    <plurals name="playlist_minutes_ago">
+        <item quantity="one">%1$d minute ago</item>
+        <item quantity="other">%1$d minutes ago</item>
+    </plurals>
+    <plurals name="playlist_hours_ago">
+        <item quantity="one">%1$d hour ago</item>
+        <item quantity="other">%1$d hours ago</item>
+    </plurals>
+
+    <string name="playlist_add_sheet_title">Add New Playlist</string>
+
+    <string name="playlist_form_name_label">List Name</string>
+    <string name="playlist_form_name_placeholder">Playlist 1</string>
+    <string name="playlist_form_epg_url_label">EPG URL (optional)</string>
+    <string name="playlist_upload_button">Upload</string>
+
+    <string name="playlist_form_server_url_label">Server URL</string>
+    <string name="playlist_form_username_label">Username</string>
+    <string name="playlist_form_password_label">Password</string>
+    <string name="playlist_password_hide">Hide</string>
+    <string name="playlist_password_show">Show</string>
+    <string name="playlist_connect_button">Connect</string>
+    <string name="profile_plan_standard">Standard</string>
+    <!-- Content refresh. A picker rather than a switch: a switch in its off
+         state names what is not happening, never what is, so "Wi-Fi only:
+         off" reads equally well as "never refreshes". Two named options
+         say it outright, and the row can show the answer as its subtitle. -->
+    <string name="profile_sync_network_label">Content refresh</string>
+    <string name="profile_sync_option_any">Mobile data and Wi-Fi</string>
+    <string name="profile_sync_option_wifi">Wi-Fi only</string>
+    <string name="profile_sync_note">A refresh downloads the whole catalogue and can use a lot of data.</string>
+</resources>

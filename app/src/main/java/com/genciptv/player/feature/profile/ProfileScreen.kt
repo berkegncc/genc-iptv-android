@@ -20,6 +20,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Wifi
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.Autorenew
@@ -52,6 +53,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -59,6 +63,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.genciptv.player.R
 import com.genciptv.player.core.designsystem.Bg
 import com.genciptv.player.core.designsystem.Border
 import com.genciptv.player.core.designsystem.GeistMonoFamily
@@ -83,6 +88,10 @@ import com.genciptv.player.feature.update.UpdateDialogHost
 import com.genciptv.player.feature.update.rememberUpdateViewModel
 import com.genciptv.player.data.model.PlayerPreferences
 import com.genciptv.player.data.model.UserPreferences
+import com.genciptv.player.core.util.AppLanguage
+import com.genciptv.player.feature.profile.language.LanguageDialog
+import com.genciptv.player.feature.profile.sync.SyncNetworkDialog
+import androidx.compose.material.icons.outlined.Language
 
 // ── Stateful screen ───────────────────────────────────────────────────────────
 
@@ -113,6 +122,7 @@ fun ProfileScreen(
         onCheckUpdates = { updateViewModel.check(force = true) },
         onBack = onBack,
         onNavigateToPlaylistManager = onNavigateToPlaylistManager,
+        onSetSyncOverWifiOnly = viewModel::setSyncOverWifiOnly,
         onNavigateToPlayerSettings = onNavigateToPlayerSettings,
         onNavigateToSubtitleSettings = onNavigateToSubtitleSettings,
         onNavigateToThemeSettings = onNavigateToThemeSettings,
@@ -123,7 +133,6 @@ fun ProfileScreen(
         onNavigateToVod = onNavigateToVod,
         onSetDisplayName = viewModel::setDisplayName,
         onSetTmdbApiKey = viewModel::setTmdbApiKey,
-        onToggleAutoUpdate = viewModel::toggleAutoUpdate,
         onToggleLoudness = viewModel::toggleLoudness,
         onTogglePip = viewModel::togglePip,
         onLogout = viewModel::logout,
@@ -141,6 +150,7 @@ fun ProfileContent(
     onCheckUpdates: () -> Unit = {},
     onBack: () -> Unit,
     onNavigateToPlaylistManager: () -> Unit,
+    onSetSyncOverWifiOnly: (Boolean) -> Unit,
     onNavigateToPlayerSettings: () -> Unit,
     onNavigateToSubtitleSettings: () -> Unit,
     onNavigateToThemeSettings: () -> Unit,
@@ -151,12 +161,13 @@ fun ProfileContent(
     onNavigateToVod: ((kind: String) -> Unit)? = null,
     onSetDisplayName: (String) -> Unit,
     onSetTmdbApiKey: (String) -> Unit = {},
-    onToggleAutoUpdate: (Boolean) -> Unit,
     onToggleLoudness: (Boolean) -> Unit,
     onTogglePip: (Boolean) -> Unit,
     onLogout: () -> Unit,
 ) {
     val accent = LocalAccentPalette.current
+    var showLanguageDialog by remember { mutableStateOf(false) }
+    var showSyncNetworkDialog by remember { mutableStateOf(false) }
     var showEditNameDialog by remember { mutableStateOf(false) }
     var showTmdbKeyDialog by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
@@ -194,7 +205,7 @@ fun ProfileContent(
                 // Gradient profile card
                 val initials = buildInitials(uiState.user.displayName)
                 GradientProfileCard(
-                    name = uiState.user.displayName.ifBlank { "Kullanıcı" },
+                    name = uiState.user.displayName.ifBlank { stringResource(R.string.profile_default_display_name) },
                     plan = uiState.planText,
                     initials = initials,
                     onEditClick = { showEditNameDialog = true },
@@ -203,20 +214,20 @@ fun ProfileContent(
                 Spacer(Modifier.height(20.dp))
 
                 // ── Keşfet section — Guide + Favoriler ────────────────────────
-                SectionTitle("Keşfet")
+                SectionTitle(stringResource(R.string.profile_section_discover))
                 Spacer(Modifier.height(8.dp))
                 SettingGroupCard {
                     SettingRow(
                         icon = Icons.Outlined.StarBorder,
-                        label = "Favoriler",
-                        subtitle = "Kanallarım, filmlerim, dizilerim",
+                        label = stringResource(R.string.term_favorites),
+                        subtitle = stringResource(R.string.profile_favorites_subtitle),
                         onClick = onNavigateToFavorites,
                     )
                     SettingRowDivider()
                     SettingRow(
                         icon = Icons.Outlined.CalendarMonth,
-                        label = "Program Rehberi",
-                        subtitle = "Canlı TV EPG",
+                        label = stringResource(R.string.profile_guide_label),
+                        subtitle = stringResource(R.string.profile_guide_subtitle),
                         onClick = onNavigateToGuide,
                     )
                 }
@@ -224,52 +235,57 @@ fun ProfileContent(
                 Spacer(Modifier.height(20.dp))
 
                 // Section label
-                SectionTitle("Playlist")
+                SectionTitle(stringResource(R.string.profile_section_playlist))
                 Spacer(Modifier.height(8.dp))
                 SettingGroupCard {
                     SettingRow(
                         icon = Icons.AutoMirrored.Outlined.PlaylistPlay,
-                        label = "Playlist Yönetimi",
-                        subtitle = "${uiState.playlistCount} playlist ekli",
+                        label = stringResource(R.string.profile_playlist_management_label),
+                        subtitle = pluralStringResource(
+                            R.plurals.profile_playlist_count,
+                            uiState.playlistCount,
+                            uiState.playlistCount,
+                        ),
                         onClick = onNavigateToPlaylistManager,
                     )
                     SettingRowDivider()
+                    // Subtitle carries the current choice, matching the Language
+                    // row above it — the value is the answer, so it belongs
+                    // where the reader is already looking.
                     SettingRow(
-                        icon = Icons.Outlined.Autorenew,
-                        label = "Otomatik Güncelleme",
-                        subtitle = "Her 24 saatte bir",
-                        trailing = {
-                            GencToggle(
-                                checked = uiState.user.autoUpdateEnabled,
-                                onCheckedChange = onToggleAutoUpdate,
-                            )
-                        }
+                        icon = Icons.Outlined.Wifi,
+                        label = stringResource(R.string.profile_sync_network_label),
+                        subtitle = stringResource(
+                            if (uiState.user.syncOverWifiOnly) R.string.profile_sync_option_wifi
+                            else R.string.profile_sync_option_any
+                        ),
+                        onClick = { showSyncNetworkDialog = true },
                     )
                 }
 
                 Spacer(Modifier.height(20.dp))
 
-                SectionTitle("Oynatıcı")
+                SectionTitle(stringResource(R.string.profile_section_player))
                 Spacer(Modifier.height(8.dp))
                 SettingGroupCard {
                     SettingRow(
                         icon = Icons.Outlined.Tune,
-                        label = "Player Ayarları",
-                        subtitle = "Varsayılan kalite, audio, decoder",
+                        label = stringResource(R.string.profile_player_settings_label),
+                        subtitle = stringResource(R.string.profile_player_settings_subtitle),
                         onClick = onNavigateToPlayerSettings,
                     )
                     SettingRowDivider()
                     SettingRow(
                         icon = Icons.Outlined.ClosedCaption,
-                        label = "Altyazı Görünümü",
-                        subtitle = "Yazı tipi, renk, boyut",
+                        label = stringResource(R.string.profile_subtitle_settings_label),
+                        subtitle = stringResource(R.string.profile_subtitle_settings_subtitle),
                         onClick = onNavigateToSubtitleSettings,
                     )
                     SettingRowDivider()
                     SettingRow(
                         icon = Icons.Outlined.GraphicEq,
-                        label = "Ses Normalleştirme",
-                        subtitle = "Ses seviyesini dengele",
+                        label = stringResource(R.string.profile_loudness_label),
+                        subtitle = stringResource(R.string.profile_loudness_subtitle),
                         trailing = {
                             GencToggle(
                                 checked = uiState.player.loudnessNormalization,
@@ -280,8 +296,8 @@ fun ProfileContent(
                     SettingRowDivider()
                     SettingRow(
                         icon = Icons.Outlined.PictureInPictureAlt,
-                        label = "Resim İçinde Resim",
-                        subtitle = "Arka planda izle",
+                        label = stringResource(R.string.profile_pip_label),
+                        subtitle = stringResource(R.string.profile_pip_subtitle),
                         trailing = {
                             GencToggle(
                                 checked = uiState.player.pictureInPicture,
@@ -293,41 +309,55 @@ fun ProfileContent(
 
                 Spacer(Modifier.height(20.dp))
 
-                SectionTitle("Görünüm")
+                SectionTitle(stringResource(R.string.profile_section_appearance))
                 Spacer(Modifier.height(8.dp))
                 SettingGroupCard {
                     SettingRow(
                         icon = Icons.Outlined.Palette,
-                        label = "Tema & Renk",
+                        label = stringResource(R.string.profile_theme_color_label),
                         subtitle = buildThemeSubtitle(uiState),
                         onClick = onNavigateToThemeSettings,
+                    )
+                    // Sits under Appearance rather than in its own section: it
+                    // is one row, and a section heading over a single item
+                    // reads as an empty promise of more.
+                    val currentLanguage = AppLanguage.current(LocalContext.current)
+                    SettingRow(
+                        icon = Icons.Outlined.Language,
+                        label = stringResource(R.string.language_title),
+                        subtitle = when (currentLanguage) {
+                            AppLanguage.SYSTEM -> stringResource(R.string.language_subtitle_system)
+                            AppLanguage.TURKISH -> stringResource(R.string.language_option_turkish)
+                            AppLanguage.ENGLISH -> stringResource(R.string.language_option_english)
+                        },
+                        onClick = { showLanguageDialog = true },
                     )
                 }
 
                 Spacer(Modifier.height(20.dp))
 
-                SectionTitle("Hakkında")
+                SectionTitle(stringResource(R.string.profile_section_about))
                 Spacer(Modifier.height(8.dp))
                 SettingGroupCard {
                     SettingRow(
                         icon = Icons.Outlined.FileDownload,
-                        label = "Güncellemeleri kontrol et",
-                        subtitle = "GitHub üzerinden yeni sürüm ara",
+                        label = stringResource(R.string.profile_check_updates_label),
+                        subtitle = stringResource(R.string.profile_check_updates_subtitle),
                         onClick = onCheckUpdates,
                     )
                     SettingRowDivider()
                     SettingRow(
                         icon = Icons.Outlined.Movie,
-                        label = "TMDB API Anahtarı",
+                        label = stringResource(R.string.profile_tmdb_key_label),
                         subtitle = if (uiState.user.tmdbApiKey.isBlank()) {
-                            "Oyuncu fotoğrafları ve eksik afişler için"
+                            stringResource(R.string.profile_tmdb_key_subtitle_empty)
                         } else {
-                            "Tanımlı — dokunarak değiştir"
+                            stringResource(R.string.profile_tmdb_key_subtitle_set)
                         },
                         onClick = { showTmdbKeyDialog = true },
                         trailing = {
                             Text(
-                                text = if (uiState.user.tmdbApiKey.isBlank()) "Ekle" else "✓",
+                                text = if (uiState.user.tmdbApiKey.isBlank()) stringResource(R.string.action_add) else "✓",
                                 style = TextStyle(
                                     fontFamily = GeistMonoFamily,
                                     fontWeight = FontWeight.Medium,
@@ -344,7 +374,7 @@ fun ProfileContent(
                     SettingRowDivider()
                     SettingRow(
                         icon = Icons.Outlined.Info,
-                        label = "Sürüm",
+                        label = stringResource(R.string.profile_version_label),
                         trailing = {
                             Text(
                                 text = if (appVersion.isBlank()) "—" else "v$appVersion",
@@ -362,13 +392,13 @@ fun ProfileContent(
 
                 Spacer(Modifier.height(20.dp))
 
-                SectionTitle("Hesap")
+                SectionTitle(stringResource(R.string.profile_section_account))
                 Spacer(Modifier.height(8.dp))
                 SettingGroupCard {
                     SettingRow(
                         icon = Icons.AutoMirrored.Outlined.Logout,
                         tint = Live,
-                        label = "Çıkış Yap",
+                        label = stringResource(R.string.profile_logout_label),
                         onClick = { showLogoutDialog = true },
                         trailing = {
                             Text(
@@ -382,6 +412,18 @@ fun ProfileContent(
                 Spacer(Modifier.height(16.dp))
             }
         }
+    }
+
+    if (showLanguageDialog) {
+        LanguageDialog(onDismiss = { showLanguageDialog = false })
+    }
+
+    if (showSyncNetworkDialog) {
+        SyncNetworkDialog(
+            wifiOnly = uiState.user.syncOverWifiOnly,
+            onSelect = onSetSyncOverWifiOnly,
+            onDismiss = { showSyncNetworkDialog = false },
+        )
     }
 
     if (showTmdbKeyDialog) {
@@ -411,8 +453,8 @@ fun ProfileContent(
     if (showLogoutDialog) {
         AlertDialog(
             onDismissRequest = { showLogoutDialog = false },
-            title = { Text("Çıkış Yap") },
-            text = { Text("Çıkış yapmak istediğinize emin misiniz? Aktif playlist silinecek.") },
+            title = { Text(stringResource(R.string.profile_logout_label)) },
+            text = { Text(stringResource(R.string.profile_logout_confirm_message)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -420,12 +462,12 @@ fun ProfileContent(
                         showLogoutDialog = false
                     }
                 ) {
-                    Text("Çıkış Yap", color = Live)
+                    Text(stringResource(R.string.profile_logout_label), color = Live)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showLogoutDialog = false }) {
-                    Text("İptal")
+                    Text(stringResource(R.string.action_cancel))
                 }
             }
         )
@@ -456,7 +498,7 @@ private fun ProfileHeader(onBack: () -> Unit) {
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Geri",
+                contentDescription = stringResource(R.string.action_back),
                 modifier = Modifier.size(20.dp),
                 tint = TextPrimary,
             )
@@ -464,7 +506,7 @@ private fun ProfileHeader(onBack: () -> Unit) {
 
         // Title centered
         Text(
-            text = "Ayarlar",
+            text = stringResource(R.string.term_settings),
             style = TextStyle(
                 fontFamily = InstrumentSerifFamily,
                 fontWeight = FontWeight.Normal,
@@ -514,12 +556,12 @@ private fun EditNameDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("İsmi Düzenle") },
+        title = { Text(stringResource(R.string.profile_edit_name_title)) },
         text = {
             OutlinedTextField(
                 value = text,
                 onValueChange = { text = it },
-                label = { Text("Görünen İsim") },
+                label = { Text(stringResource(R.string.profile_display_name_label)) },
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = accent,
@@ -533,12 +575,12 @@ private fun EditNameDialog(
                 onClick = { onSave(text) },
                 enabled = text.isNotBlank(),
             ) {
-                Text("Kaydet")
+                Text(stringResource(R.string.action_save))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("İptal")
+                Text(stringResource(R.string.action_cancel))
             }
         }
     )
@@ -546,8 +588,9 @@ private fun EditNameDialog(
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+@Composable
 internal fun buildInitials(name: String): String {
-    if (name.isBlank()) return "K"
+    if (name.isBlank()) return stringResource(R.string.profile_default_initials)
     val parts = name.trim().split("\\s+".toRegex())
     return if (parts.size >= 2) {
         "${parts[0].first()}${parts[1].first()}".uppercase()
@@ -559,7 +602,7 @@ internal fun buildInitials(name: String): String {
 @Composable
 private fun buildThemeSubtitle(uiState: ProfileUiState): String {
     // We don't have direct access to AppearancePreferences here; show static
-    return "Açık · ${LocalAccentPalette.current.label}"
+    return stringResource(R.string.profile_theme_subtitle, stringResource(LocalAccentPalette.current.labelRes))
 }
 
 // ── Previews ─────────────────────────────────────────────────────────────────
@@ -570,13 +613,14 @@ private fun ProfileContentPreview() {
     GencIptvTheme {
         ProfileContent(
             uiState = ProfileUiState(
-                user = UserPreferences(displayName = "Mehmet Kaya", autoUpdateEnabled = true),
+                user = UserPreferences(displayName = "Mehmet Kaya"),
                 player = PlayerPreferences(loudnessNormalization = false, pictureInPicture = true),
                 playlistCount = 2,
                 planText = "✨ Premium Plan · Son: 15 Nis 2026",
             ),
             onBack = {},
             onNavigateToPlaylistManager = {},
+            onSetSyncOverWifiOnly = {},
             onNavigateToPlayerSettings = {},
             onNavigateToSubtitleSettings = {},
             onNavigateToThemeSettings = {},
@@ -586,7 +630,6 @@ private fun ProfileContentPreview() {
             onNavigateToFavorites = {},
             onNavigateToVod = {},
             onSetDisplayName = {},
-            onToggleAutoUpdate = {},
             onToggleLoudness = {},
             onTogglePip = {},
             onLogout = {},
@@ -617,18 +660,14 @@ private fun TmdbKeyDialog(
         containerColor = Surface,
         title = {
             Text(
-                text = "TMDB API Anahtarı",
+                text = stringResource(R.string.profile_tmdb_key_label),
                 style = MaterialTheme.typography.titleMedium.copy(color = TextPrimary),
             )
         },
         text = {
             Column {
                 Text(
-                    text = "Oyuncu fotoğrafları ve sağlayıcının afiş vermediği " +
-                        "içerikler için kullanılır. Zorunlu değil — boş bırakırsanız " +
-                        "uygulama bu iki özelliği atlar, gerisi normal çalışır.\n\n" +
-                        "Ücretsiz anahtarı themoviedb.org üzerinden hesap açıp " +
-                        "Ayarlar → API bölümünden alabilirsiniz.",
+                    text = stringResource(R.string.profile_tmdb_key_dialog_body),
                     style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary),
                 )
                 Spacer(Modifier.height(14.dp))
@@ -638,7 +677,7 @@ private fun TmdbKeyDialog(
                     singleLine = true,
                     placeholder = {
                         Text(
-                            text = "Anahtarı buraya yapıştırın",
+                            text = stringResource(R.string.profile_tmdb_key_placeholder),
                             style = MaterialTheme.typography.bodyMedium.copy(color = TextTertiary),
                         )
                     },
@@ -658,7 +697,7 @@ private fun TmdbKeyDialog(
         confirmButton = {
             TextButton(onClick = { onSave(text.trim()) }) {
                 Text(
-                    text = "Kaydet",
+                    text = stringResource(R.string.action_save),
                     style = MaterialTheme.typography.labelLarge.copy(color = accent.primary),
                 )
             }
@@ -669,14 +708,14 @@ private fun TmdbKeyDialog(
                 if (currentKey.isNotBlank()) {
                     TextButton(onClick = { onSave("") }) {
                         Text(
-                            text = "Kaldır",
+                            text = stringResource(R.string.action_remove),
                             style = MaterialTheme.typography.labelLarge.copy(color = Live),
                         )
                     }
                 }
                 TextButton(onClick = onDismiss) {
                     Text(
-                        text = "Vazgeç",
+                        text = stringResource(R.string.profile_tmdb_key_dismiss),
                         style = MaterialTheme.typography.labelLarge.copy(color = TextTertiary),
                     )
                 }

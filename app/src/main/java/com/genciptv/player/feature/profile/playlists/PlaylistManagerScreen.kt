@@ -43,11 +43,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.genciptv.player.R
 import com.genciptv.player.core.designsystem.Bg
 import com.genciptv.player.core.designsystem.Border
 import com.genciptv.player.core.designsystem.GencIptvTheme
@@ -109,7 +113,7 @@ fun PlaylistManagerContent(
             ExtendedFloatingActionButton(
                 onClick = onShowAddSheet,
                 icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                text = { Text("Yeni Ekle") },
+                text = { Text(stringResource(R.string.playlist_add_new)) },
                 containerColor = accent.primary,
                 contentColor = androidx.compose.ui.graphics.Color.White,
             )
@@ -140,13 +144,13 @@ fun PlaylistManagerContent(
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Geri",
+                        contentDescription = stringResource(R.string.action_back),
                         modifier = Modifier.size(18.dp),
                         tint = TextPrimary,
                     )
                 }
                 Text(
-                    text = "Playlist Yönetimi",
+                    text = stringResource(R.string.playlist_manager_title),
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Black,
                         color = TextPrimary,
@@ -161,8 +165,8 @@ fun PlaylistManagerContent(
                     modifier = Modifier.fillMaxSize(),
                 ) {
                     EmptyState(
-                        title = "Henüz playlist eklenmemiş",
-                        description = "Aşağıdaki + butonuna tıklayarak ekleyin",
+                        title = stringResource(R.string.playlist_empty_title),
+                        description = stringResource(R.string.playlist_empty_description),
                     )
                 }
             } else {
@@ -191,18 +195,18 @@ fun PlaylistManagerContent(
     deleteCandidate?.let { playlist ->
         AlertDialog(
             onDismissRequest = { deleteCandidate = null },
-            title = { Text("Playlist Sil") },
-            text = { Text("\"${playlist.name}\" playlistini silmek istediğinize emin misiniz?") },
+            title = { Text(stringResource(R.string.playlist_delete_title)) },
+            text = { Text(stringResource(R.string.playlist_delete_confirm_message, playlist.name)) },
             confirmButton = {
                 TextButton(onClick = {
                     onDelete(playlist)
                     deleteCandidate = null
                 }) {
-                    Text("Sil", color = Live)
+                    Text(stringResource(R.string.action_delete), color = Live)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { deleteCandidate = null }) { Text("İptal") }
+                TextButton(onClick = { deleteCandidate = null }) { Text(stringResource(R.string.action_cancel)) }
             }
         )
     }
@@ -211,10 +215,10 @@ fun PlaylistManagerContent(
     uiState.error?.let { error ->
         AlertDialog(
             onDismissRequest = onDismissError,
-            title = { Text("Hata") },
+            title = { Text(stringResource(R.string.playlist_error_dialog_title)) },
             text = { Text(error) },
             confirmButton = {
-                TextButton(onClick = onDismissError) { Text("Tamam") }
+                TextButton(onClick = onDismissError) { Text(stringResource(R.string.action_ok)) }
             }
         )
     }
@@ -282,14 +286,19 @@ private fun PlaylistCard(
                             .padding(horizontal = 7.dp, vertical = 2.dp)
                     ) {
                         Text(
-                            text = "Aktif",
+                            text = stringResource(R.string.playlist_active_badge),
                             style = MaterialTheme.typography.labelSmall.copy(color = accent.primary),
                         )
                     }
                 }
             }
+            val channelCountText = pluralStringResource(
+                R.plurals.playlist_channel_count,
+                playlist.channelCount,
+                playlist.channelCount,
+            )
             Text(
-                text = "${playlist.channelCount} kanal · ${formatRelativeTime(playlist.lastSyncedAt)}",
+                text = "$channelCountText · ${formatRelativeTime(playlist.lastSyncedAt)}",
                 style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary),
             )
         }
@@ -315,7 +324,7 @@ private fun PlaylistCard(
             ) {
                 Icon(
                     imageVector = Icons.Default.MoreVert,
-                    contentDescription = "Seçenekler",
+                    contentDescription = stringResource(R.string.playlist_options_content_description),
                     tint = TextTertiary,
                     modifier = Modifier.size(20.dp),
                 )
@@ -325,7 +334,7 @@ private fun PlaylistCard(
                 onDismissRequest = { menuExpanded = false },
             ) {
                 DropdownMenuItem(
-                    text = { Text("Aktif yap") },
+                    text = { Text(stringResource(R.string.playlist_make_active)) },
                     onClick = {
                         onSetActive()
                         menuExpanded = false
@@ -333,14 +342,14 @@ private fun PlaylistCard(
                     enabled = !isActive,
                 )
                 DropdownMenuItem(
-                    text = { Text("Şimdi senkronize et") },
+                    text = { Text(stringResource(R.string.playlist_sync_now)) },
                     onClick = {
                         onSync()
                         menuExpanded = false
                     },
                 )
                 DropdownMenuItem(
-                    text = { Text("Sil", color = Live) },
+                    text = { Text(stringResource(R.string.action_delete), color = Live) },
                     onClick = {
                         onDelete()
                         menuExpanded = false
@@ -351,16 +360,25 @@ private fun PlaylistCard(
     }
 }
 
+@Composable
 private fun formatRelativeTime(millis: Long): String {
-    if (millis == 0L) return "hiç senkronize edilmedi"
+    if (millis == 0L) return stringResource(R.string.playlist_never_synced)
     val diff = System.currentTimeMillis() - millis
     return when {
-        diff < TimeUnit.MINUTES.toMillis(1) -> "az önce"
-        diff < TimeUnit.HOURS.toMillis(1) -> "${TimeUnit.MILLISECONDS.toMinutes(diff)} dk önce"
-        diff < TimeUnit.DAYS.toMillis(1) -> "${TimeUnit.MILLISECONDS.toHours(diff)} sa önce"
+        diff < TimeUnit.MINUTES.toMillis(1) -> stringResource(R.string.playlist_just_now)
+        diff < TimeUnit.HOURS.toMillis(1) -> {
+            val minutes = TimeUnit.MILLISECONDS.toMinutes(diff).toInt()
+            pluralStringResource(R.plurals.playlist_minutes_ago, minutes, minutes)
+        }
+        diff < TimeUnit.DAYS.toMillis(1) -> {
+            val hours = TimeUnit.MILLISECONDS.toHours(diff).toInt()
+            pluralStringResource(R.plurals.playlist_hours_ago, hours, hours)
+        }
         else -> {
-            val sdf = SimpleDateFormat("dd MMM", Locale("tr", "TR"))
-            sdf.format(Date(millis))
+            // The app's locale, not a pinned Turkish one — month abbreviations
+            // have to follow the language the user picked.
+            val locale = LocalConfiguration.current.locales[0]
+            SimpleDateFormat("dd MMM", locale).format(Date(millis))
         }
     }
 }

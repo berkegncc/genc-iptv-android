@@ -1,0 +1,198 @@
+<resources>
+    <!-- Profil ekranı (ProfileScreen.kt). -->
+
+    <string name="profile_default_display_name">Kullanıcı</string>
+    <string name="profile_default_initials">K</string>
+
+    <string name="profile_section_discover">Keşfet</string>
+    <string name="profile_section_playlist">Playlist</string>
+    <string name="profile_section_player">Oynatıcı</string>
+    <string name="profile_section_appearance">Görünüm</string>
+    <string name="profile_section_about">Hakkında</string>
+    <string name="profile_section_account">Hesap</string>
+
+    <string name="profile_favorites_subtitle">Kanallarım, filmlerim, dizilerim</string>
+    <string name="profile_guide_label">Program Rehberi</string>
+    <string name="profile_guide_subtitle">Canlı TV EPG</string>
+
+    <string name="profile_playlist_management_label">Playlist Yönetimi</string>
+    <plurals name="profile_playlist_count">
+        <item quantity="other">%1$d playlist ekli</item>
+    </plurals>
+
+
+    <string name="profile_player_settings_label">Player Ayarları</string>
+    <string name="profile_player_settings_subtitle">Varsayılan kalite, audio, decoder</string>
+    <string name="profile_subtitle_settings_label">Altyazı Görünümü</string>
+    <string name="profile_subtitle_settings_subtitle">Yazı tipi, renk, boyut</string>
+    <string name="profile_loudness_label">Ses Normalleştirme</string>
+    <string name="profile_loudness_subtitle">Ses seviyesini dengele</string>
+    <string name="profile_pip_label">Resim İçinde Resim</string>
+    <string name="profile_pip_subtitle">Arka planda izle</string>
+
+    <string name="profile_theme_color_label">Tema &amp; Renk</string>
+    <string name="profile_theme_subtitle">Açık · %1$s</string>
+
+    <string name="profile_check_updates_label">Güncellemeleri kontrol et</string>
+    <string name="profile_check_updates_subtitle">GitHub üzerinden yeni sürüm ara</string>
+
+    <string name="profile_tmdb_key_label">TMDB API Anahtarı</string>
+    <string name="profile_tmdb_key_subtitle_empty">Oyuncu fotoğrafları ve eksik afişler için</string>
+    <string name="profile_tmdb_key_subtitle_set">Tanımlı — dokunarak değiştir</string>
+    <string name="profile_tmdb_key_dialog_body">Oyuncu fotoğrafları ve sağlayıcının afiş vermediği içerikler için kullanılır. Zorunlu değil — boş bırakırsanız uygulama bu iki özelliği atlar, gerisi normal çalışır.\n\nÜcretsiz anahtarı themoviedb.org üzerinden hesap açıp Ayarlar → API bölümünden alabilirsiniz.</string>
+    <string name="profile_tmdb_key_placeholder">Anahtarı buraya yapıştırın</string>
+    <string name="profile_tmdb_key_dismiss">Vazgeç</string>
+
+    <string name="profile_version_label">Sürüm</string>
+
+    <string name="profile_logout_label">Çıkış Yap</string>
+    <string name="profile_logout_confirm_message">Çıkış yapmak istediğinize emin misiniz? Aktif playlist silinecek.</string>
+
+    <string name="profile_edit_name_title">İsmi Düzenle</string>
+    <string name="profile_display_name_label">Görünen İsim</string>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- Player ayarları ekranı (player/PlayerSettingsScreen.kt). -->
+
+    <string name="playersettings_title">Player Ayarları</string>
+
+    <string name="playersettings_section_quality">Kalite &amp; Codec</string>
+    <string name="playersettings_default_quality_label">Varsayılan Kalite</string>
+    <string name="playersettings_decoder_pref_label">Decoder Tercihi</string>
+
+    <string name="playersettings_section_audio_language">Ses &amp; Dil</string>
+    <string name="playersettings_audio_lang_label">Tercih Edilen Audio Dili</string>
+    <string name="playersettings_none">Yok</string>
+    <string name="playersettings_loudness_label">Ses Normalleştirme</string>
+
+    <string name="playersettings_section_network">Ağ</string>
+    <string name="playersettings_user_agent_label">User-Agent Override</string>
+    <string name="playersettings_default">Varsayılan</string>
+
+    <string name="playersettings_section_playback">Oynatma</string>
+    <string name="playersettings_pip_label">Resim İçinde Resim</string>
+
+    <string name="playersettings_audio_lang_code_label">Dil kodu (ISO 639-1)</string>
+    <string name="playersettings_audio_lang_placeholder">tr, en, de...</string>
+    <string name="playersettings_audio_lang_example">Örnek: tr (Türkçe), en (İngilizce)</string>
+
+    <string name="playersettings_user_agent_field_label">User-Agent</string>
+    <string name="playersettings_user_agent_placeholder">VLC/3.0 (boş = varsayılan)</string>
+
+    <string name="playersettings_automatic">Otomatik</string>
+    <string name="playersettings_decoder_hw">Donanım</string>
+    <string name="playersettings_decoder_sw">Yazılım</string>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- Altyazı ayarları ekranı (subtitle/SubtitleSettingsScreen.kt). -->
+
+    <string name="subtitle_title">Altyazı Görünümü</string>
+    <string name="subtitle_reset_button">Sıfırla</string>
+    <string name="subtitle_reset_confirm_message">Altyazı ayarlarını varsayılana döndürmek istediğinize emin misiniz?</string>
+
+    <string name="subtitle_section_font">Font</string>
+    <string name="subtitle_font_family_label">Font Ailesi</string>
+    <string name="subtitle_font_style_label">Font Stili</string>
+    <string name="subtitle_text_size_label">Metin Boyutu</string>
+    <string name="subtitle_percent_value">%1$d%%</string>
+
+    <string name="subtitle_section_colors">Renkler</string>
+    <string name="subtitle_text_color_label">Metin Rengi</string>
+    <string name="subtitle_text_opacity_label">Metin Opaklığı</string>
+    <string name="subtitle_bg_color_label">Arka Plan Rengi</string>
+    <string name="subtitle_bg_opacity_label">Arka Plan Opaklığı</string>
+    <string name="subtitle_window_color_label">Pencere Rengi</string>
+    <string name="subtitle_window_opacity_label">Pencere Opaklığı</string>
+
+    <string name="subtitle_section_edge">Kenar</string>
+    <string name="subtitle_edge_type_label">Kenar Tipi</string>
+    <string name="subtitle_edge_color_label">Kenar Rengi</string>
+
+    <string name="subtitle_section_position">Konum</string>
+    <string name="subtitle_vertical_position_label">Dikey Konum</string>
+
+    <string name="subtitle_font_family_system">Sistem</string>
+
+    <string name="subtitle_font_style_normal">Normal</string>
+    <string name="subtitle_font_style_bold">Kalın</string>
+    <string name="subtitle_font_style_italic">İtalik</string>
+    <string name="subtitle_font_style_bold_italic">Kalın İtalik</string>
+
+    <string name="subtitle_edge_type_none">Yok</string>
+    <string name="subtitle_edge_type_outline">Dış Çizgi</string>
+    <string name="subtitle_edge_type_drop_shadow">Gölge</string>
+    <string name="subtitle_edge_type_raised">Kabartma</string>
+    <string name="subtitle_edge_type_depressed">Batırma</string>
+
+    <string name="subtitle_position_bottom">Alt</string>
+    <string name="subtitle_position_center">Orta</string>
+    <string name="subtitle_position_top">Üst</string>
+
+    <string name="subtitle_sample_text">Bu bir altyazı örneğidir.\nİkinci satır da burada görünür.</string>
+    <string name="subtitle_transparent_button">Şeffaf</string>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- Tema ayarları ekranı (theme/ThemeSettingsScreen.kt). -->
+
+    <string name="theme_title">Görünüm &amp; Tema</string>
+
+    <string name="theme_section_mode">TEMA MODU</string>
+    <string name="theme_section_accent">ACCENT RENGİ</string>
+    <string name="theme_section_icon_preview">UYGULAMA İKONU ÖNİZLEME</string>
+
+    <string name="theme_mode_light">Açık</string>
+    <string name="theme_mode_dark">Karanlık</string>
+    <string name="theme_mode_system">Sistem</string>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- Playlist yönetimi + Playlist ekleme sheet
+         (playlists/PlaylistManagerScreen.kt, playlists/AddPlaylistSheet.kt). -->
+
+    <string name="playlist_add_new">Yeni Ekle</string>
+    <string name="playlist_manager_title">Playlist Yönetimi</string>
+
+    <string name="playlist_empty_title">Henüz playlist eklenmemiş</string>
+    <string name="playlist_empty_description">Aşağıdaki + butonuna tıklayarak ekleyin</string>
+
+    <string name="playlist_delete_title">Playlist Sil</string>
+    <string name="playlist_delete_confirm_message">\"%1$s\" playlistini silmek istediğinize emin misiniz?</string>
+
+    <string name="playlist_error_dialog_title">Hata</string>
+
+    <string name="playlist_active_badge">Aktif</string>
+    <plurals name="playlist_channel_count">
+        <item quantity="other">%1$d kanal</item>
+    </plurals>
+
+    <string name="playlist_options_content_description">Seçenekler</string>
+    <string name="playlist_make_active">Aktif yap</string>
+    <string name="playlist_sync_now">Şimdi senkronize et</string>
+
+    <string name="playlist_never_synced">hiç senkronize edilmedi</string>
+    <string name="playlist_just_now">az önce</string>
+    <plurals name="playlist_minutes_ago">
+        <item quantity="other">%1$d dk önce</item>
+    </plurals>
+    <plurals name="playlist_hours_ago">
+        <item quantity="other">%1$d sa önce</item>
+    </plurals>
+
+    <string name="playlist_add_sheet_title">Yeni Playlist Ekle</string>
+
+    <string name="playlist_form_name_label">Liste Adı</string>
+    <string name="playlist_form_name_placeholder">Playlist 1</string>
+    <string name="playlist_form_epg_url_label">EPG URL (opsiyonel)</string>
+    <string name="playlist_upload_button">Yükle</string>
+
+    <string name="playlist_form_server_url_label">Sunucu URL</string>
+    <string name="playlist_form_username_label">Kullanıcı Adı</string>
+    <string name="playlist_form_password_label">Şifre</string>
+    <string name="playlist_password_hide">Gizle</string>
+    <string name="playlist_password_show">Göster</string>
+    <string name="playlist_connect_button">Bağlan</string>
+    <string name="profile_plan_standard">Standart</string>
+    <string name="profile_sync_network_label">İçerik Yenileme</string>
+    <string name="profile_sync_option_any">Mobil veri ve Wi-Fi</string>
+    <string name="profile_sync_option_wifi">Yalnızca Wi-Fi</string>
+    <string name="profile_sync_note">Yenileme tüm kataloğu indirir ve çok veri harcayabilir.</string>
+</resources>

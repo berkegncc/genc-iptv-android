@@ -1,0 +1,14 @@
+<resources>
+    <!-- Güncelleme indirme ve kurulum hataları. -->
+
+    <string name="update_error_server_code">Sunucu %1$d yanıtı döndü</string>
+    <string name="update_error_empty_response">İndirme yanıtı boş geldi</string>
+    <string name="update_error_empty_file">İndirilen dosya boş</string>
+    <string name="update_error_download_failed">İndirme başarısız oldu. Bağlantınızı kontrol edip tekrar deneyin.</string>
+
+    <string name="install_error_missing_file">İndirilen dosya bulunamadı. Güncellemeyi tekrar indirin.</string>
+    <string name="install_error_unreadable">İndirilen dosya okunamadı; indirme yarım kalmış olabilir. Tekrar deneyin.</string>
+    <string name="install_error_wrong_package">Bu paket bu uygulamaya ait değil (%1$s). Kurulum iptal edildi.</string>
+    <string name="install_error_downgrade">Sunucudaki sürüm (%1$d) cihazınızdakinden (%2$d) daha eski. Android eski sürüme dönmeye izin vermiyor.</string>
+    <string name="install_error_signature">Bu güncelleme farklı bir imzayla paketlenmiş, Android bu yüzden kurulumu reddediyor. Kurmak için önce mevcut uygulamayı kaldırıp yeni sürümü elle yüklemeniz gerekiyor.</string>
+</resources>

@@ -46,7 +46,10 @@ class PosterEnricher @Inject constructor(
     private val semaphore = Semaphore(MAX_CONCURRENT_REQUESTS)
 
     /** Backfill posters for movies in [items] that don't already have one. */
-    fun enrichMovies(items: List<VodItem>) {
+    fun enrichMovies(items: List<VodItem>) = scope.launch {
+        // Asked once per batch, before anything is marked as attempted, so a
+        // key added later still gets a chance at these items.
+        if (!tmdbRepository.isConfigured()) return@launch
         items.asSequence()
             .filter { it.posterUrl.isNullOrBlank() }
             .filter { attempted.add(it.id) }
@@ -64,7 +67,8 @@ class PosterEnricher @Inject constructor(
     }
 
     /** Backfill posters for series in [items] that don't already have one. */
-    fun enrichSeries(items: List<Series>) {
+    fun enrichSeries(items: List<Series>) = scope.launch {
+        if (!tmdbRepository.isConfigured()) return@launch
         items.asSequence()
             .filter { it.posterUrl.isNullOrBlank() }
             .filter { attempted.add(it.id) }

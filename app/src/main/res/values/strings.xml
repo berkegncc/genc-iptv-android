@@ -1,3 +1,57 @@
 <resources>
-    <string name="app_name">Genc IPTV Player</string>
+    <!--
+      Default locale: English.
+
+      Android falls back to this folder for every language it has no specific
+      folder for, so Turkish lives in values-tr/ rather than here. The other way
+      round — Turkish as the default — would hand Turkish to a French or German
+      user, which is the opposite of adding English support.
+
+      Strings are split across strings_*.xml by area; Android merges every file
+      in this folder into one table.
+    -->
+
+    <string name="app_name" translatable="false">Genç IPTV Player</string>
+
+    <!-- ── Actions ─────────────────────────────────────────────────────────── -->
+    <string name="action_back">Back</string>
+    <string name="action_play">Play</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_save">Save</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_remove">Remove</string>
+    <string name="action_close">Close</string>
+    <string name="action_retry">Try again</string>
+    <string name="action_refresh">Refresh</string>
+    <string name="action_ok">OK</string>
+    <string name="action_all">All</string>
+    <string name="action_see_all">See all</string>
+    <string name="action_add">Add</string>
+    <string name="action_edit">Edit</string>
+
+    <!-- ── Navigation ──────────────────────────────────────────────────────── -->
+    <string name="nav_home">Home</string>
+    <string name="nav_channels">Channels</string>
+    <string name="nav_movies">Movies</string>
+    <string name="nav_series">Series</string>
+    <string name="nav_profile">Profile</string>
+
+    <!-- ── Shared content terms ────────────────────────────────────────────── -->
+    <string name="term_episodes">Episodes</string>
+    <string name="term_favorites">Favorites</string>
+    <string name="term_settings">Settings</string>
+    <string name="term_search">Search</string>
+
+    <!-- Season and episode are format strings rather than concatenation:
+         Turkish trails the label ("1. Sezon"), English leads with it. -->
+    <string name="term_season_number">Season %1$d</string>
+    <string name="term_episode_number">Episode %1$d</string>
+    <string name="term_episode_titled">Episode %1$d: %2$s</string>
+
+    <!-- ── Shared states ───────────────────────────────────────────────────── -->
+    <string name="state_loading">Loading…</string>
+    <string name="state_error_title">Something went wrong</string>
+
+    <!-- ── Units ───────────────────────────────────────────────────────────── -->
+    <string name="unit_minutes_short">%1$d min</string>
 </resources>

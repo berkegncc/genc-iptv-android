@@ -1,0 +1,58 @@
+<resources>
+    <!-- VOD (movies & series) list and detail screens. -->
+
+    <!-- ── List header / tabs ──────────────────────────────────────────────── -->
+    <string name="vod_list_title">Movies &amp; Series</string>
+
+    <string name="vod_tab_movies">Movies</string>
+    <string name="vod_tab_series">Series</string>
+
+    <!-- ── Search ───────────────────────────────────────────────────────────── -->
+    <string name="vod_search_movies_placeholder">Search movies…</string>
+    <string name="vod_search_series_placeholder">Search series…</string>
+
+    <!-- ── Empty states ─────────────────────────────────────────────────────── -->
+    <string name="vod_empty_movies_title">No movies found</string>
+    <string name="vod_empty_movies_body">Movies will appear here once sync finishes.</string>
+
+    <string name="vod_empty_series_title">No series found</string>
+    <string name="vod_empty_series_body">Series will appear here once sync finishes.</string>
+
+    <!-- ── Continue watching ────────────────────────────────────────────────── -->
+    <string name="vod_continue_watching_title">Continue Watching</string>
+    <!-- Short badge overlaid on the poster art itself — keep it terse. -->
+    <string name="vod_continue_watching_badge">CONTINUE</string>
+
+    <string name="vod_movie_count">%1$d MOVIES</string>
+    <string name="vod_series_count">%1$d SERIES</string>
+
+    <!-- ── Continue-watching selection mode ────────────────────────────────── -->
+    <string name="vod_cancel_selection">Cancel selection</string>
+    <string name="vod_selected_count">%1$d selected</string>
+
+    <string name="vod_remove_dialog_title">Remove?</string>
+    <string name="vod_remove_dialog_body">%1$d selected items will be removed from the \"Continue Watching\" list.</string>
+
+    <!-- ── Playback snackbars ───────────────────────────────────────────────── -->
+    <string name="vod_movie_playback_preparing">Preparing movie playback</string>
+    <string name="vod_episode_playback_preparing">Preparing episode playback</string>
+
+    <!-- ── Detail screen ────────────────────────────────────────────────────── -->
+    <string name="vod_add_to_favorites">Add to favorites</string>
+    <string name="vod_remove_from_favorites">Remove from favorites</string>
+
+    <string name="vod_plot_summary_label">Summary</string>
+    <string name="vod_cast_title">Cast</string>
+    <string name="vod_similar_movies">Similar Movies</string>
+    <string name="vod_similar_series">Similar Series</string>
+
+    <string name="vod_episode_count">%1$d EPISODES</string>
+    <string name="vod_episodes_unavailable">Episode information is unavailable.</string>
+    <string name="vod_load_failed">Could not load</string>
+    <!-- Search results. The heading only ever said "All", which reads as a lie
+         over a filtered list, and there was no feedback at all when a search
+         matched nothing. -->
+    <string name="vod_search_results_label">Results</string>
+    <string name="vod_search_no_results_title">No results found</string>
+    <string name="vod_search_no_results_body">Nothing matches %1$s. Check the spelling or try a shorter word.</string>
+</resources>

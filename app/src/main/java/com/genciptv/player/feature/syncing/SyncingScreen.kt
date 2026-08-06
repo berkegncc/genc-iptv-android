@@ -17,12 +17,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.genciptv.player.R
 import com.genciptv.player.core.designsystem.GencIptvTheme
 import com.genciptv.player.core.designsystem.LocalAccentPalette
 import com.genciptv.player.core.designsystem.TextPrimary
@@ -80,13 +82,13 @@ private fun SyncingScreenContent() {
             )
             Spacer(Modifier.height(20.dp))
             Text(
-                text = "Sağlayıcı içerikleri güncelleniyor…",
+                text = stringResource(R.string.syncing_updating_message),
                 style = MaterialTheme.typography.bodyLarge.copy(color = TextPrimary),
                 textAlign = TextAlign.Center,
             )
             Spacer(Modifier.height(6.dp))
             Text(
-                text = "Bu işlem birkaç saniye sürebilir.",
+                text = stringResource(R.string.syncing_duration_hint),
                 style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary),
                 textAlign = TextAlign.Center,
             )

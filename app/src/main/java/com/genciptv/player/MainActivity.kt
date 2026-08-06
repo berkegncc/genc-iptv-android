@@ -25,9 +25,17 @@ import com.genciptv.player.core.designsystem.GencIptvTheme
 import com.genciptv.player.core.designsystem.LocalWindowSize
 import com.genciptv.player.data.model.ThemeMode
 import dagger.hilt.android.AndroidEntryPoint
+import android.content.Context
+import com.genciptv.player.core.util.AppLanguage
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    // Below Android 13 the platform has no per-app language, so the choice is
+    // applied here — before anything reads a resource.
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(AppLanguage.wrap(newBase))
+    }
 
     // Resolve start destination before setContent so splash screen can be kept
     private val startDestinationViewModel: StartDestinationViewModel by viewModels()

@@ -11,6 +11,7 @@ import android.util.Log
 import androidx.core.content.FileProvider
 import androidx.core.content.pm.PackageInfoCompat
 import java.io.File
+import com.genciptv.player.R
 
 /**
  * Hands a downloaded APK to the system package installer.
@@ -42,7 +43,7 @@ object ApkInstaller {
     fun validate(context: Context, file: File): Check {
         if (!file.exists() || file.length() <= 0L) {
             return Check.Problem(
-                "İndirilen dosya bulunamadı. Güncellemeyi tekrar indirin."
+                context.getString(R.string.install_error_missing_file)
             )
         }
 
@@ -56,12 +57,12 @@ object ApkInstaller {
         val apk: PackageInfo = runCatching {
             pm.getPackageArchiveInfo(file.absolutePath, sigFlag)
         }.getOrNull() ?: return Check.Problem(
-            "İndirilen dosya okunamadı; indirme yarım kalmış olabilir. Tekrar deneyin."
+            context.getString(R.string.install_error_unreadable)
         )
 
         if (apk.packageName != context.packageName) {
             return Check.Problem(
-                "Bu paket bu uygulamaya ait değil (${apk.packageName}). Kurulum iptal edildi."
+                context.getString(R.string.install_error_wrong_package, apk.packageName)
             )
         }
 
@@ -71,15 +72,12 @@ object ApkInstaller {
             val oldCode = PackageInfoCompat.getLongVersionCode(installed)
             if (newCode < oldCode) {
                 return Check.Problem(
-                    "Sunucudaki sürüm ($newCode) cihazınızdakinden ($oldCode) daha eski. " +
-                        "Android eski sürüme dönmeye izin vermiyor."
+                    context.getString(R.string.install_error_downgrade, newCode, oldCode)
                 )
             }
             if (!signaturesMatch(installed, apk)) {
                 return Check.Problem(
-                    "Bu güncelleme farklı bir imzayla paketlenmiş, Android bu yüzden " +
-                        "kurulumu reddediyor. Kurmak için önce mevcut uygulamayı " +
-                        "kaldırıp yeni sürümü elle yüklemeniz gerekiyor."
+                    context.getString(R.string.install_error_signature)
                 )
             }
         }

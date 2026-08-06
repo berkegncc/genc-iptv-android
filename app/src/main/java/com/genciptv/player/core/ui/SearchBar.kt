@@ -31,9 +31,11 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.genciptv.player.R
 import com.genciptv.player.core.designsystem.Border
 import com.genciptv.player.core.designsystem.GencIptvTheme
 import com.genciptv.player.core.designsystem.LocalAccentPalette
@@ -55,7 +57,7 @@ fun GencSearchBar(
     query: String,
     onQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    placeholder: String = "Kanal, film veya dizi ara…",
+    placeholder: String = stringResource(R.string.ui_search_placeholder),
     showMic: Boolean = true,
     onMicClick: () -> Unit = {},
     /** When non-null, the bar becomes a tap target (no keyboard) that fires this callback. */
@@ -131,7 +133,7 @@ fun GencSearchBar(
             ) {
                 Icon(
                     imageVector = Icons.Default.Mic,
-                    contentDescription = "Sesli arama",
+                    contentDescription = stringResource(R.string.ui_voice_search),
                     tint = Color.White,
                     modifier = Modifier.size(13.dp)
                 )

@@ -1,0 +1,59 @@
+<resources>
+    <!-- Channels screen. -->
+
+    <string name="channels_loading_message">Loading channels…</string>
+
+    <string name="channels_error_title">Channels Could Not Be Loaded</string>
+    <string name="channels_error_go_back">Go Back</string>
+
+    <string name="channels_select_category_placeholder">Select a category from the left</string>
+
+    <string name="channels_categories_heading">Categories</string>
+    <string name="channels_collection_count">%1$d collections</string>
+    <string name="channels_channel_count">%1$d channels</string>
+
+    <string name="channels_empty_categories_title">No Categories Found</string>
+    <string name="channels_empty_categories_body">Categories will be listed here after playlist sync. You can tap the refresh button in the top right.</string>
+
+    <string name="channels_empty_list_title">No Channels Found</string>
+    <string name="channels_empty_list_body">Try changing your search criteria.</string>
+
+    <string name="channels_no_program_info">No broadcast info</string>
+
+    <string name="channels_favorite_remove">Remove from favorites</string>
+    <string name="channels_favorite_add">Add to favorites</string>
+
+    <string name="channels_reload_content_description">Reload</string>
+    <string name="channels_search_placeholder">Search channels…</string>
+
+    <!-- Guide (EPG) screen. -->
+
+    <string name="guide_loading_message">Loading program guide…</string>
+
+    <string name="guide_empty_title">Program guide is empty</string>
+    <string name="guide_empty_body">There is no EPG data for this playlist. The provider might not offer EPG, or the EPG hasn\'t downloaded yet since the playlist was just synced. Automatic EPG sync will be added in a future version.</string>
+    <string name="guide_empty_action_refresh_playlist">Refresh Playlist</string>
+
+    <string name="guide_header_title">📅 Program Guide</string>
+
+    <string name="guide_watch_action">Watch</string>
+
+    <!-- %1$s/%2$s are pre-formatted HH:MM strings (not translatable on their own). -->
+    <string name="guide_program_time_range">%1$s - %2$s · %3$d min</string>
+    <!-- %1$s is a pre-formatted HH:MM time label. -->
+    <string name="guide_time_now_suffix">%1$s · now</string>
+
+    <!-- Day strip. Resolved in the screen, not the ViewModel: a ViewModel
+         outlives the activity recreation a language change causes, so a label
+         decided there would keep the old language. -->
+    <string name="guide_day_yesterday">Yesterday</string>
+    <string name="guide_day_today">Today</string>
+    <string name="guide_day_tomorrow">Tomorrow</string>
+    <string name="guide_weekday_mon">Mon</string>
+    <string name="guide_weekday_tue">Tue</string>
+    <string name="guide_weekday_wed">Wed</string>
+    <string name="guide_weekday_thu">Thu</string>
+    <string name="guide_weekday_fri">Fri</string>
+    <string name="guide_weekday_sat">Sat</string>
+    <string name="guide_weekday_sun">Sun</string>
+</resources>

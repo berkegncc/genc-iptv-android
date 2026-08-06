@@ -1,0 +1,7 @@
+<resources>
+    <!-- Dil seçimi (Profil → Ayarlar). -->
+
+    <string name="language_title">Dil</string>
+    <string name="language_subtitle_system">Telefonun dilini kullanıyor</string>
+    <string name="language_option_system">Sistem dili</string>
+</resources>

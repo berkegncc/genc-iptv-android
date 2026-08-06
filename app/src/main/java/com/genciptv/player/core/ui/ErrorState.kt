@@ -13,10 +13,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.genciptv.player.R
 import com.genciptv.player.core.designsystem.GencIptvTheme
 import com.genciptv.player.core.designsystem.LocalAccentPalette
 import com.genciptv.player.core.designsystem.TextSecondary
@@ -30,7 +32,7 @@ fun ErrorState(
     title: String,
     modifier: Modifier = Modifier,
     description: String? = null,
-    retryLabel: String = "Tekrar Dene",
+    retryLabel: String = stringResource(R.string.action_retry),
     onRetry: (() -> Unit)? = null
 ) {
     val accent = LocalAccentPalette.current.primary

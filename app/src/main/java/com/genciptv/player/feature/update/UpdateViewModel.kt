@@ -3,6 +3,7 @@ package com.genciptv.player.feature.update
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.genciptv.player.R
 import com.genciptv.player.core.util.ApkInstaller
 import com.genciptv.player.data.model.DownloadState
 import com.genciptv.player.data.model.UpdateInfo
@@ -152,7 +153,7 @@ class UpdateViewModel @Inject constructor(
             _uiState.value = UpdateUiState.Idle
         } else {
             _uiState.value = UpdateUiState.Error(
-                "Kurulum ekranı açılamadı. Güncellemeyi tekrar deneyin."
+                context.getString(R.string.errors_update_install_screen_failed)
             )
         }
     }

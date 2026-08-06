@@ -11,6 +11,15 @@ import javax.inject.Singleton
 
 interface TmdbRepository {
     /**
+     * Whether a TMDb key is available at all, from the user's settings or the
+     * build. Callers that are about to loop over a catalogue should ask once up
+     * front: every lookup otherwise re-reads the key from DataStore, so a list
+     * of a few thousand poster-less items turns into a few thousand disk reads
+     * that were always going to end in "no key, give up".
+     */
+    suspend fun isConfigured(): Boolean
+
+    /**
      * Look up cast for a movie by [title] (and optional [year]).
      * Returns an empty list if the API key is missing, the search yields no
      * match, or the call fails. Never throws.
@@ -57,6 +66,8 @@ class TmdbRepositoryImpl @Inject constructor(
         val userKey = runCatching { userPrefs.flow.first().tmdbApiKey }.getOrDefault("")
         return userKey.ifBlank { BuildConfig.TMDB_API_KEY }.trim()
     }
+
+    override suspend fun isConfigured(): Boolean = resolveApiKey().isNotBlank()
 
     override suspend fun fetchMovieCast(title: String, year: Int?): List<CastMember> =
         fetchCastInternal(title, year, isSeries = false)

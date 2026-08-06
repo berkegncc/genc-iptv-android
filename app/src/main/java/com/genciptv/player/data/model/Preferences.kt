@@ -53,7 +53,12 @@ data class UserPreferences(
     val displayName: String = "",
     val onboardingCompleted: Boolean = false,
     val activePlaylistId: Long = -1L,
-    val autoUpdateEnabled: Boolean = true,
+    /**
+     * Whether the daily catalogue refresh waits for Wi-Fi. Defaults to true:
+     * a refresh re-fetches the whole catalogue, which runs to tens of
+     * megabytes, and nobody should discover that on their mobile bill.
+     */
+    val syncOverWifiOnly: Boolean = true,
     /**
      * The user's own TMDb key, pasted in Settings. Optional — blank simply
      * means the actor photos and poster fallback stay off.

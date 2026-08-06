@@ -39,12 +39,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.genciptv.player.R
 import com.genciptv.player.core.designsystem.AccentPalette
 import com.genciptv.player.core.designsystem.Bg
 import com.genciptv.player.core.designsystem.Border
@@ -107,13 +109,13 @@ fun ThemeSettingsContent(
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Geri",
+                    contentDescription = stringResource(R.string.action_back),
                     modifier = Modifier.size(18.dp),
                     tint = TextPrimary,
                 )
             }
             Text(
-                text = "Görünüm & Tema",
+                text = stringResource(R.string.theme_title),
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Black,
                     color = TextPrimary,
@@ -131,7 +133,7 @@ fun ThemeSettingsContent(
         ) {
             // Mode switcher
             Text(
-                text = "TEMA MODU",
+                text = stringResource(R.string.theme_section_mode),
                 style = MaterialTheme.typography.labelSmall.copy(color = TextTertiary),
             )
             Spacer(Modifier.height(8.dp))
@@ -155,7 +157,7 @@ fun ThemeSettingsContent(
 
             // Accent swatches
             Text(
-                text = "ACCENT RENGİ",
+                text = stringResource(R.string.theme_section_accent),
                 style = MaterialTheme.typography.labelSmall.copy(color = TextTertiary),
             )
             Spacer(Modifier.height(12.dp))
@@ -187,7 +189,7 @@ fun ThemeSettingsContent(
 
             // Icon preview (display-only)
             Text(
-                text = "UYGULAMA İKONU ÖNİZLEME",
+                text = stringResource(R.string.theme_section_icon_preview),
                 style = MaterialTheme.typography.labelSmall.copy(color = TextTertiary),
             )
             Spacer(Modifier.height(12.dp))
@@ -216,7 +218,7 @@ fun ThemeSettingsContent(
                             }
                             Spacer(Modifier.height(4.dp))
                             Text(
-                                text = palette.label,
+                                text = stringResource(palette.labelRes),
                                 style = MaterialTheme.typography.labelSmall.copy(color = TextSecondary),
                             )
                         }
@@ -235,7 +237,11 @@ private fun ThemeModeSwitcher(
     current: ThemeMode,
     onSelect: (ThemeMode) -> Unit,
 ) {
-    val modes = listOf(ThemeMode.LIGHT to "Açık", ThemeMode.DARK to "Karanlık", ThemeMode.SYSTEM to "Sistem")
+    val modes = listOf(
+        ThemeMode.LIGHT to stringResource(R.string.theme_mode_light),
+        ThemeMode.DARK to stringResource(R.string.theme_mode_dark),
+        ThemeMode.SYSTEM to stringResource(R.string.theme_mode_system),
+    )
 
     Row(
         modifier = Modifier
@@ -399,7 +405,7 @@ private fun AccentSwatch(
                 .padding(vertical = 5.dp)
         ) {
             Text(
-                text = palette.label,
+                text = stringResource(palette.labelRes),
                 style = MaterialTheme.typography.labelSmall.copy(
                     color = if (isSelected) palette.dark else TextSecondary,
                     fontSize = 10.sp,

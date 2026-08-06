@@ -14,6 +14,13 @@ data class HomeUiState(
     val recentChannels: List<Channel> = emptyList(),
     val isLoading: Boolean = true,
     val selectedChipIndex: Int = 0,
+    /**
+     * The catalogue is out of date and nothing is going to fix it on its own:
+     * the user asked to sync over Wi-Fi only and this connection is metered, so
+     * both the background job and the gate on app open stood down. Without
+     * saying so, the app just looks like it stopped updating.
+     */
+    val refreshHeldForWifi: Boolean = false,
 ) {
     companion object {
         val INITIAL = HomeUiState()

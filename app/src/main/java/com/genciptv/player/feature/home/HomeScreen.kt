@@ -40,6 +40,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.genciptv.player.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
@@ -81,8 +83,6 @@ import com.genciptv.player.data.model.Channel
 import com.genciptv.player.data.model.Series
 import com.genciptv.player.data.model.VodItem
 import com.genciptv.player.data.model.VodKind
-
-private val homeChips = listOf("Tümü", "Canlı TV", "Filmler", "Diziler", "Spor")
 
 // ── Stateful screen wrapper ───────────────────────────────────────────────────
 
@@ -142,6 +142,13 @@ fun HomeContent(
     var selectedChip by rememberSaveable { mutableIntStateOf(0) }
     val posterWidth = if (WindowSize.isTablet) 140.dp else 120.dp
     val posterHeight = if (WindowSize.isTablet) 210.dp else 180.dp
+    val homeChips = listOf(
+        stringResource(R.string.action_all),
+        stringResource(R.string.home_chip_live_tv),
+        stringResource(R.string.nav_movies),
+        stringResource(R.string.nav_series),
+        stringResource(R.string.home_chip_sports),
+    )
 
     GencAdaptiveScaffold(
         current = GencNavItem.HOME,
@@ -206,6 +213,21 @@ fun HomeContent(
                     )
                 }
 
+                // Refresh held back by the user's Wi-Fi-only choice. Placed
+                // above the content it affects, so the catalogue below is never
+                // read as current when it isn't.
+                if (state.refreshHeldForWifi) {
+                    item {
+                        RefreshHeldNotice(
+                            onRefresh = onRefresh,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                                .padding(top = 14.dp),
+                        )
+                    }
+                }
+
                 // Category chips
                 item {
                     HomeChipsRow(
@@ -235,9 +257,8 @@ fun HomeContent(
                     item {
                         EmptyState(
                             icon = "📺",
-                            title = "Henüz içerik yok",
-                            description = "Playlist senkronize edildiğinde filmler, diziler ve son " +
-                                "izlenen kanallar buraya gelecek.",
+                            title = stringResource(R.string.home_empty_title),
+                            description = stringResource(R.string.home_empty_body),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(top = 48.dp),
@@ -249,7 +270,7 @@ fun HomeContent(
                 if (state.latestMovies.isNotEmpty()) {
                     item {
                         SectionHeader(
-                            title = "Son Eklenen Filmler",
+                            title = stringResource(R.string.home_section_latest_movies),
                             onActionClick = { onNavigateToVod?.invoke("MOVIE") },
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -281,7 +302,7 @@ fun HomeContent(
                 if (state.latestSeries.isNotEmpty()) {
                     item {
                         SectionHeader(
-                            title = "Son Eklenen Diziler",
+                            title = stringResource(R.string.home_section_latest_series),
                             onActionClick = { onNavigateToVod?.invoke("SERIES") },
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -313,7 +334,7 @@ fun HomeContent(
                 if (state.recentChannels.isNotEmpty()) {
                     item {
                         SectionHeader(
-                            title = "Son İzlediğim Kanallar",
+                            title = stringResource(R.string.home_section_recent_channels),
                             onActionClick = onNavigateToChannels,
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -395,6 +416,7 @@ private fun HomeHeader(
         // press it. The outline turns the pair into one object that looks
         // pressable, which a floating word beside an icon would not.
         val context = LocalContext.current
+        val noBrowserMessage = stringResource(R.string.home_feedback_error_no_browser)
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
@@ -404,7 +426,7 @@ private fun HomeHeader(
                     if (!Feedback.open(context)) {
                         Toast.makeText(
                             context,
-                            "Formu açacak bir tarayıcı bulunamadı",
+                            noBrowserMessage,
                             Toast.LENGTH_SHORT,
                         ).show()
                     }
@@ -419,7 +441,7 @@ private fun HomeHeader(
             )
             Spacer(Modifier.width(6.dp))
             Text(
-                text = "Geri Bildirim",
+                text = stringResource(R.string.home_feedback_label),
                 style = TextStyle(
                     fontFamily = GeistFamily,
                     fontWeight = FontWeight.Medium,
@@ -471,9 +493,16 @@ private fun HomeGreeting(
     val firstName = displayName.trim().split(" ").firstOrNull()?.takeIf { it.isNotBlank() }
         ?: displayName.ifBlank { "" }
 
+    // A single format-string resource drives the sentence (word order differs
+    // between Turkish and English), but the name is rendered in a second color —
+    // so the resolved string is split back apart at the name's position.
+    val name = firstName.ifBlank { stringResource(R.string.home_greeting_fallback_name) }
+    val greeting = stringResource(R.string.home_greeting, name)
+    val nameStart = greeting.indexOf(name).let { if (it >= 0) it else 0 }
+
     Row(modifier = modifier) {
         Text(
-            text = "Hoş geldin, ",
+            text = greeting.substring(0, nameStart),
             style = TextStyle(
                 fontFamily = InstrumentSerifFamily,
                 fontWeight = FontWeight.Normal,
@@ -484,7 +513,7 @@ private fun HomeGreeting(
             ),
         )
         Text(
-            text = if (firstName.isNotBlank()) "$firstName." else "izleyici.",
+            text = greeting.substring(nameStart),
             style = TextStyle(
                 fontFamily = InstrumentSerifFamily,
                 fontWeight = FontWeight.Normal,
@@ -521,7 +550,7 @@ private fun HomeSearchEntry(
         )
         Spacer(Modifier.width(10.dp))
         Text(
-            text = "Kanal, film veya dizi ara…",
+            text = stringResource(R.string.home_search_placeholder),
             style = TextStyle(
                 fontFamily = GeistFamily,
                 fontWeight = FontWeight.Normal,
@@ -604,7 +633,7 @@ internal fun SectionHeader(
             modifier = Modifier.weight(1f),
         )
         Text(
-            text = "Tümü →",
+            text = "${stringResource(R.string.action_see_all)} →",
             style = TextStyle(
                 fontFamily = GeistFamily,
                 fontWeight = FontWeight.Medium,
@@ -648,11 +677,12 @@ private fun MoviePosterColumn(
             overflow = TextOverflow.Ellipsis,
         )
         Spacer(Modifier.height(2.dp))
+        val durationText = movie.durationSecs?.let { stringResource(R.string.unit_minutes_short, it / 60) }
         val sub = buildString {
             movie.year?.let { append(it) }
-            movie.durationSecs?.let {
+            durationText?.let {
                 if (isNotEmpty()) append(" · ")
-                append("${it / 60}dk")
+                append(it)
             }
         }
         if (sub.isNotEmpty()) {

@@ -32,6 +32,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.genciptv.player.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -93,7 +95,7 @@ fun SearchScreen(
             IconButton(onClick = onBack) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Geri",
+                    contentDescription = stringResource(R.string.action_back),
                     tint = TextPrimary,
                 )
             }
@@ -115,14 +117,14 @@ fun SearchScreen(
         when {
             !state.hasQuery -> EmptyState(
                 icon = "🔎",
-                title = "Ne arıyorsun?",
-                description = "Kanal, film veya dizi adından en az 2 karakter yaz.",
+                title = stringResource(R.string.home_search_prompt_title),
+                description = stringResource(R.string.home_search_prompt_body),
                 modifier = Modifier.fillMaxSize(),
             )
             state.isEmpty -> EmptyState(
                 icon = "🙁",
-                title = "Sonuç bulunamadı",
-                description = "\"${state.query}\" için eşleşme yok. Farklı bir şey dene.",
+                title = stringResource(R.string.home_search_no_results_title),
+                description = stringResource(R.string.home_search_no_results_body, state.query),
                 modifier = Modifier.fillMaxSize(),
             )
             else -> LazyColumn(
@@ -132,7 +134,7 @@ fun SearchScreen(
                 contentPadding = PaddingValues(bottom = 24.dp),
             ) {
                 if (state.channels.isNotEmpty()) {
-                    item { SectionHeader("Kanallar", state.channels.size) }
+                    item { SectionHeader(stringResource(R.string.nav_channels), state.channels.size) }
                     items(items = state.channels, key = { "ch-${it.id}" }) { channel ->
                         ChannelListItem(
                             name = channel.name,
@@ -149,7 +151,7 @@ fun SearchScreen(
                 }
 
                 if (state.movies.isNotEmpty()) {
-                    item { SectionHeader("Filmler", state.movies.size) }
+                    item { SectionHeader(stringResource(R.string.nav_movies), state.movies.size) }
                     item {
                         LazyRow(
                             horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -171,7 +173,7 @@ fun SearchScreen(
                 }
 
                 if (state.series.isNotEmpty()) {
-                    item { SectionHeader("Diziler", state.series.size) }
+                    item { SectionHeader(stringResource(R.string.nav_series), state.series.size) }
                     item {
                         LazyRow(
                             horizontalArrangement = Arrangement.spacedBy(10.dp),

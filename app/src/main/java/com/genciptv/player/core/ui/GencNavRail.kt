@@ -26,7 +26,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.genciptv.player.R
 import com.genciptv.player.core.designsystem.Border
 import com.genciptv.player.core.designsystem.GencLogo
 import com.genciptv.player.core.designsystem.LocalAccentPalette
@@ -98,6 +100,7 @@ fun GencNavRail(
                     val isActive = item == current
                     val iconTint = if (isActive) accent else TextTertiary
                     val labelColor = if (isActive) accent else TextTertiary
+                    val label = stringResource(item.labelRes)
 
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -114,7 +117,7 @@ fun GencNavRail(
                         ) {
                             Icon(
                                 imageVector = item.icon,
-                                contentDescription = item.label,
+                                contentDescription = label,
                                 tint = iconTint,
                                 modifier = Modifier.size(20.dp),
                             )
@@ -122,7 +125,7 @@ fun GencNavRail(
                         if (showLabels) {
                             Spacer(Modifier.height(4.dp))
                             Text(
-                                text = item.label,
+                                text = label,
                                 style = MaterialTheme.typography.labelSmall.copy(color = labelColor),
                                 maxLines = 1,
                             )

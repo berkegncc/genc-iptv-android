@@ -1,0 +1,38 @@
+<resources>
+    <!-- Ana sayfa ekranı. -->
+
+    <!-- Kategori filtre çipleri. "Tümü", "Filmler", "Diziler" action_all /
+         nav_movies / nav_series üzerinden yeniden kullanılıyor — bkz. HomeContent. -->
+    <string name="home_chip_live_tv">Canlı TV</string>
+    <string name="home_chip_sports">Spor</string>
+
+    <string name="home_empty_title">Henüz içerik yok</string>
+    <string name="home_empty_body">Playlist senkronize edildiğinde filmler, diziler ve son izlenen kanallar buraya gelecek.</string>
+
+    <string name="home_section_latest_movies">Son Eklenen Filmler</string>
+    <string name="home_section_latest_series">Son Eklenen Diziler</string>
+    <string name="home_section_recent_channels">Son İzlediğim Kanallar</string>
+
+    <string name="home_feedback_label">Geri Bildirim</string>
+    <string name="home_feedback_error_no_browser">Formu açacak bir tarayıcı bulunamadı</string>
+
+    <!-- Selamlama bir format string'dir, birleştirme değil — dillerde kelime
+         sırası farklı olabilir. Görünen ad yoksa %1$s yerine
+         home_greeting_fallback_name kullanılır. -->
+    <string name="home_greeting">Hoş geldin, %1$s.</string>
+    <string name="home_greeting_fallback_name">izleyici</string>
+
+    <string name="home_search_placeholder">Kanal, film veya dizi ara…</string>
+
+    <!-- Arama ekranı. -->
+    <string name="home_search_prompt_title">Ne arıyorsun?</string>
+    <string name="home_search_prompt_body">Kanal, film veya dizi adından en az 2 karakter yaz.</string>
+
+    <string name="home_search_no_results_title">Sonuç bulunamadı</string>
+    <string name="home_search_no_results_body">\"%1$s\" için eşleşme yok. Farklı bir şey dene.</string>
+
+    <!-- Wi-Fi beklendiği için atlanan yenileme bildirimi -->
+    <string name="home_refresh_held_title">İçerikler güncellenmedi</string>
+    <string name="home_refresh_held_body">Yalnızca Wi-Fi seçili olduğu için yenileme bekletiliyor.</string>
+    <string name="home_refresh_held_action">Yine de yenile</string>
+</resources>

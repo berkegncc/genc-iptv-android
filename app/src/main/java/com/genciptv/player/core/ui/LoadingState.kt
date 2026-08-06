@@ -13,9 +13,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.genciptv.player.R
 import com.genciptv.player.core.designsystem.GencIptvTheme
 import com.genciptv.player.core.designsystem.LocalAccentPalette
 import com.genciptv.player.core.designsystem.TextSecondary
@@ -27,7 +29,7 @@ import com.genciptv.player.core.designsystem.TextSecondary
 @Composable
 fun LoadingState(
     modifier: Modifier = Modifier,
-    message: String = "Yükleniyor…"
+    message: String = stringResource(R.string.state_loading)
 ) {
     val accent = LocalAccentPalette.current.primary
 

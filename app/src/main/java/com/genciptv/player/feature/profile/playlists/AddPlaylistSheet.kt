@@ -35,11 +35,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import com.genciptv.player.R
 import com.genciptv.player.core.designsystem.Bg
 import com.genciptv.player.core.designsystem.LocalAccentPalette
 import com.genciptv.player.core.designsystem.TextPrimary
@@ -81,7 +83,7 @@ fun AddPlaylistSheet(
                 .padding(bottom = 24.dp)
         ) {
             Text(
-                text = "Yeni Playlist Ekle",
+                text = stringResource(R.string.playlist_add_sheet_title),
                 style = MaterialTheme.typography.titleLarge.copy(color = TextPrimary),
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
             )
@@ -160,7 +162,7 @@ private fun M3uForm(
     Column(modifier = Modifier.padding(horizontal = 20.dp)) {
         SheetTextField(
             value = name, onValueChange = onNameChange,
-            label = "Liste Adı", placeholder = "Playlist 1",
+            label = stringResource(R.string.playlist_form_name_label), placeholder = stringResource(R.string.playlist_form_name_placeholder),
             imeAction = ImeAction.Next,
         )
         Spacer(Modifier.height(12.dp))
@@ -172,7 +174,7 @@ private fun M3uForm(
         Spacer(Modifier.height(12.dp))
         SheetTextField(
             value = epgUrl, onValueChange = onEpgUrlChange,
-            label = "EPG URL (opsiyonel)", placeholder = "XMLTV link",
+            label = stringResource(R.string.playlist_form_epg_url_label), placeholder = "XMLTV link",
             keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done,
         )
         Spacer(Modifier.height(20.dp))
@@ -183,7 +185,7 @@ private fun M3uForm(
             colors = ButtonDefaults.buttonColors(containerColor = accent),
             modifier = Modifier.fillMaxWidth().height(52.dp),
         ) {
-            Text("Yükle", style = MaterialTheme.typography.labelLarge.copy(color = Color.White))
+            Text(stringResource(R.string.playlist_upload_button), style = MaterialTheme.typography.labelLarge.copy(color = Color.White))
         }
     }
 }
@@ -208,26 +210,26 @@ private fun XtreamForm(
     Column(modifier = Modifier.padding(horizontal = 20.dp)) {
         SheetTextField(
             value = name, onValueChange = onNameChange,
-            label = "Liste Adı", placeholder = "Xtream",
+            label = stringResource(R.string.playlist_form_name_label), placeholder = "Xtream",
             imeAction = ImeAction.Next,
         )
         Spacer(Modifier.height(12.dp))
         SheetTextField(
             value = serverUrl, onValueChange = onServerUrlChange,
-            label = "Sunucu URL", placeholder = "http://host:port",
+            label = stringResource(R.string.playlist_form_server_url_label), placeholder = "http://host:port",
             keyboardType = KeyboardType.Uri, imeAction = ImeAction.Next,
         )
         Spacer(Modifier.height(12.dp))
         SheetTextField(
             value = username, onValueChange = onUsernameChange,
-            label = "Kullanıcı Adı", placeholder = "",
+            label = stringResource(R.string.playlist_form_username_label), placeholder = "",
             imeAction = ImeAction.Next,
         )
         Spacer(Modifier.height(12.dp))
         OutlinedTextField(
             value = password,
             onValueChange = onPasswordChange,
-            label = { Text("Şifre") },
+            label = { Text(stringResource(R.string.playlist_form_password_label)) },
             singleLine = true,
             visualTransformation = if (passwordVisible) VisualTransformation.None
                                    else PasswordVisualTransformation(),
@@ -240,7 +242,7 @@ private fun XtreamForm(
                     Icon(
                         imageVector = if (passwordVisible) Icons.Default.VisibilityOff
                                       else Icons.Default.Visibility,
-                        contentDescription = if (passwordVisible) "Gizle" else "Göster",
+                        contentDescription = if (passwordVisible) stringResource(R.string.playlist_password_hide) else stringResource(R.string.playlist_password_show),
                     )
                 }
             },
@@ -259,7 +261,7 @@ private fun XtreamForm(
             colors = ButtonDefaults.buttonColors(containerColor = accent),
             modifier = Modifier.fillMaxWidth().height(52.dp),
         ) {
-            Text("Bağlan", style = MaterialTheme.typography.labelLarge.copy(color = Color.White))
+            Text(stringResource(R.string.playlist_connect_button), style = MaterialTheme.typography.labelLarge.copy(color = Color.White))
         }
     }
 }

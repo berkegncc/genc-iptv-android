@@ -17,11 +17,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
+import com.genciptv.player.R
 import com.genciptv.player.core.designsystem.GeistFamily
 import com.genciptv.player.core.designsystem.GeistMonoFamily
 import com.genciptv.player.core.designsystem.InstrumentSerifFamily
@@ -69,22 +71,22 @@ fun UpdateDialog(
         confirmButton = {
             when (state) {
                 is UpdateUiState.Available -> DialogButton(
-                    text = "Güncelle",
+                    text = stringResource(R.string.update_button_update),
                     color = accent.primary,
                     onClick = { onDownload(state.info) },
                 )
                 is UpdateUiState.NeedsPermission -> DialogButton(
-                    text = "İzin ver",
+                    text = stringResource(R.string.update_button_grant_permission),
                     color = accent.primary,
                     onClick = onOpenPermissionSettings,
                 )
                 is UpdateUiState.Error -> DialogButton(
-                    text = "Tekrar dene",
+                    text = stringResource(R.string.action_retry),
                     color = accent.primary,
                     onClick = onRetry,
                 )
                 is UpdateUiState.UpToDate -> DialogButton(
-                    text = "Tamam",
+                    text = stringResource(R.string.action_ok),
                     color = accent.primary,
                     onClick = onClose,
                 )
@@ -95,13 +97,13 @@ fun UpdateDialog(
         dismissButton = {
             when (state) {
                 is UpdateUiState.Available -> DialogButton(
-                    text = "Daha sonra",
+                    text = stringResource(R.string.update_button_later),
                     color = TextTertiary,
                     onClick = { onDismissVersion(state.info.versionName) },
                 )
                 is UpdateUiState.NeedsPermission,
                 is UpdateUiState.Error -> DialogButton(
-                    text = "Kapat",
+                    text = stringResource(R.string.action_close),
                     color = TextTertiary,
                     onClick = onClose,
                 )
@@ -116,12 +118,12 @@ fun UpdateDialog(
 @Composable
 private fun DialogTitle(state: UpdateUiState) {
     val text = when (state) {
-        is UpdateUiState.Available -> "Yeni sürüm hazır"
-        is UpdateUiState.Downloading -> "İndiriliyor"
-        is UpdateUiState.ReadyToInstall -> "Kurulum başlatılıyor"
-        is UpdateUiState.NeedsPermission -> "Kurulum için izin gerekli"
-        is UpdateUiState.UpToDate -> "Güncelsiniz"
-        is UpdateUiState.Error -> "Bir sorun oldu"
+        is UpdateUiState.Available -> stringResource(R.string.update_title_available)
+        is UpdateUiState.Downloading -> stringResource(R.string.update_title_downloading)
+        is UpdateUiState.ReadyToInstall -> stringResource(R.string.update_title_installing)
+        is UpdateUiState.NeedsPermission -> stringResource(R.string.update_title_needs_permission)
+        is UpdateUiState.UpToDate -> stringResource(R.string.update_title_up_to_date)
+        is UpdateUiState.Error -> stringResource(R.string.state_error_title)
         UpdateUiState.Idle -> return
     }
     Text(
@@ -177,7 +179,10 @@ private fun DialogBody(state: UpdateUiState) {
         }
 
         is UpdateUiState.Downloading -> Column(modifier = Modifier.fillMaxWidth()) {
-            VersionLine(version = state.info.versionName, trailing = "· %${state.percent}")
+            VersionLine(
+                version = state.info.versionName,
+                trailing = stringResource(R.string.update_download_progress_suffix, state.percent),
+            )
             Spacer(Modifier.height(14.dp))
             LinearProgressIndicator(
                 progress = { state.percent / 100f },
@@ -190,26 +195,24 @@ private fun DialogBody(state: UpdateUiState) {
             )
             Spacer(Modifier.height(10.dp))
             Text(
-                text = "Güncelleme indiriliyor, uygulamayı kapatmayın.",
+                text = stringResource(R.string.update_body_downloading),
                 style = bodyStyle(),
             )
         }
 
         is UpdateUiState.ReadyToInstall -> Text(
-            text = "İndirme tamamlandı. Kurulum ekranı açılıyor.",
+            text = stringResource(R.string.update_body_ready_to_install),
             style = bodyStyle(),
         )
 
         is UpdateUiState.NeedsPermission -> Text(
-            text = "Güncellemeyi kurabilmek için bu uygulamaya \"bilinmeyen " +
-                "kaynaklardan uygulama yükleme\" izni vermeniz gerekiyor. " +
-                "İzni verdikten sonra buraya dönüp tekrar deneyin.",
+            text = stringResource(R.string.update_body_needs_permission),
             style = bodyStyle(),
         )
 
         is UpdateUiState.UpToDate -> VersionLine(
             version = state.version,
-            leading = "Güncel sürümdesiniz",
+            leading = stringResource(R.string.update_up_to_date_leading),
         )
 
         is UpdateUiState.Error -> Text(text = state.message, style = bodyStyle())

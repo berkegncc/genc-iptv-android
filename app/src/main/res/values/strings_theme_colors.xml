@@ -1,0 +1,22 @@
+<resources>
+    <!--
+      Accent palette names, shown under each swatch in Theme settings.
+
+      They live here rather than on the enum because an enum constant is built
+      before there is any context to resolve a resource with — the enum carries
+      a resource id and the screen resolves it.
+    -->
+    <string name="palette_purple">Purple</string>
+    <string name="palette_red">Red</string>
+    <string name="palette_orange">Orange</string>
+    <string name="palette_green">Green</string>
+    <string name="palette_blue">Blue</string>
+    <string name="palette_pink">Pink</string>
+    <string name="palette_teal">Teal</string>
+    <string name="palette_lilac">Lilac</string>
+
+    <!-- Splash. Stored uppercased rather than uppercased at runtime: Turkish
+         has a dotted capital İ, and .uppercase() with the wrong locale turns
+         "Yükleniyor" into "YUKLENIYOR". -->
+    <string name="splash_loading">LOADING…</string>
+</resources>

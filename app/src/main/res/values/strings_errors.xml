@@ -1,0 +1,76 @@
+<resources>
+    <!--
+      User-facing error / empty-state strings surfaced from the ViewModel
+      layer (as opposed to Screen/composable copy). These ViewModels resolve
+      them with context.getString rather than stringResource.
+    -->
+
+    <!-- Shared fallback for a caught exception that carries no message. -->
+    <string name="errors_unknown">Unknown error</string>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- Onboarding (onboarding/OnboardingViewModel.kt) -->
+
+    <string name="errors_onboarding_settings_save_failed">Failed to save settings. Please try again.</string>
+
+    <string name="errors_onboarding_m3u_url_empty">M3U URL cannot be empty. Please enter a URL.</string>
+    <string name="errors_onboarding_m3u_connection_failed">Connection error. Check your internet connection.</string>
+    <string name="errors_onboarding_m3u_server_error_code">The server returned an error code (%1$s). Check the URL.</string>
+    <string name="errors_onboarding_m3u_empty_playlist">Empty playlist. Make sure the URL contains a valid M3U.</string>
+    <string name="errors_onboarding_m3u_parse_failed">Could not parse the playlist. Enter a valid M3U URL.</string>
+    <string name="errors_onboarding_m3u_load_failed">Could not load the playlist: %1$s</string>
+
+    <string name="errors_onboarding_xtream_server_url_empty">Server URL cannot be empty.</string>
+    <string name="errors_onboarding_xtream_username_empty">Username cannot be empty.</string>
+    <string name="errors_onboarding_xtream_password_empty">Password cannot be empty.</string>
+    <string name="errors_onboarding_xtream_auth_failed">Authentication failed. Check your username and password.</string>
+    <string name="errors_onboarding_xtream_connection_failed">Connection error. Check the server URL and your internet connection.</string>
+    <string name="errors_onboarding_xtream_empty_playlist">Empty playlist. No channels were found in your Xtream account.</string>
+    <string name="errors_onboarding_xtream_connect_failed">Could not connect: %1$s</string>
+
+    <!-- Shared between the M3U and Xtream submit paths. -->
+    <string name="errors_onboarding_internal_network_main_thread">Internal error: the network request ran on the main thread. Please report this to the developer.</string>
+    <string name="errors_onboarding_host_unreachable">Could not reach the server. Check the URL.</string>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- Playlist manager (profile/playlists/PlaylistManagerViewModel.kt) -->
+
+    <string name="errors_playlist_set_active_failed">Could not set as active: %1$s</string>
+    <string name="errors_playlist_delete_failed">Could not delete: %1$s</string>
+    <string name="errors_playlist_sync_failed">Sync failed: %1$s</string>
+    <string name="errors_playlist_host_unreachable">Could not reach the server.</string>
+    <string name="errors_playlist_connection_timeout">Connection timed out.</string>
+    <string name="errors_playlist_empty">Empty playlist.</string>
+    <string name="errors_playlist_auth_failed">Authentication failed.</string>
+    <string name="errors_playlist_generic">Error: %1$s</string>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- VOD player (vodplayer/VodPlayerViewModel.kt) -->
+
+    <string name="errors_vodplayer_content_not_found">Content not found</string>
+    <string name="errors_vodplayer_movie_not_found">Movie not found</string>
+    <string name="errors_vodplayer_episode_not_found">Episode not found</string>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- In-app update (update/UpdateViewModel.kt) -->
+
+    <string name="errors_update_install_screen_failed">Could not open the install screen. Try updating again.</string>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- Live player (player/PlayerViewModel.kt) -->
+
+    <string name="errors_player_channel_not_found">Channel not found</string>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- VOD detail (vod/VodDetailViewModel.kt) -->
+
+    <!-- Fallback episode title when the provider does not send one. -->
+    <string name="errors_voddetail_episode_fallback_title">Episode %1$s</string>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- Profile (profile/ProfileViewModel.kt) — subscription plan status. -->
+
+    <string name="errors_profile_premium_active">✨ Premium Plan</string>
+    <string name="errors_profile_premium_active_until">✨ Premium Plan · Expires: %1$s</string>
+    <string name="errors_profile_plan_expired">⚠ Expired</string>
+</resources>

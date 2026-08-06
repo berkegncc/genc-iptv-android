@@ -1,0 +1,13 @@
+<resources>
+    <!-- Language picker (Profile → Settings). -->
+
+    <string name="language_title">Language</string>
+    <string name="language_subtitle_system">Follows your phone</string>
+    <string name="language_option_system">System default</string>
+
+    <!-- Language names stay in their own language — a Turkish speaker looking
+         for Turkish looks for "Türkçe", not for whatever the current UI calls
+         it. Same reason these are not translated in values-tr. -->
+    <string name="language_option_turkish" translatable="false">Türkçe</string>
+    <string name="language_option_english" translatable="false">English</string>
+</resources>

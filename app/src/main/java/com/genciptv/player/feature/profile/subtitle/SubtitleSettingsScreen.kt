@@ -60,6 +60,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
@@ -70,6 +71,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.genciptv.player.R
 import com.genciptv.player.core.designsystem.Bg
 import com.genciptv.player.core.designsystem.Border
 import com.genciptv.player.core.designsystem.GencIptvTheme
@@ -93,8 +95,11 @@ import kotlin.math.roundToInt
 
 // ── Label extensions for enums ────────────────────────────────────────────────
 
+@Composable
 fun SubtitleFontFamily.label(): String = when (this) {
-    SubtitleFontFamily.SYSTEM -> "Sistem"
+    // Sans-Serif / Serif / Monospace / Casual / Cursive are font-family
+    // identifiers, not prose — left untranslated on purpose.
+    SubtitleFontFamily.SYSTEM -> stringResource(R.string.subtitle_font_family_system)
     SubtitleFontFamily.SANS_SERIF -> "Sans-Serif"
     SubtitleFontFamily.SERIF -> "Serif"
     SubtitleFontFamily.MONOSPACE -> "Monospace"
@@ -102,25 +107,28 @@ fun SubtitleFontFamily.label(): String = when (this) {
     SubtitleFontFamily.CURSIVE -> "Cursive"
 }
 
+@Composable
 fun SubtitleFontStyle.label(): String = when (this) {
-    SubtitleFontStyle.NORMAL -> "Normal"
-    SubtitleFontStyle.BOLD -> "Kalın"
-    SubtitleFontStyle.ITALIC -> "İtalik"
-    SubtitleFontStyle.BOLD_ITALIC -> "Kalın İtalik"
+    SubtitleFontStyle.NORMAL -> stringResource(R.string.subtitle_font_style_normal)
+    SubtitleFontStyle.BOLD -> stringResource(R.string.subtitle_font_style_bold)
+    SubtitleFontStyle.ITALIC -> stringResource(R.string.subtitle_font_style_italic)
+    SubtitleFontStyle.BOLD_ITALIC -> stringResource(R.string.subtitle_font_style_bold_italic)
 }
 
+@Composable
 fun SubtitleEdgeType.label(): String = when (this) {
-    SubtitleEdgeType.NONE -> "Yok"
-    SubtitleEdgeType.OUTLINE -> "Dış Çizgi"
-    SubtitleEdgeType.DROP_SHADOW -> "Gölge"
-    SubtitleEdgeType.RAISED -> "Kabartma"
-    SubtitleEdgeType.DEPRESSED -> "Batırma"
+    SubtitleEdgeType.NONE -> stringResource(R.string.subtitle_edge_type_none)
+    SubtitleEdgeType.OUTLINE -> stringResource(R.string.subtitle_edge_type_outline)
+    SubtitleEdgeType.DROP_SHADOW -> stringResource(R.string.subtitle_edge_type_drop_shadow)
+    SubtitleEdgeType.RAISED -> stringResource(R.string.subtitle_edge_type_raised)
+    SubtitleEdgeType.DEPRESSED -> stringResource(R.string.subtitle_edge_type_depressed)
 }
 
+@Composable
 fun SubtitleVerticalPosition.label(): String = when (this) {
-    SubtitleVerticalPosition.BOTTOM -> "Alt"
-    SubtitleVerticalPosition.CENTER -> "Orta"
-    SubtitleVerticalPosition.TOP -> "Üst"
+    SubtitleVerticalPosition.BOTTOM -> stringResource(R.string.subtitle_position_bottom)
+    SubtitleVerticalPosition.CENTER -> stringResource(R.string.subtitle_position_center)
+    SubtitleVerticalPosition.TOP -> stringResource(R.string.subtitle_position_top)
 }
 
 // ── Color helpers ─────────────────────────────────────────────────────────────
@@ -197,13 +205,13 @@ fun SubtitleSettingsContent(
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Geri",
+                    contentDescription = stringResource(R.string.action_back),
                     modifier = Modifier.size(18.dp),
                     tint = TextPrimary,
                 )
             }
             Text(
-                text = "Altyazı Görünümü",
+                text = stringResource(R.string.subtitle_title),
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Black,
                     color = TextPrimary,
@@ -214,7 +222,7 @@ fun SubtitleSettingsContent(
                 onClick = { showResetDialog = true },
                 modifier = Modifier.align(Alignment.CenterEnd),
             ) {
-                Text("Sıfırla", color = accent.primary)
+                Text(stringResource(R.string.subtitle_reset_button), color = accent.primary)
             }
         }
 
@@ -231,27 +239,27 @@ fun SubtitleSettingsContent(
             Spacer(Modifier.height(20.dp))
 
             // Font section
-            SectionLabel("Font")
+            SectionLabel(stringResource(R.string.subtitle_section_font))
             Spacer(Modifier.height(8.dp))
             SettingGroupCard {
                 SettingRow(
                     icon = Icons.Outlined.FontDownload,
-                    label = "Font Ailesi",
+                    label = stringResource(R.string.subtitle_font_family_label),
                     subtitle = style.fontFamily.label(),
                     onClick = { showFontFamilySheet = true },
                 )
                 SettingRowDivider()
                 SettingRow(
                     icon = Icons.Outlined.FormatBold,
-                    label = "Font Stili",
+                    label = stringResource(R.string.subtitle_font_style_label),
                     subtitle = style.fontStyle.label(),
                     onClick = { showFontStyleSheet = true },
                 )
                 SettingRowDivider()
                 SettingRow(
                     icon = Icons.Outlined.FormatSize,
-                    label = "Metin Boyutu",
-                    subtitle = "${style.textSizePercent}%",
+                    label = stringResource(R.string.subtitle_text_size_label),
+                    subtitle = stringResource(R.string.subtitle_percent_value, style.textSizePercent),
                     trailing = {},
                 )
                 // Slider row
@@ -270,12 +278,12 @@ fun SubtitleSettingsContent(
             Spacer(Modifier.height(20.dp))
 
             // Colors section
-            SectionLabel("Renkler")
+            SectionLabel(stringResource(R.string.subtitle_section_colors))
             Spacer(Modifier.height(8.dp))
             SettingGroupCard {
                 SettingRow(
                     icon = Icons.Outlined.Palette,
-                    label = "Metin Rengi",
+                    label = stringResource(R.string.subtitle_text_color_label),
                     trailing = {
                         ColorSwatch(color = style.textColor.toComposeColor(), onClick = { showTextColorPicker = true })
                     }
@@ -283,8 +291,8 @@ fun SubtitleSettingsContent(
                 SettingRowDivider()
                 SettingRow(
                     icon = Icons.Outlined.Opacity,
-                    label = "Metin Opaklığı",
-                    subtitle = "${style.textColor.alphaPercent()}%",
+                    label = stringResource(R.string.subtitle_text_opacity_label),
+                    subtitle = stringResource(R.string.subtitle_percent_value, style.textColor.alphaPercent()),
                     trailing = {},
                 )
                 Box(modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
@@ -303,7 +311,7 @@ fun SubtitleSettingsContent(
                 SettingRowDivider()
                 SettingRow(
                     icon = Icons.Outlined.FormatColorFill,
-                    label = "Arka Plan Rengi",
+                    label = stringResource(R.string.subtitle_bg_color_label),
                     trailing = {
                         ColorSwatch(color = style.backgroundColor.toComposeColor(), onClick = { showBgColorPicker = true })
                     }
@@ -311,8 +319,8 @@ fun SubtitleSettingsContent(
                 SettingRowDivider()
                 SettingRow(
                     icon = Icons.Outlined.Opacity,
-                    label = "Arka Plan Opaklığı",
-                    subtitle = "${style.backgroundColor.alphaPercent()}%",
+                    label = stringResource(R.string.subtitle_bg_opacity_label),
+                    subtitle = stringResource(R.string.subtitle_percent_value, style.backgroundColor.alphaPercent()),
                     trailing = {},
                 )
                 Box(modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
@@ -331,7 +339,7 @@ fun SubtitleSettingsContent(
                 SettingRowDivider()
                 SettingRow(
                     icon = Icons.Outlined.Crop169,
-                    label = "Pencere Rengi",
+                    label = stringResource(R.string.subtitle_window_color_label),
                     trailing = {
                         ColorSwatch(color = style.windowColor.toComposeColor(), onClick = { showWindowColorPicker = true })
                     }
@@ -339,8 +347,8 @@ fun SubtitleSettingsContent(
                 SettingRowDivider()
                 SettingRow(
                     icon = Icons.Outlined.Opacity,
-                    label = "Pencere Opaklığı",
-                    subtitle = "${style.windowColor.alphaPercent()}%",
+                    label = stringResource(R.string.subtitle_window_opacity_label),
+                    subtitle = stringResource(R.string.subtitle_percent_value, style.windowColor.alphaPercent()),
                     trailing = {},
                 )
                 Box(modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
@@ -361,19 +369,19 @@ fun SubtitleSettingsContent(
             Spacer(Modifier.height(20.dp))
 
             // Edge section
-            SectionLabel("Kenar")
+            SectionLabel(stringResource(R.string.subtitle_section_edge))
             Spacer(Modifier.height(8.dp))
             SettingGroupCard {
                 SettingRow(
                     icon = Icons.Outlined.BorderStyle,
-                    label = "Kenar Tipi",
+                    label = stringResource(R.string.subtitle_edge_type_label),
                     subtitle = style.edgeType.label(),
                     onClick = { showEdgeTypeSheet = true },
                 )
                 SettingRowDivider()
                 SettingRow(
                     icon = Icons.Outlined.BorderColor,
-                    label = "Kenar Rengi",
+                    label = stringResource(R.string.subtitle_edge_color_label),
                     trailing = {
                         ColorSwatch(
                             color = style.edgeColor.toComposeColor(),
@@ -387,12 +395,12 @@ fun SubtitleSettingsContent(
             Spacer(Modifier.height(20.dp))
 
             // Position section
-            SectionLabel("Konum")
+            SectionLabel(stringResource(R.string.subtitle_section_position))
             Spacer(Modifier.height(8.dp))
             SettingGroupCard {
                 SettingRow(
                     icon = Icons.Outlined.VerticalAlignBottom,
-                    label = "Dikey Konum",
+                    label = stringResource(R.string.subtitle_vertical_position_label),
                     subtitle = style.verticalPosition.label(),
                     onClick = { showVerticalPosSheet = true },
                 )
@@ -406,16 +414,16 @@ fun SubtitleSettingsContent(
     if (showResetDialog) {
         AlertDialog(
             onDismissRequest = { showResetDialog = false },
-            title = { Text("Sıfırla") },
-            text = { Text("Altyazı ayarlarını varsayılana döndürmek istediğinize emin misiniz?") },
+            title = { Text(stringResource(R.string.subtitle_reset_button)) },
+            text = { Text(stringResource(R.string.subtitle_reset_confirm_message)) },
             confirmButton = {
                 TextButton(onClick = {
                     onReset()
                     showResetDialog = false
-                }) { Text("Sıfırla") }
+                }) { Text(stringResource(R.string.subtitle_reset_button)) }
             },
             dismissButton = {
-                TextButton(onClick = { showResetDialog = false }) { Text("İptal") }
+                TextButton(onClick = { showResetDialog = false }) { Text(stringResource(R.string.action_cancel)) }
             }
         )
     }
@@ -423,7 +431,7 @@ fun SubtitleSettingsContent(
     // Font family sheet
     if (showFontFamilySheet) {
         RadioPickerSheet(
-            title = "Font Ailesi",
+            title = stringResource(R.string.subtitle_font_family_label),
             options = SubtitleFontFamily.entries.map { it to it.label() },
             selected = style.fontFamily,
             onSelect = { onUpdate(style.copy(fontFamily = it)); showFontFamilySheet = false },
@@ -434,7 +442,7 @@ fun SubtitleSettingsContent(
     // Font style sheet
     if (showFontStyleSheet) {
         RadioPickerSheet(
-            title = "Font Stili",
+            title = stringResource(R.string.subtitle_font_style_label),
             options = SubtitleFontStyle.entries.map { it to it.label() },
             selected = style.fontStyle,
             onSelect = { onUpdate(style.copy(fontStyle = it)); showFontStyleSheet = false },
@@ -445,7 +453,7 @@ fun SubtitleSettingsContent(
     // Edge type sheet
     if (showEdgeTypeSheet) {
         RadioPickerSheet(
-            title = "Kenar Tipi",
+            title = stringResource(R.string.subtitle_edge_type_label),
             options = SubtitleEdgeType.entries.map { it to it.label() },
             selected = style.edgeType,
             onSelect = { onUpdate(style.copy(edgeType = it)); showEdgeTypeSheet = false },
@@ -456,7 +464,7 @@ fun SubtitleSettingsContent(
     // Vertical position sheet
     if (showVerticalPosSheet) {
         RadioPickerSheet(
-            title = "Dikey Konum",
+            title = stringResource(R.string.subtitle_vertical_position_label),
             options = SubtitleVerticalPosition.entries.map { it to it.label() },
             selected = style.verticalPosition,
             onSelect = { onUpdate(style.copy(verticalPosition = it)); showVerticalPosSheet = false },
@@ -467,7 +475,7 @@ fun SubtitleSettingsContent(
     // Color pickers
     if (showTextColorPicker) {
         ColorPickerSheet(
-            title = "Metin Rengi",
+            title = stringResource(R.string.subtitle_text_color_label),
             currentRgb = style.textColor and 0x00FFFFFF,
             onSelect = { rgb ->
                 val alpha = style.textColor ushr 24
@@ -480,7 +488,7 @@ fun SubtitleSettingsContent(
 
     if (showBgColorPicker) {
         ColorPickerSheet(
-            title = "Arka Plan Rengi",
+            title = stringResource(R.string.subtitle_bg_color_label),
             currentRgb = style.backgroundColor and 0x00FFFFFF,
             onSelect = { rgb ->
                 val alpha = style.backgroundColor ushr 24
@@ -494,7 +502,7 @@ fun SubtitleSettingsContent(
 
     if (showWindowColorPicker) {
         ColorPickerSheet(
-            title = "Pencere Rengi",
+            title = stringResource(R.string.subtitle_window_color_label),
             currentRgb = style.windowColor and 0x00FFFFFF,
             onSelect = { rgb ->
                 val alpha = style.windowColor ushr 24
@@ -508,7 +516,7 @@ fun SubtitleSettingsContent(
 
     if (showEdgeColorPicker) {
         ColorPickerSheet(
-            title = "Kenar Rengi",
+            title = stringResource(R.string.subtitle_edge_color_label),
             currentRgb = style.edgeColor and 0x00FFFFFF,
             onSelect = { rgb ->
                 val alpha = style.edgeColor ushr 24
@@ -552,7 +560,7 @@ private fun SubtitlePreviewCard(style: SubtitleStyle) {
             SubtitleVerticalPosition.TOP -> Alignment.TopCenter
         }
 
-        val sampleText = "Bu bir altyazı örneğidir.\nİkinci satır da burada görünür."
+        val sampleText = stringResource(R.string.subtitle_sample_text)
 
         val textColor = style.textColor.toComposeColor()
         val bgColor = style.backgroundColor.toComposeColor()
@@ -774,7 +782,7 @@ private fun ColorPickerSheet(
             if (includeTransparent) {
                 Spacer(Modifier.height(8.dp))
                 TextButton(onClick = { onSelect(0x00000000) }) {
-                    Text("Şeffaf")
+                    Text(stringResource(R.string.subtitle_transparent_button))
                 }
             }
             Spacer(Modifier.height(16.dp))

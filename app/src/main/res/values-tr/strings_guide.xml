@@ -1,0 +1,55 @@
+<resources>
+    <!-- Kanallar ekranı. -->
+
+    <string name="channels_loading_message">Kanallar yükleniyor…</string>
+
+    <string name="channels_error_title">Kanallar Yüklenemedi</string>
+    <string name="channels_error_go_back">Geri Dön</string>
+
+    <string name="channels_select_category_placeholder">Soldan bir kategori seçin</string>
+
+    <string name="channels_categories_heading">Kategoriler</string>
+    <string name="channels_collection_count">%1$d koleksiyon</string>
+    <string name="channels_channel_count">%1$d kanal</string>
+
+    <string name="channels_empty_categories_title">Kategori Bulunamadı</string>
+    <string name="channels_empty_categories_body">Playlist senkronizasyonu sonrasında kategoriler burada listelenecek. Sağ üstteki yenile butonuna basabilirsin.</string>
+
+    <string name="channels_empty_list_title">Kanal Bulunamadı</string>
+    <string name="channels_empty_list_body">Arama kriterlerinizi değiştirmeyi deneyin.</string>
+
+    <string name="channels_no_program_info">Yayın bilgisi yok</string>
+
+    <string name="channels_favorite_remove">Favorilerden çıkar</string>
+    <string name="channels_favorite_add">Favorilere ekle</string>
+
+    <string name="channels_reload_content_description">Yeniden yükle</string>
+    <string name="channels_search_placeholder">Kanal ara…</string>
+
+    <!-- Program rehberi (EPG) ekranı. -->
+
+    <string name="guide_loading_message">Program rehberi yükleniyor…</string>
+
+    <string name="guide_empty_title">Program rehberi boş</string>
+    <string name="guide_empty_body">Bu playlist için EPG verisi bulunmuyor. Provider\'ın EPG sağlamıyor olabilir, ya da playlist ilk kez senkronize edildiğinde EPG henüz inmedi. İleriki sürümlerde otomatik EPG senkronizasyonu eklenecek.</string>
+    <string name="guide_empty_action_refresh_playlist">Playlist\'i Yenile</string>
+
+    <string name="guide_header_title">📅 Program Rehberi</string>
+
+    <string name="guide_watch_action">İzle</string>
+
+    <string name="guide_program_time_range">%1$s - %2$s · %3$d dk</string>
+    <string name="guide_time_now_suffix">%1$s · şimdi</string>
+
+    <!-- Gün şeridi. -->
+    <string name="guide_day_yesterday">Dün</string>
+    <string name="guide_day_today">Bugün</string>
+    <string name="guide_day_tomorrow">Yarın</string>
+    <string name="guide_weekday_mon">Pzt</string>
+    <string name="guide_weekday_tue">Sal</string>
+    <string name="guide_weekday_wed">Çar</string>
+    <string name="guide_weekday_thu">Per</string>
+    <string name="guide_weekday_fri">Cum</string>
+    <string name="guide_weekday_sat">Cmt</string>
+    <string name="guide_weekday_sun">Paz</string>
+</resources>

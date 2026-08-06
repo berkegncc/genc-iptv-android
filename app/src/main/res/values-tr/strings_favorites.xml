@@ -1,0 +1,18 @@
+<resources>
+    <!-- Favoriler ekranı. -->
+
+    <string name="favorites_title">Favoriler</string>
+
+    <string name="favorites_tab_channels">Kanallar</string>
+    <string name="favorites_tab_movies">Filmler</string>
+    <string name="favorites_tab_series">Diziler</string>
+
+    <string name="favorites_empty_channels_title">Henüz favori kanal yok</string>
+    <string name="favorites_empty_channels_body">Kanallar ekranında ⭐ simgesine dokunarak favori ekleyebilirsin.</string>
+
+    <string name="favorites_empty_movies_title">Henüz favori film yok</string>
+    <string name="favorites_empty_movies_body">Film listesinde ⭐ simgesine dokunarak favori ekleyebilirsin.</string>
+
+    <string name="favorites_empty_series_title">Henüz favori dizi yok</string>
+    <string name="favorites_empty_series_body">Dizi listesinde ⭐ simgesine dokunarak favori ekleyebilirsin.</string>
+</resources>

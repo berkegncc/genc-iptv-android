@@ -81,6 +81,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.genciptv.player.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -141,7 +143,7 @@ import com.genciptv.player.core.ui.LoadingState
 import com.genciptv.player.core.ui.Poster
 import com.genciptv.player.core.ui.applySubtitleStyle
 import com.genciptv.player.core.util.restoreUserOrientation
-import com.genciptv.player.core.util.episodeDisplayTitle
+import com.genciptv.player.core.util.episodeName
 import com.genciptv.player.data.model.CastMember
 import com.genciptv.player.data.model.Episode
 import com.genciptv.player.data.model.SubtitleStyle
@@ -159,12 +161,21 @@ private data class SubtitleTrackInfo(val groupIndex: Int, val trackIndex: Int, v
  *  "Seslendirme ve Alt Yazı" control in the overlay. */
 private enum class PlayerSheet { SPEED, TRACKS, SCALE, SEASON, EPISODES }
 
-private enum class VideoScale(val label: String) {
-    ORIGINAL("Orijinal"),
-    FIT_SCREEN("Ekrana Sığdır"),
-    STRETCH("Gerdir"),
-    RATIO_16_9("16:9"),
-    RATIO_21_9("21:9"),
+private enum class VideoScale {
+    ORIGINAL,
+    FIT_SCREEN,
+    STRETCH,
+    RATIO_16_9,
+    RATIO_21_9,
+}
+
+@Composable
+private fun videoScaleLabel(scale: VideoScale): String = when (scale) {
+    VideoScale.ORIGINAL -> stringResource(R.string.player_scale_original)
+    VideoScale.FIT_SCREEN -> stringResource(R.string.player_scale_fit_screen)
+    VideoScale.STRETCH -> stringResource(R.string.player_scale_stretch)
+    VideoScale.RATIO_16_9 -> stringResource(R.string.player_scale_ratio_16_9)
+    VideoScale.RATIO_21_9 -> stringResource(R.string.player_scale_ratio_21_9)
 }
 
 private val SPEED_PRESETS = listOf(0.25f, 0.5f, 0.75f, 1f, 1.25f, 1.5f, 2f, 3f, 4f)
@@ -177,24 +188,47 @@ private val SPEED_PRESETS = listOf(0.25f, 0.5f, 0.75f, 1f, 1.25f, 1.5f, 2f, 3f, 
  */
 private val MaxActionSlotWidth = 240.dp
 
-private fun speedLabel(speed: Float): String = when (speed) {
-    0.25f -> "0.25x (Çok Yavaş)"
-    0.5f  -> "0.5x (Yavaş)"
-    0.75f -> "0.75x"
-    1f    -> "1x (Normal)"
-    1.25f -> "1.25x"
-    1.5f  -> "1.5x (Hızlı)"
-    2f    -> "2x (Çok Hızlı)"
-    3f    -> "3x"
-    4f    -> "4x"
-    else  -> "${speed}x"
+@Composable
+private fun speedLabel(speed: Float): String {
+    // formatSpeed's numeric part ("1x", "1.5x"…) is a number format, not
+    // translatable text — only the parenthetical descriptor needs a resource.
+    val numeric = formatSpeed(speed)
+    val descriptorRes = when (speed) {
+        0.25f -> R.string.player_speed_very_slow
+        0.5f  -> R.string.player_speed_slow
+        1f    -> R.string.player_speed_normal
+        1.5f  -> R.string.player_speed_fast
+        2f    -> R.string.player_speed_very_fast
+        else  -> null
+    }
+    return if (descriptorRes != null) {
+        stringResource(R.string.player_speed_with_descriptor, numeric, stringResource(descriptorRes))
+    } else {
+        numeric
+    }
 }
 
-private fun languageDisplay(code: String?): String {
-    if (code.isNullOrBlank() || code == "und") return "Bilinmeyen"
+/**
+ * A track's language, named in the language the app is currently running in.
+ *
+ * [displayLocale] used to be pinned to Turkish, which meant an English UI still
+ * listed its audio tracks as "İngilizce" and "Türkçe". The caller passes the
+ * composition's locale so the names follow the app's language setting.
+ *
+ * [unknownLabel] is resolved via `stringResource` at the call site rather than
+ * here, because this is invoked from inside `remember { }` blocks, which
+ * disallow composable calls.
+ */
+private fun languageDisplay(
+    code: String?,
+    unknownLabel: String,
+    displayLocale: Locale,
+): String {
+    if (code.isNullOrBlank() || code == "und") return unknownLabel
     return runCatching {
-        val loc = Locale.forLanguageTag(code)
-        loc.getDisplayLanguage(Locale.forLanguageTag("tr")).replaceFirstChar { it.uppercase() }
+        Locale.forLanguageTag(code)
+            .getDisplayLanguage(displayLocale)
+            .replaceFirstChar { it.uppercase(displayLocale) }
     }.getOrDefault(code)
 }
 
@@ -331,13 +365,13 @@ fun VodPlayerScreen(
     val errorMessage = state.error
     when {
         state.isLoading -> LoadingState(
-            message = "İçerik yükleniyor…",
+            message = stringResource(R.string.player_loading_content),
             modifier = Modifier.fillMaxSize().background(GencColors.Dark.bg),
         )
         errorMessage != null -> ErrorState(
-            title = "Oynatma Hatası",
+            title = stringResource(R.string.player_playback_error_title),
             description = errorMessage,
-            retryLabel = "Geri Dön",
+            retryLabel = stringResource(R.string.player_go_back),
             onRetry = onBack,
             modifier = Modifier.fillMaxSize(),
         )
@@ -775,7 +809,7 @@ private fun VodPlayerOverlay(
         ) {
             FlatIconButton(
                 icon = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Geri",
+                contentDescription = stringResource(R.string.action_back),
                 onClick = onBack,
                 size = 24.dp,
             )
@@ -812,13 +846,17 @@ private fun VodPlayerOverlay(
             }
             FlatIconButton(
                 icon = if (state.isFavorite) Icons.Filled.Star else Icons.Filled.StarBorder,
-                contentDescription = if (state.isFavorite) "Favorilerden çıkar" else "Favorilere ekle",
+                contentDescription = if (state.isFavorite) {
+                    stringResource(R.string.player_remove_favorite)
+                } else {
+                    stringResource(R.string.player_add_favorite)
+                },
                 onClick = onToggleFavorite,
                 tint = if (state.isFavorite) Copper else Color.White,
             )
             FlatIconButton(
                 icon = if (isFullscreen) Icons.Filled.FullscreenExit else Icons.Filled.Fullscreen,
-                contentDescription = "Tam ekran",
+                contentDescription = stringResource(R.string.player_fullscreen),
                 onClick = onToggleFullscreen,
             )
         }
@@ -833,19 +871,23 @@ private fun VodPlayerOverlay(
         ) {
             SeekButton(
                 icon = Icons.Filled.FastRewind,
-                contentDescription = "10 saniye geri",
+                contentDescription = stringResource(R.string.player_seek_back_10),
                 onClick = onRewind,
             )
             FlatIconButton(
                 icon = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                contentDescription = if (isPlaying) "Duraklat" else "Oynat",
+                contentDescription = if (isPlaying) {
+                    stringResource(R.string.player_pause)
+                } else {
+                    stringResource(R.string.action_play)
+                },
                 onClick = onPlayPause,
                 size = 52.dp,
                 touchTarget = 68.dp,
             )
             SeekButton(
                 icon = Icons.Filled.FastForward,
-                contentDescription = "10 saniye ileri",
+                contentDescription = stringResource(R.string.player_seek_forward_10),
                 onClick = onForward,
             )
         }
@@ -908,13 +950,13 @@ private fun VodPlayerOverlay(
             val actionRow: @Composable RowScope.(itemModifier: Modifier) -> Unit = { itemModifier ->
                 PlayerActionButton(
                     icon = Icons.Filled.AspectRatio,
-                    label = "Ölçek",
+                    label = stringResource(R.string.player_scale),
                     onClick = { onOpenSheet(PlayerSheet.SCALE) },
                     modifier = itemModifier,
                 )
                 PlayerActionButton(
                     icon = Icons.Filled.Speed,
-                    label = "Hız (${formatSpeed(playbackSpeed)})",
+                    label = stringResource(R.string.player_speed, formatSpeed(playbackSpeed)),
                     onClick = { onOpenSheet(PlayerSheet.SPEED) },
                     modifier = itemModifier,
                     tint = if (playbackSpeed != 1f) Copper else Color.White,
@@ -922,7 +964,7 @@ private fun VodPlayerOverlay(
                 if (!state.isMovie && state.seriesEpisodes.isNotEmpty()) {
                     PlayerActionButton(
                         icon = Icons.AutoMirrored.Filled.List,
-                        label = "Bölümler",
+                        label = stringResource(R.string.term_episodes),
                         onClick = { onOpenSheet(PlayerSheet.EPISODES) },
                         modifier = itemModifier,
                     )
@@ -932,7 +974,7 @@ private fun VodPlayerOverlay(
                 // the audio *track* being chosen here, not dubbing specifically.
                 PlayerActionButton(
                     icon = Icons.Filled.Subtitles,
-                    label = "Ses ve Altyazı",
+                    label = stringResource(R.string.player_audio_subtitles),
                     onClick = { onOpenSheet(PlayerSheet.TRACKS) },
                     modifier = itemModifier,
                 )
@@ -941,7 +983,7 @@ private fun VodPlayerOverlay(
                 if (onSkipNext != null) {
                     PlayerActionButton(
                         icon = Icons.Filled.SkipNext,
-                        label = "Sonraki Bölüm",
+                        label = stringResource(R.string.player_next_episode),
                         onClick = onSkipNext,
                         modifier = itemModifier,
                     )
@@ -1158,7 +1200,7 @@ private fun VodPlayerErrorOverlay(
         ) {
             FlatIconButton(
                 icon = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Geri",
+                contentDescription = stringResource(R.string.action_back),
                 onClick = onBack,
                 size = 24.dp,
             )
@@ -1177,7 +1219,7 @@ private fun VodPlayerErrorOverlay(
             )
             FlatIconButton(
                 icon = if (isFullscreen) Icons.Filled.FullscreenExit else Icons.Filled.Fullscreen,
-                contentDescription = "Tam ekran",
+                contentDescription = stringResource(R.string.player_fullscreen),
                 onClick = onToggleFullscreen,
                 size = 20.dp,
             )
@@ -1200,7 +1242,7 @@ private fun VodPlayerErrorOverlay(
             }
             Spacer(Modifier.height(14.dp))
             Text(
-                text = "Akış oynatılamadı",
+                text = stringResource(R.string.player_stream_playback_failed),
                 style = TextStyle(
                     fontFamily = InstrumentSerifFamily,
                     fontWeight = FontWeight.Normal,
@@ -1324,7 +1366,7 @@ private fun MoviePanel(
         val plot = movie?.plot
         if (!plot.isNullOrBlank()) {
             Spacer(Modifier.height(8.dp))
-            PanelSectionTitle("Özet")
+            PanelSectionTitle(stringResource(R.string.player_section_summary))
             Spacer(Modifier.height(6.dp))
             Text(
                 text = plot,
@@ -1345,7 +1387,7 @@ private fun MoviePanel(
         }
         if (cast.isNotEmpty()) {
             Spacer(Modifier.height(20.dp))
-            PanelSectionTitle("Oyuncular")
+            PanelSectionTitle(stringResource(R.string.player_section_cast))
             Spacer(Modifier.height(10.dp))
             CastRow(cast = cast)
         }
@@ -1353,7 +1395,7 @@ private fun MoviePanel(
         // Similar movies
         if (state.similarMovies.isNotEmpty()) {
             Spacer(Modifier.height(20.dp))
-            PanelSectionTitle("Benzer Filmler")
+            PanelSectionTitle(stringResource(R.string.player_section_similar_movies))
             Spacer(Modifier.height(10.dp))
             LazyRow(
                 contentPadding = PaddingValues(horizontal = 16.dp),
@@ -1404,7 +1446,7 @@ private fun EpisodePanel(
 ) {
     val accent = LocalAccentPalette.current
     val episodes = state.episodesInSelectedSeason
-    val seasonLabel = state.selectedSeason?.let { "Sezon $it" } ?: "—"
+    val seasonLabel = state.selectedSeason?.let { stringResource(R.string.term_season_number, it) } ?: "—"
     val totalEpisodes = episodes.size
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -1428,7 +1470,7 @@ private fun EpisodePanel(
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
-                    text = "$seasonLabel  ·  $totalEpisodes BÖLÜM",
+                    text = stringResource(R.string.player_season_episode_count, seasonLabel, totalEpisodes),
                     style = TextStyle(
                         fontFamily = GeistMonoFamily,
                         fontWeight = FontWeight.Normal,
@@ -1464,7 +1506,7 @@ private fun EpisodePanel(
                 Spacer(Modifier.width(4.dp))
                 Icon(
                     imageVector = Icons.Default.ExpandMore,
-                    contentDescription = "Sezon seç",
+                    contentDescription = stringResource(R.string.player_select_season),
                     tint = accent.primary,
                     modifier = Modifier.size(16.dp),
                 )
@@ -1478,7 +1520,7 @@ private fun EpisodePanel(
                 modifier = Modifier.fillMaxSize().padding(32.dp),
             ) {
                 Text(
-                    text = "Bölümler yükleniyor…",
+                    text = stringResource(R.string.player_episodes_loading),
                     style = TextStyle(
                         fontFamily = GeistFamily,
                         fontWeight = FontWeight.Normal,
@@ -1528,7 +1570,9 @@ private fun EpisodeRow(
         // and the accent background marks the one that is playing.
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = episodeDisplayTitle(episode.episode, episode.title),
+                text = episodeName(episode.episode, episode.title)
+                        ?.let { stringResource(R.string.term_episode_titled, episode.episode, it) }
+                        ?: stringResource(R.string.term_episode_number, episode.episode),
                 style = TextStyle(
                     fontFamily = GeistFamily,
                     fontWeight = FontWeight.SemiBold,
@@ -1540,10 +1584,10 @@ private fun EpisodeRow(
             )
             // Runtime under the title, matching the detail screen's card.
             val sub = buildString {
-                episode.durationSecs?.let { append("${it / 60} dk") }
+                episode.durationSecs?.let { append(stringResource(R.string.unit_minutes_short, it / 60)) }
                 if (isCurrent) {
                     if (isNotEmpty()) append("  ·  ")
-                    append("ŞU AN OYNUYOR")
+                    append(stringResource(R.string.player_now_playing))
                 }
             }
             if (sub.isNotEmpty()) {
@@ -1579,7 +1623,7 @@ private fun EpisodeRow(
         Spacer(Modifier.width(8.dp))
         Icon(
             imageVector = Icons.Filled.PlayArrow,
-            contentDescription = "Oynat",
+            contentDescription = stringResource(R.string.action_play),
             tint = if (isCurrent) accent.primary else TextTertiary,
             modifier = Modifier.size(20.dp),
         )
@@ -1690,7 +1734,7 @@ private fun SeasonSheet(
     val accent = LocalAccentPalette.current
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
         Text(
-            text = "Sezon",
+            text = stringResource(R.string.player_season_sheet_title),
             style = TextStyle(
                 fontFamily = InstrumentSerifFamily,
                 fontWeight = FontWeight.Normal,
@@ -1714,7 +1758,7 @@ private fun SeasonSheet(
                     colors = RadioButtonDefaults.colors(selectedColor = accent.primary),
                 )
                 Text(
-                    text = "Sezon $season",
+                    text = stringResource(R.string.term_season_number, season),
                     style = TextStyle(
                         fontFamily = GeistFamily,
                         fontWeight = FontWeight.Medium,
@@ -1741,7 +1785,7 @@ private fun TracksSheet(exoPlayer: ExoPlayer, onDismiss: () -> Unit) {
     var showSubtitles by remember { mutableStateOf(false) }
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
-            text = "Seslendirme ve Alt Yazı",
+            text = stringResource(R.string.player_audio_subtitle_sheet_title),
             style = TextStyle(
                 fontFamily = InstrumentSerifFamily,
                 fontWeight = FontWeight.Normal,
@@ -1757,8 +1801,8 @@ private fun TracksSheet(exoPlayer: ExoPlayer, onDismiss: () -> Unit) {
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
         ) {
-            SheetTab(label = "Ses", selected = !showSubtitles) { showSubtitles = false }
-            SheetTab(label = "Alt Yazı", selected = showSubtitles) { showSubtitles = true }
+            SheetTab(label = stringResource(R.string.player_tab_audio), selected = !showSubtitles) { showSubtitles = false }
+            SheetTab(label = stringResource(R.string.player_tab_subtitles), selected = showSubtitles) { showSubtitles = true }
         }
         if (showSubtitles) {
             SubtitleSheet(exoPlayer = exoPlayer, onDismiss = onDismiss, showHeader = false)
@@ -1806,7 +1850,7 @@ private fun EpisodesSheet(
 ) {
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
         Text(
-            text = "Bölümler",
+            text = stringResource(R.string.term_episodes),
             style = TextStyle(
                 fontFamily = InstrumentSerifFamily,
                 fontWeight = FontWeight.Normal,
@@ -1826,7 +1870,7 @@ private fun EpisodesSheet(
             ) {
                 state.availableSeasons.forEach { season ->
                     SheetTab(
-                        label = "Sezon $season",
+                        label = stringResource(R.string.term_season_number, season),
                         selected = season == state.selectedSeason,
                         onClick = { onSelectSeason(season) },
                     )
@@ -1854,7 +1898,7 @@ private fun ScaleSheet(current: VideoScale, onSelect: (VideoScale) -> Unit) {
     val accent = LocalAccentPalette.current
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
         Text(
-            text = "Görüntü Ölçeği",
+            text = stringResource(R.string.player_scale_sheet_title),
             style = TextStyle(
                 fontFamily = InstrumentSerifFamily,
                 fontWeight = FontWeight.Normal,
@@ -1875,7 +1919,7 @@ private fun ScaleSheet(current: VideoScale, onSelect: (VideoScale) -> Unit) {
                     colors = RadioButtonDefaults.colors(selectedColor = accent.primary),
                 )
                 Text(
-                    text = scale.label,
+                    text = videoScaleLabel(scale),
                     style = TextStyle(
                         fontFamily = GeistFamily,
                         fontWeight = FontWeight.Medium,
@@ -1895,7 +1939,7 @@ private fun SpeedSheet(currentSpeed: Float, onSelect: (Float) -> Unit) {
     val accent = LocalAccentPalette.current
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
         Text(
-            text = "Oynatma Hızı",
+            text = stringResource(R.string.player_speed_sheet_title),
             style = TextStyle(
                 fontFamily = InstrumentSerifFamily,
                 fontWeight = FontWeight.Normal,
@@ -1939,7 +1983,11 @@ private fun AudioSheet(
     showHeader: Boolean = true,
 ) {
     val accent = LocalAccentPalette.current
-    val tracks = remember(exoPlayer.currentTracks) {
+    val unknownLanguageLabel = stringResource(R.string.player_language_unknown)
+    // Keyed on the locale too: a language change has to rebuild these names,
+    // not leave the previous language's spellings cached.
+    val displayLocale = LocalConfiguration.current.locales[0]
+    val tracks = remember(exoPlayer.currentTracks, unknownLanguageLabel, displayLocale) {
         exoPlayer.currentTracks.groups
             .mapIndexedNotNull { groupIndex, group ->
                 if (group.type != C.TRACK_TYPE_AUDIO) return@mapIndexedNotNull null
@@ -1948,7 +1996,7 @@ private fun AudioSheet(
                     AudioTrackInfo(
                         groupIndex = groupIndex,
                         trackIndex = trackIndex,
-                        displayName = languageDisplay(format.language),
+                        displayName = languageDisplay(format.language, unknownLanguageLabel, displayLocale),
                     )
                 }
             }
@@ -1956,7 +2004,7 @@ private fun AudioSheet(
     }
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
         if (showHeader) Text(
-            text = "Ses",
+            text = stringResource(R.string.player_tab_audio),
             style = TextStyle(
                 fontFamily = InstrumentSerifFamily,
                 fontWeight = FontWeight.Normal,
@@ -1968,7 +2016,7 @@ private fun AudioSheet(
         )
         if (tracks.isEmpty()) {
             Text(
-                text = "Ses kanalı bulunamadı",
+                text = stringResource(R.string.player_no_audio_tracks),
                 style = TextStyle(
                     fontFamily = GeistFamily,
                     fontWeight = FontWeight.Normal,
@@ -2025,7 +2073,11 @@ private fun SubtitleSheet(
     showHeader: Boolean = true,
 ) {
     val accent = LocalAccentPalette.current
-    val tracks = remember(exoPlayer.currentTracks) {
+    val unknownLanguageLabel = stringResource(R.string.player_language_unknown)
+    // Keyed on the locale too: a language change has to rebuild these names,
+    // not leave the previous language's spellings cached.
+    val displayLocale = LocalConfiguration.current.locales[0]
+    val tracks = remember(exoPlayer.currentTracks, unknownLanguageLabel, displayLocale) {
         exoPlayer.currentTracks.groups
             .mapIndexedNotNull { groupIndex, group ->
                 if (group.type != C.TRACK_TYPE_TEXT) return@mapIndexedNotNull null
@@ -2034,7 +2086,7 @@ private fun SubtitleSheet(
                     SubtitleTrackInfo(
                         groupIndex = groupIndex,
                         trackIndex = trackIndex,
-                        displayName = languageDisplay(format.language),
+                        displayName = languageDisplay(format.language, unknownLanguageLabel, displayLocale),
                     )
                 }
             }
@@ -2045,7 +2097,7 @@ private fun SubtitleSheet(
     }
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
         if (showHeader) Text(
-            text = "Altyazı",
+            text = stringResource(R.string.player_subtitle_label),
             style = TextStyle(
                 fontFamily = InstrumentSerifFamily,
                 fontWeight = FontWeight.Normal,
@@ -2071,7 +2123,7 @@ private fun SubtitleSheet(
                 colors = RadioButtonDefaults.colors(selectedColor = accent.primary),
             )
             Text(
-                text = "Kapalı",
+                text = stringResource(R.string.player_subtitles_off),
                 style = TextStyle(
                     fontFamily = GeistFamily,
                     fontWeight = FontWeight.Medium,
@@ -2083,7 +2135,7 @@ private fun SubtitleSheet(
         }
         if (tracks.isEmpty()) {
             Text(
-                text = "Altyazı bulunamadı",
+                text = stringResource(R.string.player_no_subtitle_tracks),
                 style = TextStyle(
                     fontFamily = GeistFamily,
                     fontWeight = FontWeight.Normal,

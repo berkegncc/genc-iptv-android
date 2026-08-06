@@ -1,0 +1,18 @@
+<resources>
+    <!-- Favorites screen. -->
+
+    <string name="favorites_title">Favorites</string>
+
+    <string name="favorites_tab_channels">Channels</string>
+    <string name="favorites_tab_movies">Movies</string>
+    <string name="favorites_tab_series">Series</string>
+
+    <string name="favorites_empty_channels_title">No favorite channels yet</string>
+    <string name="favorites_empty_channels_body">Tap the ⭐ on the Channels screen to add one.</string>
+
+    <string name="favorites_empty_movies_title">No favorite movies yet</string>
+    <string name="favorites_empty_movies_body">Tap the ⭐ in the movie list to add one.</string>
+
+    <string name="favorites_empty_series_title">No favorite series yet</string>
+    <string name="favorites_empty_series_body">Tap the ⭐ in the series list to add one.</string>
+</resources>

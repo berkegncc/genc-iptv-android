@@ -1,11 +1,14 @@
 package com.genciptv.player.feature.profile
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.genciptv.player.R
 import com.genciptv.player.data.model.PlaylistType
 import com.genciptv.player.data.repository.PlaylistRepository
 import com.genciptv.player.data.repository.UserPreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -15,10 +18,13 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
+import com.genciptv.player.data.worker.SyncScheduler
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val userPreferencesRepository: UserPreferencesRepository,
+    private val syncScheduler: SyncScheduler,
     private val playlistRepository: PlaylistRepository,
 ) : ViewModel() {
 
@@ -54,9 +60,15 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    fun toggleAutoUpdate(enabled: Boolean) {
+    /**
+     * Saves the choice and re-declares the job, in that order — the scheduler
+     * reads the preference back, so writing first is what makes the new
+     * constraint the one that gets applied.
+     */
+    fun setSyncOverWifiOnly(wifiOnly: Boolean) {
         viewModelScope.launch {
-            userPreferencesRepository.setAutoUpdateEnabled(enabled)
+            userPreferencesRepository.setSyncOverWifiOnly(wifiOnly)
+            syncScheduler.scheduleDailySync()
         }
     }
 
@@ -82,17 +94,21 @@ class ProfileViewModel @Inject constructor(
     private fun buildPlanText(playlist: com.genciptv.player.data.model.Playlist?): String {
         if (playlist == null) return "—"
         return when (playlist.type) {
-            PlaylistType.M3U -> "Standart"
+            PlaylistType.M3U -> context.getString(R.string.profile_plan_standard)
             PlaylistType.XTREAM -> {
                 val userInfo = playlist.userInfo
                 if (userInfo != null && userInfo.status.equals("Active", ignoreCase = true)) {
-                    val expText = userInfo.expDateMillis?.let { millis ->
+                    val expDate = userInfo.expDateMillis?.let { millis ->
                         val sdf = SimpleDateFormat("dd MMM yyyy", Locale("tr", "TR"))
-                        "Son: ${sdf.format(Date(millis))}"
-                    } ?: ""
-                    if (expText.isNotBlank()) "✨ Premium Plan · $expText" else "✨ Premium Plan"
+                        sdf.format(Date(millis))
+                    }
+                    if (expDate != null) {
+                        context.getString(R.string.errors_profile_premium_active_until, expDate)
+                    } else {
+                        context.getString(R.string.errors_profile_premium_active)
+                    }
                 } else {
-                    "⚠ Süresi Dolmuş"
+                    context.getString(R.string.errors_profile_plan_expired)
                 }
             }
         }

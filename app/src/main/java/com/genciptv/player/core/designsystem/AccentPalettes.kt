@@ -2,6 +2,8 @@ package com.genciptv.player.core.designsystem
 
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.annotation.StringRes
+import com.genciptv.player.R
 
 /**
  * 8 user-selectable accent palettes, sourced from the new tokens.js design system.
@@ -20,7 +22,12 @@ import androidx.compose.ui.graphics.Color
  * the colour outside any theme context.
  */
 enum class AccentPalette(
-    val label: String,
+    /**
+     * Name shown under the swatch, as a resource id rather than text: an enum
+     * constant is built long before there is a context to resolve a string
+     * with, so the screen does the resolving.
+     */
+    @param:StringRes val labelRes: Int,
     /** Light-theme variant. */
     val light: Color,
     /** Dark-theme variant — pulled brighter for AA on deep ink. */
@@ -29,49 +36,49 @@ enum class AccentPalette(
     val glow: Color,
 ) {
     PURPLE(
-        label = "Mor",
+        labelRes = R.string.palette_purple,
         light = Color(0xFF6B4FBE),
         dark  = Color(0xFFA892F0),
         glow  = Color(0xFFA892F0).copy(alpha = 0.20f),
     ),
     RED(
-        label = "Kırmızı",
+        labelRes = R.string.palette_red,
         light = Color(0xFFC13E3E),
         dark  = Color(0xFFF08585),
         glow  = Color(0xFFF08585).copy(alpha = 0.20f),
     ),
     ORANGE(
-        label = "Turuncu",
+        labelRes = R.string.palette_orange,
         light = Color(0xFFB8632A),
         dark  = Color(0xFFF0A06E),
         glow  = Color(0xFFF0A06E).copy(alpha = 0.20f),
     ),
     GREEN(
-        label = "Yeşil",
+        labelRes = R.string.palette_green,
         light = Color(0xFF3F8A4F),
         dark  = Color(0xFF7FCC8F),
         glow  = Color(0xFF7FCC8F).copy(alpha = 0.20f),
     ),
     BLUE(
-        label = "Mavi",
+        labelRes = R.string.palette_blue,
         light = Color(0xFF3565C2),
         dark  = Color(0xFF7BA8F0),
         glow  = Color(0xFF7BA8F0).copy(alpha = 0.20f),
     ),
     PINK(
-        label = "Pembe",
+        labelRes = R.string.palette_pink,
         light = Color(0xFFC13E8A),
         dark  = Color(0xFFF085C2),
         glow  = Color(0xFFF085C2).copy(alpha = 0.20f),
     ),
     TEAL(
-        label = "Turkuaz",
+        labelRes = R.string.palette_teal,
         light = Color(0xFF0F8A7E),
         dark  = Color(0xFF3FD0BD),
         glow  = Color(0xFF3FD0BD).copy(alpha = 0.20f),
     ),
     VIOLET(
-        label = "Eflatun",
+        labelRes = R.string.palette_lilac,
         light = Color(0xFF8A3FB8),
         dark  = Color(0xFFC285F0),
         glow  = Color(0xFFC285F0).copy(alpha = 0.20f),
@@ -99,7 +106,7 @@ enum class AccentPalette(
         val active = if (isDark) dark else light
         return ResolvedAccent(
             key         = this,
-            label       = label,
+            labelRes    = labelRes,
             primary     = active,
             soft        = active.copy(alpha = 0.12f),
             mid         = active.copy(alpha = 0.30f),
@@ -119,7 +126,8 @@ enum class AccentPalette(
 data class ResolvedAccent(
     /** Back-reference to the enum entry that produced this resolution. */
     val key: AccentPalette,
-    val label: String,
+    /** Name of the palette, as a resource id — see [AccentPalette.labelRes]. */
+    @param:StringRes val labelRes: Int,
     /** Active accent colour (light or dark variant). */
     val primary: Color,
     /** Tinted background — 12 % alpha. */

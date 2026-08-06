@@ -1,0 +1,72 @@
+<resources>
+    <!-- ViewModel katmanından yüzeye çıkan hata / boş durum metinleri. -->
+
+    <!-- Mesajı olmayan bir exception için ortak yedek metin. -->
+    <string name="errors_unknown">bilinmeyen hata</string>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- Onboarding (onboarding/OnboardingViewModel.kt) -->
+
+    <string name="errors_onboarding_settings_save_failed">Ayarlar kaydedilemedi. Lütfen tekrar deneyin.</string>
+
+    <string name="errors_onboarding_m3u_url_empty">M3U URL boş olamaz. Lütfen bir URL girin.</string>
+    <string name="errors_onboarding_m3u_connection_failed">Bağlantı hatası. İnternet bağlantınızı kontrol edin.</string>
+    <string name="errors_onboarding_m3u_server_error_code">Sunucu hata kodu döndü (%1$s). URL\'yi kontrol edin.</string>
+    <string name="errors_onboarding_m3u_empty_playlist">Boş playlist. URL\'nin geçerli bir M3U içerdiğinden emin olun.</string>
+    <string name="errors_onboarding_m3u_parse_failed">Playlist ayrıştırılamadı. Geçerli bir M3U URL\'si girin.</string>
+    <string name="errors_onboarding_m3u_load_failed">Playlist yüklenemedi: %1$s</string>
+
+    <string name="errors_onboarding_xtream_server_url_empty">Sunucu URL boş olamaz.</string>
+    <string name="errors_onboarding_xtream_username_empty">Kullanıcı adı boş olamaz.</string>
+    <string name="errors_onboarding_xtream_password_empty">Şifre boş olamaz.</string>
+    <string name="errors_onboarding_xtream_auth_failed">Kimlik doğrulama başarısız. Kullanıcı adı ve şifrenizi kontrol edin.</string>
+    <string name="errors_onboarding_xtream_connection_failed">Bağlantı hatası. Sunucu URL\'sini ve internet bağlantınızı kontrol edin.</string>
+    <string name="errors_onboarding_xtream_empty_playlist">Boş playlist. Xtream hesabınızda kanal bulunamadı.</string>
+    <string name="errors_onboarding_xtream_connect_failed">Bağlantı kurulamadı: %1$s</string>
+
+    <!-- M3U ve Xtream gönderim yollarında ortak. -->
+    <string name="errors_onboarding_internal_network_main_thread">İç hata: ağ isteği ana iş parçacığında çalıştı. Geliştiriciye bildirin.</string>
+    <string name="errors_onboarding_host_unreachable">Sunucuya ulaşılamadı. URL\'yi kontrol edin.</string>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- Playlist yöneticisi (profile/playlists/PlaylistManagerViewModel.kt) -->
+
+    <string name="errors_playlist_set_active_failed">Aktif ayarlanamadı: %1$s</string>
+    <string name="errors_playlist_delete_failed">Silinemedi: %1$s</string>
+    <string name="errors_playlist_sync_failed">Senkronizasyon başarısız: %1$s</string>
+    <string name="errors_playlist_host_unreachable">Sunucuya ulaşılamadı.</string>
+    <string name="errors_playlist_connection_timeout">Bağlantı zaman aşımı.</string>
+    <string name="errors_playlist_empty">Boş playlist.</string>
+    <string name="errors_playlist_auth_failed">Kimlik doğrulama başarısız.</string>
+    <string name="errors_playlist_generic">Hata: %1$s</string>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- VOD oynatıcı (vodplayer/VodPlayerViewModel.kt) -->
+
+    <string name="errors_vodplayer_content_not_found">İçerik bulunamadı</string>
+    <string name="errors_vodplayer_movie_not_found">Film bulunamadı</string>
+    <string name="errors_vodplayer_episode_not_found">Bölüm bulunamadı</string>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- Uygulama içi güncelleme (update/UpdateViewModel.kt) -->
+
+    <string name="errors_update_install_screen_failed">Kurulum ekranı açılamadı. Güncellemeyi tekrar deneyin.</string>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- Canlı yayın oynatıcı (player/PlayerViewModel.kt) -->
+
+    <string name="errors_player_channel_not_found">Kanal bulunamadı</string>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- VOD detay (vod/VodDetailViewModel.kt) -->
+
+    <!-- Sağlayıcı bölüm başlığı göndermediğinde kullanılan yedek başlık. -->
+    <string name="errors_voddetail_episode_fallback_title">Bölüm %1$s</string>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- Profil (profile/ProfileViewModel.kt) — abonelik plan durumu. -->
+
+    <string name="errors_profile_premium_active">✨ Premium Plan</string>
+    <string name="errors_profile_premium_active_until">✨ Premium Plan · Son: %1$s</string>
+    <string name="errors_profile_plan_expired">⚠ Süresi Dolmuş</string>
+</resources>

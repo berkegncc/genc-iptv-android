@@ -63,6 +63,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.genciptv.player.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -267,14 +269,14 @@ fun PlayerScreen(
 
     when {
         state.channel == null && state.error != null -> ErrorState(
-            title = "Kanal Bulunamadı",
+            title = stringResource(R.string.player_channel_not_found),
             description = state.error,
-            retryLabel = "Geri Dön",
+            retryLabel = stringResource(R.string.player_go_back),
             onRetry = onBack,
             modifier = Modifier.fillMaxSize(),
         )
         state.channel == null -> LoadingState(
-            message = "Kanal yükleniyor…",
+            message = stringResource(R.string.player_channel_loading),
             modifier = Modifier.fillMaxSize(),
         )
         else -> PlayerContent(
@@ -626,8 +628,9 @@ private fun PlayerInfoPanel(
                     )
                     Spacer(Modifier.height(3.dp))
                     val cat = buildCatTimeString(state.channel?.groupTitle, state.currentProgram)
+                    val noProgramInfo = stringResource(R.string.player_no_program_info)
                     Text(
-                        text = cat.ifBlank { "Yayın bilgisi yok" }.uppercase(),
+                        text = cat.ifBlank { noProgramInfo }.uppercase(),
                         style = TextStyle(
                             fontFamily = GeistMonoFamily,
                             fontWeight = FontWeight.Normal,
@@ -645,7 +648,11 @@ private fun PlayerInfoPanel(
                 ) {
                     Icon(
                         imageVector = if (state.isFavorite) Icons.Filled.Star else Icons.Filled.StarBorder,
-                        contentDescription = if (state.isFavorite) "Favorilerden çıkar" else "Favorilere ekle",
+                        contentDescription = if (state.isFavorite) {
+                            stringResource(R.string.player_remove_favorite)
+                        } else {
+                            stringResource(R.string.player_add_favorite)
+                        },
                         tint = if (state.isFavorite) Copper else TextSecondary,
                         modifier = Modifier.size(20.dp),
                     )
@@ -653,7 +660,7 @@ private fun PlayerInfoPanel(
                 IconButton(onClick = {}, modifier = Modifier.size(36.dp)) {
                     Icon(
                         imageVector = Icons.Default.MoreVert,
-                        contentDescription = "Daha fazla",
+                        contentDescription = stringResource(R.string.player_more_options),
                         tint = TextSecondary,
                         modifier = Modifier.size(20.dp),
                     )
@@ -708,7 +715,7 @@ private fun PlayerInfoPanel(
                         .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 6.dp),
                 ) {
                     Text(
-                        text = "Şu Anda Diğer Kanallarda",
+                        text = stringResource(R.string.player_other_channels_now),
                         style = TextStyle(
                             fontFamily = GeistFamily,
                             fontWeight = FontWeight.SemiBold,
@@ -811,7 +818,7 @@ private fun PlayerOverlay(
                 GlassIconButton(onClick = onBack) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Geri",
+                        contentDescription = stringResource(R.string.action_back),
                         tint = Color.White,
                         modifier = Modifier.size(20.dp),
                     )
@@ -848,7 +855,11 @@ private fun PlayerOverlay(
                 GlassIconButton(onClick = onToggleFullscreen) {
                     Icon(
                         imageVector = if (isFullscreen) Icons.Filled.FullscreenExit else Icons.Filled.Fullscreen,
-                        contentDescription = if (isFullscreen) "Küçük ekran" else "Tam ekran",
+                        contentDescription = if (isFullscreen) {
+                            stringResource(R.string.player_exit_fullscreen)
+                        } else {
+                            stringResource(R.string.player_fullscreen)
+                        },
                         tint = Color.White,
                         modifier = Modifier.size(18.dp),
                     )
@@ -867,7 +878,11 @@ private fun PlayerOverlay(
             ) {
                 Icon(
                     imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                    contentDescription = if (isPlaying) "Duraklat" else "Oynat",
+                    contentDescription = if (isPlaying) {
+                        stringResource(R.string.player_pause)
+                    } else {
+                        stringResource(R.string.action_play)
+                    },
                     tint = Color.White,
                     modifier = Modifier.size(26.dp),
                 )
@@ -937,7 +952,7 @@ private fun ErrorOverlay(
             GlassIconButton(onClick = onBack) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Geri",
+                    contentDescription = stringResource(R.string.action_back),
                     tint = Color.White,
                     modifier = Modifier.size(20.dp),
                 )
@@ -990,7 +1005,7 @@ private fun ErrorOverlay(
             }
             Spacer(Modifier.height(14.dp))
             Text(
-                text = "Akış oynatılamadı",
+                text = stringResource(R.string.player_stream_playback_failed),
                 style = TextStyle(
                     fontFamily = InstrumentSerifFamily,
                     fontWeight = FontWeight.Normal,
@@ -1022,7 +1037,7 @@ private fun ErrorOverlay(
             }
             Spacer(Modifier.height(14.dp))
             Text(
-                text = "Aşağıdaki listeden başka bir kanal seçebilir veya bağlantınızı kontrol edebilirsiniz.",
+                text = stringResource(R.string.player_error_helper_text),
                 style = TextStyle(
                     fontFamily = GeistFamily,
                     fontWeight = FontWeight.Normal,
@@ -1059,28 +1074,36 @@ private fun TrackPillsRow(
     var activeAudioIndex by remember { mutableIntStateOf(0) }
     var showSubtitleSheet by remember { mutableStateOf(false) }
 
+    val autoLabel = stringResource(R.string.player_quality_auto)
+    val videoGenericLabel = stringResource(R.string.player_quality_video_generic)
+    val defaultAudioLabel = stringResource(R.string.player_audio_default)
     val qualityLabels: List<String> = buildList {
-        add("Otomatik")
+        add(autoLabel)
         videoGroups.forEach { group ->
             for (tIdx in 0 until group.length) {
                 val format = group.getTrackFormat(tIdx)
-                val label = if (format.height > 0) "${format.height}p" else "Video"
+                val label = if (format.height > 0) "${format.height}p" else videoGenericLabel
                 if (!contains(label)) add(label)
             }
         }
     }
     val audioLabels: List<String> = if (audioGroups.isEmpty()) {
-        listOf("Varsayılan")
+        listOf(defaultAudioLabel)
     } else {
         audioGroups.mapIndexed { gIdx, group ->
+            val displayLocale = LocalConfiguration.current.locales[0]
+            val fallbackLabel = stringResource(R.string.player_audio_track_number, gIdx + 1)
             val lang = group.getTrackFormat(0).language
             if (!lang.isNullOrBlank()) {
                 runCatching {
-                    Locale.forLanguageTag(lang).displayLanguage
-                        .replaceFirstChar { it.uppercase() }
-                        .ifBlank { "Ses ${gIdx + 1}" }
-                }.getOrDefault("Ses ${gIdx + 1}")
-            } else "Ses ${gIdx + 1}"
+                    // Named in the app's language, not the JVM default —
+                    // those diverge once the user picks a language in-app.
+                    Locale.forLanguageTag(lang)
+                        .getDisplayLanguage(displayLocale)
+                        .replaceFirstChar { it.uppercase(displayLocale) }
+                        .ifBlank { fallbackLabel }
+                }.getOrDefault(fallbackLabel)
+            } else fallbackLabel
         }
     }
 
@@ -1128,7 +1151,7 @@ private fun TrackPillsRow(
         }
         // Subtitle pill
         FlatTrackPill(
-            label = "Altyazı",
+            label = stringResource(R.string.player_subtitle_label),
             leadingIcon = Icons.Default.Subtitles,
             isActive = showSubtitleSheet,
             onClick = { showSubtitleSheet = !showSubtitleSheet },
@@ -1222,7 +1245,7 @@ private fun OtherChannelRow(
                         .background(Live),
                 )
             }
-            val program = item.currentProgram?.title ?: "Yayın bilgisi yok"
+            val program = item.currentProgram?.title ?: stringResource(R.string.player_no_program_info)
             Text(
                 text = program,
                 style = TextStyle(

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Languages the app ships. Declaring them lets Android 13+ show a per-app
+  language entry under Settings, and lets AppCompatDelegate keep the in-app
+  picker and that system setting pointing at the same value.
+-->
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <locale android:name="en" />
+    <locale android:name="tr" />
+</locale-config>

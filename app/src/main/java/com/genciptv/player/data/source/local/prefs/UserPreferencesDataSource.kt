@@ -18,7 +18,7 @@ class UserPreferencesDataSource(
             displayName = p[KEY_DISPLAY_NAME] ?: "",
             onboardingCompleted = p[KEY_ONBOARDING_DONE] ?: false,
             activePlaylistId = p[KEY_ACTIVE_PLAYLIST] ?: -1L,
-            autoUpdateEnabled = p[KEY_AUTO_UPDATE] ?: true,
+            syncOverWifiOnly = p[KEY_SYNC_WIFI_ONLY] ?: true,
             tmdbApiKey = p[KEY_TMDB_API_KEY] ?: "",
         )
     }
@@ -27,16 +27,16 @@ class UserPreferencesDataSource(
         dataStore.edit { it[KEY_DISPLAY_NAME] = name }
     }
 
+    suspend fun setSyncOverWifiOnly(wifiOnly: Boolean) {
+        dataStore.edit { it[KEY_SYNC_WIFI_ONLY] = wifiOnly }
+    }
+
     suspend fun setOnboardingCompleted(done: Boolean) {
         dataStore.edit { it[KEY_ONBOARDING_DONE] = done }
     }
 
     suspend fun setActivePlaylistId(id: Long) {
         dataStore.edit { it[KEY_ACTIVE_PLAYLIST] = id }
-    }
-
-    suspend fun setAutoUpdateEnabled(enabled: Boolean) {
-        dataStore.edit { it[KEY_AUTO_UPDATE] = enabled }
     }
 
     /** Blank clears it, which turns the TMDb features back off. */
@@ -49,7 +49,7 @@ class UserPreferencesDataSource(
         private val KEY_DISPLAY_NAME = stringPreferencesKey("display_name")
         private val KEY_ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
         private val KEY_ACTIVE_PLAYLIST = longPreferencesKey("active_playlist_id")
-        private val KEY_AUTO_UPDATE = booleanPreferencesKey("auto_update_enabled")
+        private val KEY_SYNC_WIFI_ONLY = booleanPreferencesKey("sync_over_wifi_only")
         private val KEY_TMDB_API_KEY = stringPreferencesKey("tmdb_api_key")
     }
 }

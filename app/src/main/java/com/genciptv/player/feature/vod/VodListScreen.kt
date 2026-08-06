@@ -91,6 +91,8 @@ import com.genciptv.player.data.model.Series
 import com.genciptv.player.data.model.VodCategory
 import com.genciptv.player.data.model.VodItem
 import com.genciptv.player.data.model.VodKind
+import androidx.compose.ui.res.stringResource
+import com.genciptv.player.R
 
 // ── Stateful wrapper ──────────────────────────────────────────────────────────
 
@@ -169,7 +171,7 @@ fun VodListContent(
             onDismissRequest = { showRemoveDialog = false },
             title = {
                 Text(
-                    text = "Kaldırılsın mı?",
+                    text = stringResource(R.string.vod_remove_dialog_title),
                     style = TextStyle(
                         fontFamily = InstrumentSerifFamily,
                         fontWeight = FontWeight.Normal,
@@ -180,7 +182,7 @@ fun VodListContent(
             },
             text = {
                 Text(
-                    text = "Seçili $count içerik \"Devam Et\" listesinden kaldırılacak.",
+                    text = stringResource(R.string.vod_remove_dialog_body, count),
                     style = TextStyle(
                         fontFamily = GeistFamily,
                         fontSize = 14.sp,
@@ -195,7 +197,7 @@ fun VodListContent(
                     onRemoveSelectedCw()
                 }) {
                     Text(
-                        text = "Kaldır",
+                        text = stringResource(R.string.action_remove),
                         style = TextStyle(
                             fontFamily = GeistFamily,
                             fontWeight = FontWeight.SemiBold,
@@ -208,7 +210,7 @@ fun VodListContent(
             dismissButton = {
                 TextButton(onClick = { showRemoveDialog = false }) {
                     Text(
-                        text = "İptal",
+                        text = stringResource(R.string.action_cancel),
                         style = TextStyle(
                             fontFamily = GeistFamily,
                             fontWeight = FontWeight.Medium,
@@ -284,6 +286,11 @@ private fun VodListBody(
 ) {
     val inProgress = if (uiState.kind == VodKind.MOVIE) uiState.inProgressMovies
                      else uiState.inProgressSeries
+    // Typing turns this screen into a results list. The category filter stops
+    // applying while a query is live, so its chips would misrepresent what is
+    // on screen; and "Devam Et" is a browsing shelf that here only pushes the
+    // matches below a keyboard-shortened viewport.
+    val isSearching = uiState.query.isNotBlank()
 
     Column(modifier = Modifier.fillMaxSize()) {
         // Header — toggles between normal and selection-mode bar
@@ -310,13 +317,13 @@ private fun VodListBody(
             VodSearchEntry(
                 query = uiState.query,
                 onQueryChange = onQueryChanged,
-                placeholder = if (uiState.kind == VodKind.MOVIE) "Film ara…" else "Dizi ara…",
+                placeholder = if (uiState.kind == VodKind.MOVIE) stringResource(R.string.vod_search_movies_placeholder) else stringResource(R.string.vod_search_series_placeholder),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 10.dp),
             )
 
-            if (uiState.categories.isNotEmpty()) {
+            if (uiState.categories.isNotEmpty() && !isSearching) {
                 VodCategoryChips(
                     categories = uiState.categories,
                     selectedId = uiState.selectedCategoryId,
@@ -330,23 +337,28 @@ private fun VodListBody(
         when {
             uiState.isLoading -> LoadingState(modifier = Modifier.fillMaxSize())
 
+            isSearching &&
+                (if (uiState.kind == VodKind.MOVIE) uiState.movies else uiState.series).isEmpty() ->
+                SearchEmptyState(query = uiState.query)
+
             uiState.kind == VodKind.MOVIE && uiState.movies.isEmpty() && inProgress.isEmpty() ->
                 EmptyState(
                     icon = "🎬",
-                    title = "Film bulunamadı",
-                    description = "Senkronizasyon tamamlandıktan sonra filmler burada görünecek.",
+                    title = stringResource(R.string.vod_empty_movies_title),
+                    description = stringResource(R.string.vod_empty_movies_body),
                     modifier = Modifier.fillMaxSize(),
                 )
 
             uiState.kind == VodKind.SERIES && uiState.series.isEmpty() && inProgress.isEmpty() ->
                 EmptyState(
                     icon = "📺",
-                    title = "Dizi bulunamadı",
-                    description = "Senkronizasyon tamamlandıktan sonra diziler burada görünecek.",
+                    title = stringResource(R.string.vod_empty_series_title),
+                    description = stringResource(R.string.vod_empty_series_body),
                     modifier = Modifier.fillMaxSize(),
                 )
 
             uiState.kind == VodKind.MOVIE -> VodMovieList(
+                isSearching = isSearching,
                 inProgress = inProgress,
                 movies = uiState.movies,
                 selectedCwIds = uiState.selectedCwIds,
@@ -355,6 +367,7 @@ private fun VodListBody(
                 onMovieClick = onItemClick,
             )
             else -> VodSeriesList(
+                isSearching = isSearching,
                 inProgress = inProgress,
                 seriesList = uiState.series,
                 selectedCwIds = uiState.selectedCwIds,
@@ -381,14 +394,14 @@ private fun VodListHeader(onBack: () -> Unit) {
             IconButton(onClick = onBack, modifier = Modifier.size(40.dp)) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Geri",
+                    contentDescription = stringResource(R.string.action_back),
                     tint = TextPrimary,
                     modifier = Modifier.size(22.dp),
                 )
             }
             Spacer(Modifier.width(4.dp))
             Text(
-                text = "Film & Dizi",
+                text = stringResource(R.string.vod_list_title),
                 style = TextStyle(
                     fontFamily = GeistFamily,
                     fontWeight = FontWeight.SemiBold,
@@ -422,14 +435,14 @@ private fun SelectionTopBar(
             IconButton(onClick = onClear, modifier = Modifier.size(40.dp)) {
                 Icon(
                     imageVector = Icons.Default.Close,
-                    contentDescription = "Seçimi iptal et",
+                    contentDescription = stringResource(R.string.vod_cancel_selection),
                     tint = TextPrimary,
                     modifier = Modifier.size(20.dp),
                 )
             }
             Spacer(Modifier.width(4.dp))
             Text(
-                text = "$selectedCount seçili",
+                text = stringResource(R.string.vod_selected_count, selectedCount),
                 style = TextStyle(
                     fontFamily = GeistFamily,
                     fontWeight = FontWeight.SemiBold,
@@ -455,7 +468,7 @@ private fun SelectionTopBar(
                 )
                 Spacer(Modifier.width(6.dp))
                 Text(
-                    text = "Kaldır",
+                    text = stringResource(R.string.action_remove),
                     style = TextStyle(
                         fontFamily = GeistFamily,
                         fontWeight = FontWeight.SemiBold,
@@ -483,7 +496,7 @@ private fun VodTabRow(
             .fillMaxWidth()
             .background(Bg),
     ) {
-        listOf("Filmler", "Diziler").forEachIndexed { i, label ->
+        listOf(stringResource(R.string.vod_tab_movies), stringResource(R.string.vod_tab_series)).forEachIndexed { i, label ->
             val active = i == activeIndex
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -528,7 +541,7 @@ private fun VodCategoryChips(
     ) {
         item {
             VodCategoryChip(
-                label = "Tümü",
+                label = stringResource(R.string.action_all),
                 isSelected = selectedId == null,
                 onClick = { onSelected(null) },
             )
@@ -656,7 +669,7 @@ private fun DevamEtSection(
                 .padding(top = 12.dp, bottom = 12.dp),
         ) {
             Text(
-                text = "Devam Et",
+                text = stringResource(R.string.vod_continue_watching_title),
                 style = TextStyle(
                     fontFamily = GeistFamily,
                     fontWeight = FontWeight.SemiBold,
@@ -733,7 +746,7 @@ private fun DevamEtCard(
                 title = cw.title,
                 posterUrl = cw.thumbnailUrl,
                 year = null,
-                label = "DEVAM",
+                label = stringResource(R.string.vod_continue_watching_badge),
                 width = 140.dp,
                 height = 90.dp,
                 // Title is rendered underneath this card as a marquee row;
@@ -851,6 +864,7 @@ private fun SelectionBubble(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun VodMovieList(
+    isSearching: Boolean,
     inProgress: List<ContinueWatching>,
     movies: List<VodItem>,
     selectedCwIds: Set<Pair<String, FavoriteTargetType>>,
@@ -865,7 +879,12 @@ private fun VodMovieList(
         verticalArrangement = Arrangement.spacedBy(20.dp),
         modifier = Modifier.fillMaxSize(),
     ) {
-        if (inProgress.isNotEmpty()) {
+        if (isSearching) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                ResultsHeading(count = stringResource(R.string.vod_movie_count, movies.size))
+            }
+        }
+        if (!isSearching && inProgress.isNotEmpty()) {
             item(span = { GridItemSpan(maxLineSpan) }) {
                 DevamEtSection(
                     items = inProgress,
@@ -880,7 +899,7 @@ private fun VodMovieList(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(
-                        text = "Tümü",
+                        text = stringResource(R.string.action_all),
                         style = TextStyle(
                             fontFamily = GeistFamily,
                             fontWeight = FontWeight.SemiBold,
@@ -890,7 +909,7 @@ private fun VodMovieList(
                         modifier = Modifier.weight(1f),
                     )
                     Text(
-                        text = "${movies.size} FİLM",
+                        text = stringResource(R.string.vod_movie_count, movies.size),
                         style = TextStyle(
                             fontFamily = GeistMonoFamily,
                             fontWeight = FontWeight.Normal,
@@ -917,6 +936,7 @@ private fun VodMovieList(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun VodSeriesList(
+    isSearching: Boolean,
     inProgress: List<ContinueWatching>,
     seriesList: List<Series>,
     selectedCwIds: Set<Pair<String, FavoriteTargetType>>,
@@ -931,7 +951,12 @@ private fun VodSeriesList(
         verticalArrangement = Arrangement.spacedBy(20.dp),
         modifier = Modifier.fillMaxSize(),
     ) {
-        if (inProgress.isNotEmpty()) {
+        if (isSearching) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                ResultsHeading(count = stringResource(R.string.vod_series_count, seriesList.size))
+            }
+        }
+        if (!isSearching && inProgress.isNotEmpty()) {
             item(span = { GridItemSpan(maxLineSpan) }) {
                 DevamEtSection(
                     items = inProgress,
@@ -946,7 +971,7 @@ private fun VodSeriesList(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(
-                        text = "Tümü",
+                        text = stringResource(R.string.action_all),
                         style = TextStyle(
                             fontFamily = GeistFamily,
                             fontWeight = FontWeight.SemiBold,
@@ -956,7 +981,7 @@ private fun VodSeriesList(
                         modifier = Modifier.weight(1f),
                     )
                     Text(
-                        text = "${seriesList.size} DİZİ",
+                        text = stringResource(R.string.vod_series_count, seriesList.size),
                         style = TextStyle(
                             fontFamily = GeistMonoFamily,
                             fontWeight = FontWeight.Normal,
@@ -1035,6 +1060,84 @@ private fun GridPosterTile(
                 ),
             )
         }
+    }
+}
+
+/**
+ * Heading over search results: the label plus how many matched.
+ *
+ * Replaces the "Tümü" row, which claims the list is everything — true while
+ * browsing, wrong the moment a query narrows it.
+ */
+@Composable
+private fun ResultsHeading(count: String) {
+    Row(
+        verticalAlignment = Alignment.Bottom,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(
+            text = stringResource(R.string.vod_search_results_label),
+            style = TextStyle(
+                fontFamily = GeistFamily,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 15.sp,
+                color = TextPrimary,
+            ),
+            modifier = Modifier.weight(1f),
+        )
+        Text(
+            text = count,
+            style = TextStyle(
+                fontFamily = GeistMonoFamily,
+                fontWeight = FontWeight.Normal,
+                fontSize = 10.sp,
+                letterSpacing = 0.06.sp,
+                color = TextTertiary,
+            ),
+        )
+    }
+}
+
+/**
+ * Shown when a search matches nothing.
+ *
+ * Its own composable rather than [EmptyState] because the keyboard is up: the
+ * band left between the search field and the keys is around 160dp, and
+ * EmptyState spends 64dp of that on padding and another 56dp on a 48sp emoji,
+ * which left too little for the message and clipped it away entirely. This one
+ * carries no illustration, wraps its height, and sits directly under the field
+ * where the reader is already looking.
+ */
+@Composable
+private fun SearchEmptyState(query: String, modifier: Modifier = Modifier) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 32.dp)
+            .padding(top = 32.dp, bottom = 16.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.vod_search_no_results_title),
+            style = TextStyle(
+                fontFamily = GeistFamily,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 16.sp,
+                color = TextPrimary,
+            ),
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = stringResource(R.string.vod_search_no_results_body, query),
+            style = TextStyle(
+                fontFamily = GeistFamily,
+                fontSize = 13.sp,
+                lineHeight = 19.sp,
+                color = TextSecondary,
+            ),
+            textAlign = TextAlign.Center,
+        )
     }
 }
 

@@ -29,6 +29,8 @@ import java.util.Calendar
 import java.util.Locale
 import java.util.TimeZone
 import javax.inject.Inject
+import java.text.DateFormat
+import java.util.Date
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -176,15 +178,10 @@ class GuideViewModel @Inject constructor(
             val cal = Calendar.getInstance(tz)
             cal.timeInMillis = dayMidnight
             val dayOfMonth = cal.get(Calendar.DAY_OF_MONTH)
-            val dayLabel = when (offset) {
-                -1 -> "Dün"
-                0  -> "Bugün"
-                1  -> "Yarın"
-                else -> turkishWeekdayShort(cal.get(Calendar.DAY_OF_WEEK))
-            }
             DayOption(
                 dateMillis = dayMidnight,
-                dayLabel = dayLabel,
+                dayOffset = offset,
+                dayOfWeek = cal.get(Calendar.DAY_OF_WEEK),
                 dayNumber = dayOfMonth.toString(),
             )
         }
@@ -205,31 +202,20 @@ class GuideViewModel @Inject constructor(
             return cal.timeInMillis
         }
 
-        fun turkishWeekdayShort(calDayOfWeek: Int): String = when (calDayOfWeek) {
-            Calendar.MONDAY    -> "Pzt"
-            Calendar.TUESDAY   -> "Sal"
-            Calendar.WEDNESDAY -> "Çar"
-            Calendar.THURSDAY  -> "Per"
-            Calendar.FRIDAY    -> "Cum"
-            Calendar.SATURDAY  -> "Cmt"
-            Calendar.SUNDAY    -> "Paz"
-            else               -> ""
-        }
 
-        private val TURKISH_MONTHS = listOf(
-            "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
-            "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"
-        )
-
-        /** e.g. "15 Nisan 2026" */
-        fun formatDatePill(epochMs: Long): String {
-            val cal = Calendar.getInstance(TimeZone.getDefault())
-            cal.timeInMillis = epochMs
-            val day = cal.get(Calendar.DAY_OF_MONTH)
-            val month = TURKISH_MONTHS[cal.get(Calendar.MONTH)]
-            val year = cal.get(Calendar.YEAR)
-            return "$day $month $year"
-        }
+        /**
+         * The date shown in the guide header, e.g. "15 Nisan 2026" or
+         * "April 15, 2026".
+         *
+         * Delegates to the platform formatter rather than a hand-written month
+         * table. The old table only had Turkish names, and month order differs
+         * between the two languages anyway — "15 Nisan" against "April 15" is
+         * not something string concatenation can get right. [locale] is passed
+         * in by the screen so it tracks the app's language rather than the
+         * process default.
+         */
+        fun formatDatePill(epochMs: Long, locale: Locale): String =
+            DateFormat.getDateInstance(DateFormat.LONG, locale).format(Date(epochMs))
 
         /** Program progress fraction [0f, 1f] for a given program relative to now. */
         fun programProgress(program: Program, nowMillis: Long): Float {

@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -37,6 +38,7 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import com.genciptv.player.R
 import com.genciptv.player.core.designsystem.Border
 import com.genciptv.player.core.designsystem.GencIptvTheme
 import com.genciptv.player.core.designsystem.Live
@@ -150,14 +152,14 @@ fun ChannelListItem(
                 ) {
                     Icon(
                         imageVector = if (isFavorite) Icons.Filled.Star else Icons.Filled.StarBorder,
-                        contentDescription = if (isFavorite) "Favorilerden çıkar" else "Favorilere ekle",
+                        contentDescription = if (isFavorite) stringResource(R.string.ui_favorite_remove) else stringResource(R.string.ui_favorite_add),
                         tint = if (isFavorite) accent else TextSecondary,
                         modifier = Modifier.size(16.dp)
                     )
                 }
                 Spacer(Modifier.height(4.dp))
                 when {
-                    isLive -> Pill(label = "CANLI", bgColor = LiveSoft, textColor = Live)
+                    isLive -> Pill(label = stringResource(R.string.ui_live_label), bgColor = LiveSoft, textColor = Live)
                     isHd   -> Pill(label = "HD",    bgColor = accentSoft, textColor = accent)
                 }
             }

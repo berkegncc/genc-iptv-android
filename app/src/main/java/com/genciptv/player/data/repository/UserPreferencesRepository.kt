@@ -35,8 +35,8 @@ interface UserPreferencesRepository {
 
     suspend fun setDisplayName(name: String)
     suspend fun setOnboardingCompleted(done: Boolean)
+    suspend fun setSyncOverWifiOnly(wifiOnly: Boolean)
     suspend fun setActivePlaylistId(id: Long)
-    suspend fun setAutoUpdateEnabled(enabled: Boolean)
 
     /** The user's own TMDb key; blank turns the TMDb features off. */
     suspend fun setTmdbApiKey(key: String)
@@ -71,8 +71,8 @@ class UserPreferencesRepositoryImpl @Inject constructor(
 
     override suspend fun setDisplayName(name: String) = userDs.setDisplayName(name)
     override suspend fun setOnboardingCompleted(done: Boolean) = userDs.setOnboardingCompleted(done)
+    override suspend fun setSyncOverWifiOnly(wifiOnly: Boolean) = userDs.setSyncOverWifiOnly(wifiOnly)
     override suspend fun setActivePlaylistId(id: Long) = userDs.setActivePlaylistId(id)
-    override suspend fun setAutoUpdateEnabled(enabled: Boolean) = userDs.setAutoUpdateEnabled(enabled)
     override suspend fun setTmdbApiKey(key: String) = userDs.setTmdbApiKey(key)
 
     override suspend fun addRecentChannel(id: String) = recentChannelsDs.addRecent(id)

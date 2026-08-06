@@ -1,0 +1,85 @@
+<resources>
+    <!-- Onboarding, auto-sync gate, in-app update dialog, and shared core/ui
+         components (bottom nav / nav rail, search bar, live badges, etc.). -->
+
+    <!-- ── Onboarding: Step 1 (welcome) ─────────────────────────────────────── -->
+    <string name="onboarding_error_title">Error</string>
+    <string name="onboarding_welcome_title">Welcome!</string>
+    <string name="onboarding_welcome_subtitle">What should we call you?</string>
+    <string name="onboarding_name_label">Your name</string>
+    <string name="onboarding_name_placeholder">e.g. Mehmet</string>
+    <string name="onboarding_continue_button">Continue</string>
+
+    <!-- ── Onboarding: Step 2 (playlist entry) ──────────────────────────────── -->
+    <string name="onboarding_playlist_title">Add Playlist</string>
+    <string name="onboarding_playlist_subtitle">Add your M3U list or Xtream Codes account</string>
+
+    <!-- Shared between the M3U and Xtream tabs. -->
+    <string name="onboarding_list_name_label">List Name</string>
+    <string name="onboarding_m3u_name_placeholder">Playlist 1</string>
+    <string name="onboarding_epg_url_label">EPG URL (optional)</string>
+    <string name="onboarding_epg_url_placeholder">XMLTV link</string>
+    <string name="onboarding_m3u_submit_button">Upload and Start</string>
+
+    <string name="onboarding_server_url_label">Server URL</string>
+    <string name="onboarding_username_label">Username</string>
+    <string name="onboarding_password_label">Password</string>
+    <string name="onboarding_password_hide">Hide password</string>
+    <string name="onboarding_password_show">Show password</string>
+    <string name="onboarding_xtream_submit_button">Connect and Start</string>
+
+    <string name="onboarding_loading_playlist">Loading playlist…</string>
+    <!-- Interpolated in the source as "$channelCount kanal yüklendi" — kept as a
+         positional format string since word order is not guaranteed to match
+         across languages. -->
+    <string name="onboarding_channels_loaded_count">%1$d channels loaded</string>
+
+    <!-- ── Syncing: full-screen auto-sync gate ──────────────────────────────── -->
+    <string name="syncing_updating_message">Updating provider content…</string>
+    <string name="syncing_duration_hint">This may take a few seconds.</string>
+
+    <!-- ── Update dialog ─────────────────────────────────────────────────────── -->
+    <string name="update_button_update">Update</string>
+    <string name="update_button_grant_permission">Grant permission</string>
+    <string name="update_button_later">Later</string>
+
+    <string name="update_title_available">New version ready</string>
+    <string name="update_title_downloading">Downloading</string>
+    <string name="update_title_installing">Starting installation</string>
+    <string name="update_title_needs_permission">Permission needed to install</string>
+    <string name="update_title_up_to_date">You\'re up to date</string>
+
+    <string name="update_body_downloading">Update downloading, don\'t close the app.</string>
+    <string name="update_body_ready_to_install">Download complete. Opening the install screen.</string>
+    <string name="update_body_needs_permission">To install the update, you need to grant this app the \"install unknown apps\" permission. After granting it, come back here and try again.</string>
+    <string name="update_up_to_date_leading">You\'re on the latest version</string>
+
+    <!-- Download progress suffix, e.g. "· 42%". Percent placement relative to
+         the number differs by language, so this is a format string rather
+         than string concatenation; %% escapes the literal percent sign. -->
+    <string name="update_download_progress_suffix">· %1$d%%</string>
+
+    <!-- ── core/ui: shared components ───────────────────────────────────────── -->
+
+    <!-- ChannelListItem favorite toggle content description. -->
+    <string name="ui_favorite_remove">Remove from favorites</string>
+    <string name="ui_favorite_add">Add to favorites</string>
+
+    <!-- "LIVE" pill text — ChannelListItem's inline pill, CanliPill's default
+         label, and LiveBadge all share this same word. -->
+    <string name="ui_live_label">LIVE</string>
+
+    <!-- EpgMiniCard "on air now" label. -->
+    <string name="ui_now_on_air_label">ON AIR NOW</string>
+
+    <!-- GradientProfileCard edit-icon content description. -->
+    <string name="ui_edit_name">Edit name</string>
+
+    <!-- CategoryCard channel count, e.g. "42 channels". Interpolated in the
+         source as "$channelCount kanal" — kept as a positional format string. -->
+    <string name="ui_channel_count_suffix">%1$d channels</string>
+
+    <!-- GencSearchBar defaults. -->
+    <string name="ui_search_placeholder">Search channel, movie, or series…</string>
+    <string name="ui_voice_search">Voice search</string>
+</resources>

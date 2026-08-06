@@ -20,12 +20,14 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.genciptv.player.R
 import com.genciptv.player.core.designsystem.CategoryGradient
 import com.genciptv.player.core.designsystem.GeistFamily
 import com.genciptv.player.core.designsystem.GeistMonoFamily
@@ -138,7 +140,7 @@ fun CategoryCard(
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
-                    text = "$channelCount kanal",
+                    text = stringResource(R.string.ui_channel_count_suffix, channelCount),
                     style = TextStyle(
                         fontFamily = GeistFamily,
                         fontWeight = FontWeight.Medium,

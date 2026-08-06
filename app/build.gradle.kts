@@ -85,10 +85,10 @@ android {
         // Bump on every release — Android decides "is this an update?" from
         // this number, not from versionName. 3 was consumed by update-system
         // testing on a device, so the first published build after v1.1 is 4.
-        versionCode = 4
+        versionCode = 5
         // Three-part semver, and the release tag is `v` + this exact string
-        // (v1.2.0) — the in-app updater compares them directly.
-        versionName = "1.2.0"
+        // (v1.3.0) — the in-app updater compares them directly.
+        versionName = "1.3.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

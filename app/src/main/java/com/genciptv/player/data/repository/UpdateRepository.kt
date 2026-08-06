@@ -18,12 +18,15 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
+import com.genciptv.player.R
 
 interface UpdateRepository {
     /**
@@ -82,7 +85,8 @@ class UpdateRepositoryImpl @Inject constructor(
             if (!force && prefs.dismissedVersionOnce() == remoteVersion) return null
 
             val asset = release.assets.firstOrNull {
-                it.name.endsWith(".apk", ignoreCase = true)
+                it.name.endsWith(".apk", ignoreCase = true) &&
+                    isTrustedAssetUrl(it.browserDownloadUrl)
             } ?: return null
 
             UpdateInfo(
@@ -100,6 +104,23 @@ class UpdateRepositoryImpl @Inject constructor(
             Log.i(TAG, "Update check skipped: ${e.javaClass.simpleName}")
             null
         }
+    }
+
+    /**
+     * Whether a release asset's URL is somewhere we are willing to fetch an APK
+     * from: HTTPS, on a GitHub-owned host.
+     *
+     * The URL arrives inside the API response rather than being built by us, so
+     * on its own it is only as trustworthy as that response. Checking it here
+     * means a redirected or substituted release payload cannot aim the
+     * downloader at an arbitrary server — it would have to host the file on
+     * GitHub, under the same TLS rules the network config already pins.
+     */
+    private fun isTrustedAssetUrl(url: String): Boolean {
+        val parsed = url.toHttpUrlOrNull() ?: return false
+        if (!parsed.isHttps) return false
+        val host = parsed.host.lowercase(Locale.ROOT)
+        return TRUSTED_ASSET_HOSTS.any { host == it || host.endsWith(".$it") }
     }
 
     override fun downloadApk(info: UpdateInfo): Flow<DownloadState> = flow {
@@ -124,12 +145,12 @@ class UpdateRepositoryImpl @Inject constructor(
 
         call.execute().use { response ->
             if (!response.isSuccessful) {
-                emit(DownloadState.Failed("Sunucu ${response.code} yanıtı döndü"))
+                emit(DownloadState.Failed(context.getString(R.string.update_error_server_code, response.code)))
                 return@flow
             }
             val body = response.body
                 ?: run {
-                    emit(DownloadState.Failed("İndirme yanıtı boş geldi"))
+                    emit(DownloadState.Failed(context.getString(R.string.update_error_empty_response)))
                     return@flow
                 }
 
@@ -164,7 +185,7 @@ class UpdateRepositoryImpl @Inject constructor(
             }
 
             if (target.length() <= 0L) {
-                emit(DownloadState.Failed("İndirilen dosya boş"))
+                emit(DownloadState.Failed(context.getString(R.string.update_error_empty_file)))
                 return@flow
             }
             emit(DownloadState.Done(target))
@@ -174,7 +195,7 @@ class UpdateRepositoryImpl @Inject constructor(
         .catch { e ->
             if (e is CancellationException) throw e
             Log.w(TAG, "APK download failed", e)
-            emit(DownloadState.Failed("İndirme başarısız oldu. Bağlantınızı kontrol edip tekrar deneyin."))
+            emit(DownloadState.Failed(context.getString(R.string.update_error_download_failed)))
         }
 
     override suspend fun dismiss(version: String) {
@@ -194,5 +215,12 @@ class UpdateRepositoryImpl @Inject constructor(
         private const val UPDATES_DIR = "updates"
         private val CHECK_INTERVAL_MS = TimeUnit.HOURS.toMillis(24)
         private const val DOWNLOAD_TIMEOUT_MIN = 10L
+
+        /**
+         * Hosts a release APK may legitimately come from. `github.com` serves
+         * the asset link, which redirects to `objects.githubusercontent.com`;
+         * both are matched with their subdomains.
+         */
+        private val TRUSTED_ASSET_HOSTS = listOf("github.com", "githubusercontent.com")
     }
 }

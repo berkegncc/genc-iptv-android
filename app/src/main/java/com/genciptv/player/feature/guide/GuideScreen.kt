@@ -47,6 +47,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.genciptv.player.R
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
@@ -213,7 +216,7 @@ fun GuideContent(
             when {
                 state.isLoading -> {
                     LoadingState(
-                        message = "Program rehberi yükleniyor\u2026",
+                        message = stringResource(R.string.guide_loading_message),
                         modifier = Modifier.fillMaxSize(),
                     )
                 }
@@ -221,12 +224,9 @@ fun GuideContent(
                 !state.hasAnyEpgData -> {
                     EmptyState(
                         icon = "\uD83D\uDCC5",
-                        title = "Program rehberi boş",
-                        description = "Bu playlist için EPG verisi bulunmuyor. " +
-                            "Provider'ın EPG sağlamıyor olabilir, ya da playlist ilk kez " +
-                            "senkronize edildiğinde EPG henüz inmedi. " +
-                            "İleriki sürümlerde otomatik EPG senkronizasyonu eklenecek.",
-                        actionLabel = "Playlist'i Yenile",
+                        title = stringResource(R.string.guide_empty_title),
+                        description = stringResource(R.string.guide_empty_body),
+                        actionLabel = stringResource(R.string.guide_empty_action_refresh_playlist),
                         onAction = onResyncEpg,
                         modifier = Modifier.fillMaxSize(),
                     )
@@ -346,7 +346,7 @@ private fun GuideHeader(
                     .padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
                 Text(
-                    text = "\uD83D\uDCC5 Program Rehberi",
+                    text = stringResource(R.string.guide_header_title),
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.Black,
                         fontSize = 18.sp,
@@ -354,11 +354,14 @@ private fun GuideHeader(
                     color = TextPrimary,
                     modifier = Modifier.weight(1f),
                 )
-                // Date pill
+                // Date pill. The locale comes from the composition rather
+                // than Locale.getDefault() so it follows the app's language
+                // setting, not just the phone's.
+                val locale = LocalConfiguration.current.locales[0]
                 val dateText = if (selectedDateMillis > 0L) {
-                    GuideViewModel.formatDatePill(selectedDateMillis)
+                    GuideViewModel.formatDatePill(selectedDateMillis, locale)
                 } else {
-                    GuideViewModel.formatDatePill(System.currentTimeMillis())
+                    GuideViewModel.formatDatePill(System.currentTimeMillis(), locale)
                 }
                 Box(
                     modifier = Modifier
@@ -423,8 +426,14 @@ private fun DaySelector(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center,
                 ) {
+                    val dayLabel = when (day.dayOffset) {
+                        -1 -> stringResource(R.string.guide_day_yesterday)
+                        0 -> stringResource(R.string.guide_day_today)
+                        1 -> stringResource(R.string.guide_day_tomorrow)
+                        else -> stringResource(weekdayRes(day.dayOfWeek))
+                    }
                     Text(
-                        text = day.dayLabel.uppercase(),
+                        text = dayLabel.uppercase(),
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontSize = 9.sp,
                             letterSpacing = 0.5.sp,
@@ -585,7 +594,7 @@ private fun CurrentPlayingCard(
             ) {
                 Icon(
                     imageVector = Icons.Default.PlayArrow,
-                    contentDescription = "İzle",
+                    contentDescription = stringResource(R.string.guide_watch_action),
                     tint = Color.White,
                     modifier = Modifier.size(18.dp),
                 )
@@ -751,7 +760,7 @@ private fun ProgramBlock(
             overflow = TextOverflow.Ellipsis,
         )
         Text(
-            text = if (state == ProgramBlockState.NOW) "$timeLabel · şimdi" else timeLabel,
+            text = if (state == ProgramBlockState.NOW) stringResource(R.string.guide_time_now_suffix, timeLabel) else timeLabel,
             style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
             color = TextTertiary.copy(alpha = contentAlpha),
             maxLines = 1,
@@ -822,7 +831,9 @@ private fun ProgramDetailSheet(
     val stopHour = (program.stopMillis / 3_600_000L % 24).toInt()
     val stopMin = (program.stopMillis / 60_000L % 60).toInt()
     val durationMin = ((program.stopMillis - program.startMillis) / 60_000L).toInt()
-    val timeRange = "%02d:%02d - %02d:%02d · %d dk".format(startHour, startMin, stopHour, stopMin, durationMin)
+    val startTime = "%02d:%02d".format(startHour, startMin)
+    val stopTime = "%02d:%02d".format(stopHour, stopMin)
+    val timeRange = stringResource(R.string.guide_program_time_range, startTime, stopTime, durationMin)
 
     Column(
         modifier = modifier
@@ -889,7 +900,7 @@ private fun ProgramDetailSheet(
             )
             Spacer(Modifier.width(8.dp))
             Text(
-                text = "\u0130zle",
+                text = stringResource(R.string.guide_watch_action),
                 style = MaterialTheme.typography.labelLarge,
                 color = Color.White,
             )
@@ -925,8 +936,12 @@ private fun GuideContentPreview() {
             val cal = java.util.Calendar.getInstance()
             cal.timeInMillis = dayStart + offset * 24 * 3600_000L
             val dom = cal.get(java.util.Calendar.DAY_OF_MONTH)
-            val label = when (offset) { -1 -> "Dün"; 0 -> "Bugün"; 1 -> "Yarın"; else -> "+" }
-            DayOption(dayStart + offset * 24 * 3600_000L, label, dom.toString())
+            DayOption(
+                dateMillis = dayStart + offset * 24 * 3600_000L,
+                dayOffset = offset,
+                dayOfWeek = cal.get(java.util.Calendar.DAY_OF_WEEK),
+                dayNumber = dom.toString(),
+            )
         }
 
         GuideContent(
@@ -981,4 +996,20 @@ private fun GuideLoadingPreview() {
             onNavItemClick = {},
         )
     }
+}
+
+/**
+ * Weekday abbreviation for the day strip. Resources rather than the platform's
+ * own weekday names so the strip is spelled the same way in both languages we
+ * ship and stays under our control.
+ */
+@androidx.annotation.StringRes
+private fun weekdayRes(calendarDayOfWeek: Int): Int = when (calendarDayOfWeek) {
+    java.util.Calendar.MONDAY -> R.string.guide_weekday_mon
+    java.util.Calendar.TUESDAY -> R.string.guide_weekday_tue
+    java.util.Calendar.WEDNESDAY -> R.string.guide_weekday_wed
+    java.util.Calendar.THURSDAY -> R.string.guide_weekday_thu
+    java.util.Calendar.FRIDAY -> R.string.guide_weekday_fri
+    java.util.Calendar.SATURDAY -> R.string.guide_weekday_sat
+    else -> R.string.guide_weekday_sun
 }

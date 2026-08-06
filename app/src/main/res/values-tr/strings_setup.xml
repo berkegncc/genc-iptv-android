@@ -1,0 +1,82 @@
+<resources>
+    <!-- Onboarding, otomatik senkronizasyon ekranı, uygulama içi güncelleme
+         diyaloğu ve paylaşılan core/ui bileşenleri (alt gezinme / kenar rayı,
+         arama çubuğu, canlı rozetleri vb.). -->
+
+    <!-- ── Onboarding: Adım 1 (karşılama) ───────────────────────────────────── -->
+    <string name="onboarding_error_title">Hata</string>
+    <string name="onboarding_welcome_title">Hoş Geldin!</string>
+    <string name="onboarding_welcome_subtitle">Sana nasıl hitap edelim?</string>
+    <string name="onboarding_name_label">Adın</string>
+    <string name="onboarding_name_placeholder">Örn. Mehmet</string>
+    <string name="onboarding_continue_button">Devam</string>
+
+    <!-- ── Onboarding: Adım 2 (playlist ekleme) ─────────────────────────────── -->
+    <string name="onboarding_playlist_title">Playlist Ekle</string>
+    <string name="onboarding_playlist_subtitle">M3U listeni veya Xtream Codes hesabını ekle</string>
+
+    <!-- M3U ve Xtream sekmeleri arasında paylaşılıyor. -->
+    <string name="onboarding_list_name_label">Liste Adı</string>
+    <string name="onboarding_m3u_name_placeholder">Playlist 1</string>
+    <string name="onboarding_epg_url_label">EPG URL (opsiyonel)</string>
+    <string name="onboarding_epg_url_placeholder">XMLTV link</string>
+    <string name="onboarding_m3u_submit_button">Yükle ve Başla</string>
+
+    <string name="onboarding_server_url_label">Sunucu URL</string>
+    <string name="onboarding_username_label">Kullanıcı Adı</string>
+    <string name="onboarding_password_label">Şifre</string>
+    <string name="onboarding_password_hide">Şifreyi gizle</string>
+    <string name="onboarding_password_show">Şifreyi göster</string>
+    <string name="onboarding_xtream_submit_button">Bağlan ve Başla</string>
+
+    <string name="onboarding_loading_playlist">Playlist yükleniyor…</string>
+    <string name="onboarding_channels_loaded_count">%1$d kanal yüklendi</string>
+
+    <!-- ── Syncing: tam ekran otomatik senkronizasyon kapısı ────────────────── -->
+    <string name="syncing_updating_message">Sağlayıcı içerikleri güncelleniyor…</string>
+    <string name="syncing_duration_hint">Bu işlem birkaç saniye sürebilir.</string>
+
+    <!-- ── Güncelleme diyaloğu ───────────────────────────────────────────────── -->
+    <string name="update_button_update">Güncelle</string>
+    <string name="update_button_grant_permission">İzin ver</string>
+    <string name="update_button_later">Daha sonra</string>
+
+    <string name="update_title_available">Yeni sürüm hazır</string>
+    <string name="update_title_downloading">İndiriliyor</string>
+    <string name="update_title_installing">Kurulum başlatılıyor</string>
+    <string name="update_title_needs_permission">Kurulum için izin gerekli</string>
+    <string name="update_title_up_to_date">Güncelsiniz</string>
+
+    <string name="update_body_downloading">Güncelleme indiriliyor, uygulamayı kapatmayın.</string>
+    <string name="update_body_ready_to_install">İndirme tamamlandı. Kurulum ekranı açılıyor.</string>
+    <string name="update_body_needs_permission">Güncellemeyi kurabilmek için bu uygulamaya \"bilinmeyen kaynaklardan uygulama yükleme\" izni vermeniz gerekiyor. İzni verdikten sonra buraya dönüp tekrar deneyin.</string>
+    <string name="update_up_to_date_leading">Güncel sürümdesiniz</string>
+
+    <!-- İndirme yüzdesi, örn. "· %42". Yüzde işaretinin sayıya göre konumu
+         dile göre değişir, bu yüzden birleştirme yerine format string
+         kullanılıyor; %% birebir yüzde işaretini temsil eder. -->
+    <string name="update_download_progress_suffix">· %%%1$d</string>
+
+    <!-- ── core/ui: paylaşılan bileşenler ───────────────────────────────────── -->
+
+    <!-- ChannelListItem favori aç/kapa içerik açıklaması. -->
+    <string name="ui_favorite_remove">Favorilerden çıkar</string>
+    <string name="ui_favorite_add">Favorilere ekle</string>
+
+    <!-- "CANLI" rozet metni — ChannelListItem'ın satır içi rozeti, CanliPill'in
+         varsayılan etiketi ve LiveBadge aynı kelimeyi paylaşıyor. -->
+    <string name="ui_live_label">CANLI</string>
+
+    <!-- EpgMiniCard "şu an yayında" etiketi. -->
+    <string name="ui_now_on_air_label">ŞU AN YAYINDA</string>
+
+    <!-- GradientProfileCard düzenle simgesi içerik açıklaması. -->
+    <string name="ui_edit_name">Adı düzenle</string>
+
+    <!-- CategoryCard kanal sayısı, örn. "42 kanal". -->
+    <string name="ui_channel_count_suffix">%1$d kanal</string>
+
+    <!-- GencSearchBar varsayılanları. -->
+    <string name="ui_search_placeholder">Kanal, film veya dizi ara…</string>
+    <string name="ui_voice_search">Sesli arama</string>
+</resources>

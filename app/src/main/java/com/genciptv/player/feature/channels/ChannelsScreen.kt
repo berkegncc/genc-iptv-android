@@ -39,6 +39,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.genciptv.player.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -160,14 +162,14 @@ fun ChannelsContent(
         ) {
             when {
                 state.isLoading -> LoadingState(
-                    message = "Kanallar yükleniyor…",
+                    message = stringResource(R.string.channels_loading_message),
                     modifier = Modifier.fillMaxSize(),
                 )
 
                 state.error != null -> ErrorState(
-                    title = "Kanallar Yüklenemedi",
+                    title = stringResource(R.string.channels_error_title),
                     description = state.error,
-                    retryLabel = "Geri Dön",
+                    retryLabel = stringResource(R.string.channels_error_go_back),
                     onRetry = onBack,
                     modifier = Modifier.fillMaxSize(),
                 )
@@ -189,7 +191,7 @@ fun ChannelsContent(
                     },
                     endPane = {
                         if (!state.inCategoryView) {
-                            DetailPlaceholder(text = "Soldan bir kategori seçin")
+                            DetailPlaceholder(text = stringResource(R.string.channels_select_category_placeholder))
                         } else {
                             ChannelListView(
                                 state = state,
@@ -242,7 +244,7 @@ private fun CategoryPickerView(
 
     Column(modifier = Modifier.fillMaxSize()) {
         ChannelsHeader(
-            title = "Kanallar",
+            title = stringResource(R.string.nav_channels),
             onLeading = onBack,
             isSyncing = isSyncing,
             onTrailing = onResync,
@@ -258,7 +260,7 @@ private fun CategoryPickerView(
             item(key = "__intro__") {
                 Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 20.dp)) {
                     Text(
-                        text = "Kategoriler",
+                        text = stringResource(R.string.channels_categories_heading),
                         style = TextStyle(
                             fontFamily = InstrumentSerifFamily,
                             fontWeight = FontWeight.Normal,
@@ -271,7 +273,7 @@ private fun CategoryPickerView(
                     Spacer(Modifier.height(6.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = "${categories.size + 1} koleksiyon",
+                            text = stringResource(R.string.channels_collection_count, categories.size + 1),
                             style = TextStyle(
                                 fontFamily = GeistMonoFamily,
                                 fontSize = 11.sp,
@@ -285,7 +287,7 @@ private fun CategoryPickerView(
                             fontSize = 11.sp,
                         )
                         Text(
-                            text = "$totalChannelCount kanal",
+                            text = stringResource(R.string.channels_channel_count, totalChannelCount),
                             style = TextStyle(
                                 fontFamily = GeistMonoFamily,
                                 fontSize = 11.sp,
@@ -300,7 +302,7 @@ private fun CategoryPickerView(
             // "Tümü" — synthesised first row using the user's accent gradient.
             item(key = "__tumu__") {
                 CategoryGlyphRow(
-                    name = "Tümü",
+                    name = stringResource(R.string.action_all),
                     count = totalChannelCount,
                     gradientFrom = accent.primary,
                     gradientTo = accent.primary.copy(alpha = 0.75f),
@@ -330,9 +332,8 @@ private fun CategoryPickerView(
                 item(key = "__empty__") {
                     EmptyState(
                         icon = "📂",
-                        title = "Kategori Bulunamadı",
-                        description = "Playlist senkronizasyonu sonrasında kategoriler burada listelenecek. " +
-                            "Sağ üstteki yenile butonuna basabilirsin.",
+                        title = stringResource(R.string.channels_empty_categories_title),
+                        description = stringResource(R.string.channels_empty_categories_body),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 60.dp),
@@ -467,7 +468,7 @@ private fun ChannelListView(
     ) {
         item {
             ChannelsHeader(
-                title = state.selectedCategory ?: "Tümü",
+                title = state.selectedCategory ?: stringResource(R.string.action_all),
                 onLeading = onBackToCategories,
                 isSyncing = isSyncing,
                 onTrailing = onResync,
@@ -487,8 +488,8 @@ private fun ChannelListView(
             item {
                 EmptyState(
                     icon = "📺",
-                    title = "Kanal Bulunamadı",
-                    description = "Arama kriterlerinizi değiştirmeyi deneyin.",
+                    title = stringResource(R.string.channels_empty_list_title),
+                    description = stringResource(R.string.channels_empty_list_body),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(300.dp),
@@ -555,7 +556,7 @@ private fun ChannelRow(
             }
             Spacer(Modifier.height(3.dp))
             Text(
-                text = item.currentProgram?.title ?: "Yayın bilgisi yok",
+                text = item.currentProgram?.title ?: stringResource(R.string.channels_no_program_info),
                 style = TextStyle(
                     fontFamily = GeistFamily,
                     fontWeight = FontWeight.Normal,
@@ -574,7 +575,7 @@ private fun ChannelRow(
         ) {
             Icon(
                 imageVector = if (isFavorite) Icons.Filled.Star else Icons.Filled.StarBorder,
-                contentDescription = if (isFavorite) "Favorilerden çıkar" else "Favorilere ekle",
+                contentDescription = if (isFavorite) stringResource(R.string.channels_favorite_remove) else stringResource(R.string.channels_favorite_add),
                 tint = if (isFavorite) Copper else TextTertiary,
                 modifier = Modifier.size(18.dp),
             )
@@ -619,7 +620,7 @@ private fun ChannelsHeader(
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Geri",
+                    contentDescription = stringResource(R.string.action_back),
                     tint = TextPrimary,
                     modifier = Modifier.size(22.dp),
                 )
@@ -651,7 +652,7 @@ private fun ChannelsHeader(
                 } else {
                     Icon(
                         imageVector = Icons.Default.Refresh,
-                        contentDescription = "Yeniden yükle",
+                        contentDescription = stringResource(R.string.channels_reload_content_description),
                         tint = TextSecondary,
                         modifier = Modifier.size(20.dp),
                     )
@@ -708,7 +709,7 @@ private fun ChannelSearchEntry(
                 Box {
                     if (query.isEmpty()) {
                         Text(
-                            text = "Kanal ara…",
+                            text = stringResource(R.string.channels_search_placeholder),
                             style = TextStyle(
                                 fontFamily = GeistFamily,
                                 fontWeight = FontWeight.Normal,

@@ -1,8 +1,10 @@
 package com.genciptv.player.feature.vodplayer
 
+import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.genciptv.player.R
 import com.genciptv.player.data.model.ContinueWatching
 import com.genciptv.player.data.model.Episode
 import com.genciptv.player.data.model.FavoriteTargetType
@@ -15,6 +17,7 @@ import com.genciptv.player.data.repository.UserPreferencesRepository
 import com.genciptv.player.core.util.rankBySharedGenres
 import com.genciptv.player.data.repository.VodRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -31,6 +34,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class VodPlayerViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle,
     private val vodRepository: VodRepository,
     private val continueWatchingRepository: ContinueWatchingRepository,
@@ -100,7 +104,7 @@ class VodPlayerViewModel @Inject constructor(
             when {
                 initialVodId != null -> loadMovie(initialVodId)
                 initialEpisodeId != null -> loadEpisode(initialEpisodeId)
-                else -> _uiState.value = VodPlayerUiState(isLoading = false, error = "İçerik bulunamadı")
+                else -> _uiState.value = VodPlayerUiState(isLoading = false, error = context.getString(R.string.errors_vodplayer_content_not_found))
             }
         } catch (e: Exception) {
             _uiState.value = VodPlayerUiState(isLoading = false, error = e.message)
@@ -112,7 +116,7 @@ class VodPlayerViewModel @Inject constructor(
     private suspend fun loadMovie(vodId: String) {
         val movie = withContext(Dispatchers.IO) { vodRepository.getVodById(vodId) }
         if (movie == null) {
-            _uiState.value = VodPlayerUiState(isLoading = false, error = "Film bulunamadı")
+            _uiState.value = VodPlayerUiState(isLoading = false, error = context.getString(R.string.errors_vodplayer_movie_not_found))
             return
         }
         val savedPos = withContext(Dispatchers.IO) {
@@ -174,7 +178,7 @@ class VodPlayerViewModel @Inject constructor(
     private suspend fun loadEpisode(episodeId: String) {
         val episode = withContext(Dispatchers.IO) { vodRepository.getEpisodeById(episodeId) }
         if (episode == null) {
-            _uiState.value = VodPlayerUiState(isLoading = false, error = "Bölüm bulunamadı")
+            _uiState.value = VodPlayerUiState(isLoading = false, error = context.getString(R.string.errors_vodplayer_episode_not_found))
             return
         }
         val series = withContext(Dispatchers.IO) { vodRepository.getSeriesById(episode.seriesId) }
@@ -186,7 +190,12 @@ class VodPlayerViewModel @Inject constructor(
 
         _uiState.value = VodPlayerUiState(
             title = series?.title ?: episode.title,
-            subtitle = "S${episode.season} · B${episode.episode} — ${episode.title}",
+            subtitle = context.getString(
+                R.string.player_episode_subtitle,
+                episode.season,
+                episode.episode,
+                episode.title,
+            ),
             streamUrl = episode.streamUrl,
             initialPositionMs = cwPos,
             isLoading = false,
@@ -252,7 +261,12 @@ class VodPlayerViewModel @Inject constructor(
                     streamUrl = newEpisode.streamUrl,
                     initialPositionMs = savedPos,
                     targetId = newEpisodeId,
-                    subtitle = "S${newEpisode.season} · B${newEpisode.episode} — ${newEpisode.title}",
+                    subtitle = context.getString(
+                R.string.player_episode_subtitle,
+                newEpisode.season,
+                newEpisode.episode,
+                newEpisode.title,
+            ),
                     posterUrl = state.series?.posterUrl ?: newEpisode.thumbnailUrl,
                     episode = newEpisode,
                     selectedSeason = newEpisode.season,

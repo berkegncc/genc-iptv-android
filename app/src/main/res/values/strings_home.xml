@@ -1,0 +1,38 @@
+<resources>
+    <!-- Home screen. -->
+
+    <!-- Category filter chips. "All", "Movies", "Series" reuse action_all /
+         nav_movies / nav_series — see HomeContent. -->
+    <string name="home_chip_live_tv">Live TV</string>
+    <string name="home_chip_sports">Sports</string>
+
+    <string name="home_empty_title">No content yet</string>
+    <string name="home_empty_body">Movies, series, and recently watched channels will show up here once the playlist syncs.</string>
+
+    <string name="home_section_latest_movies">Latest Movies</string>
+    <string name="home_section_latest_series">Latest Series</string>
+    <string name="home_section_recent_channels">Recently Watched Channels</string>
+
+    <string name="home_feedback_label">Feedback</string>
+    <string name="home_feedback_error_no_browser">No browser found to open the form</string>
+
+    <!-- Greeting is a format string, not concatenation — word order can differ
+         between languages. home_greeting_fallback_name fills %1$s when no
+         display name is available. -->
+    <string name="home_greeting">Welcome back, %1$s.</string>
+    <string name="home_greeting_fallback_name">viewer</string>
+
+    <string name="home_search_placeholder">Search channels, movies, or series…</string>
+
+    <!-- Search screen. -->
+    <string name="home_search_prompt_title">What are you looking for?</string>
+    <string name="home_search_prompt_body">Type at least 2 characters of a channel, movie, or series name.</string>
+
+    <string name="home_search_no_results_title">No results found</string>
+    <string name="home_search_no_results_body">No matches for \"%1$s\". Try something different.</string>
+
+    <!-- Refresh skipped because the user asked for Wi-Fi only -->
+    <string name="home_refresh_held_title">Content not updated</string>
+    <string name="home_refresh_held_body">Refresh is on hold because you chose Wi-Fi only.</string>
+    <string name="home_refresh_held_action">Refresh anyway</string>
+</resources>

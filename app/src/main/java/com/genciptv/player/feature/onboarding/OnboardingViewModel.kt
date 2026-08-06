@@ -1,11 +1,14 @@
 package com.genciptv.player.feature.onboarding
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.genciptv.player.R
 import com.genciptv.player.data.repository.PlaylistRepository
 import com.genciptv.player.data.repository.UserPreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -71,6 +74,7 @@ sealed interface OnboardingAction {
 
 @HiltViewModel
 class OnboardingViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val playlistRepository: PlaylistRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
 ) : ViewModel() {
@@ -89,7 +93,7 @@ class OnboardingViewModel @Inject constructor(
                         userPreferencesRepository.setDisplayName(_state.value.displayName.trim())
                         _state.update { it.copy(step = 2) }
                     } catch (e: Exception) {
-                        _state.update { it.copy(error = "Ayarlar kaydedilemedi. Lütfen tekrar deneyin.") }
+                        _state.update { it.copy(error = context.getString(R.string.errors_onboarding_settings_save_failed)) }
                     }
                 }
             }
@@ -142,7 +146,7 @@ class OnboardingViewModel @Inject constructor(
     private fun submitM3u() {
         val form = _state.value.m3uForm
         if (form.url.isBlank()) {
-            _state.update { it.copy(error = "M3U URL boş olamaz. Lütfen bir URL girin.") }
+            _state.update { it.copy(error = context.getString(R.string.errors_onboarding_m3u_url_empty)) }
             return
         }
 
@@ -173,11 +177,11 @@ class OnboardingViewModel @Inject constructor(
         val form = _state.value.xtreamForm
         when {
             form.serverUrl.isBlank() ->
-                _state.update { it.copy(error = "Sunucu URL boş olamaz.") }
+                _state.update { it.copy(error = context.getString(R.string.errors_onboarding_xtream_server_url_empty)) }
             form.username.isBlank() ->
-                _state.update { it.copy(error = "Kullanıcı adı boş olamaz.") }
+                _state.update { it.copy(error = context.getString(R.string.errors_onboarding_xtream_username_empty)) }
             form.password.isBlank() ->
-                _state.update { it.copy(error = "Şifre boş olamaz.") }
+                _state.update { it.copy(error = context.getString(R.string.errors_onboarding_xtream_password_empty)) }
             else -> {
                 viewModelScope.launch {
                     _state.update { it.copy(isLoading = true, channelCountLoaded = 0, error = null) }
@@ -209,18 +213,21 @@ class OnboardingViewModel @Inject constructor(
         val all = "$msg | $root | ${e::class.simpleName?.lowercase()}"
         return when {
             "networkonmainthread" in all ->
-                "İç hata: ağ isteği ana iş parçacığında çalıştı. Geliştiriciye bildirin."
+                context.getString(R.string.errors_onboarding_internal_network_main_thread)
             "unknownhost" in all || "no address" in all ->
-                "Sunucuya ulaşılamadı. URL'yi kontrol edin."
+                context.getString(R.string.errors_onboarding_host_unreachable)
             "connect" in all || "timeout" in all || "unreachable" in all ->
-                "Bağlantı hatası. İnternet bağlantınızı kontrol edin."
+                context.getString(R.string.errors_onboarding_m3u_connection_failed)
             "http 4" in all || "http 5" in all ->
-                "Sunucu hata kodu döndü (${e.message ?: ""}). URL'yi kontrol edin."
+                context.getString(R.string.errors_onboarding_m3u_server_error_code, e.message ?: "")
             "empty" in all || "no channel" in all ->
-                "Boş playlist. URL'nin geçerli bir M3U içerdiğinden emin olun."
+                context.getString(R.string.errors_onboarding_m3u_empty_playlist)
             "parse" in all || "format" in all || "invalid" in all ->
-                "Playlist ayrıştırılamadı. Geçerli bir M3U URL'si girin."
-            else -> "Playlist yüklenemedi: ${e.message ?: "bilinmeyen hata"}"
+                context.getString(R.string.errors_onboarding_m3u_parse_failed)
+            else -> context.getString(
+                R.string.errors_onboarding_m3u_load_failed,
+                e.message ?: context.getString(R.string.errors_unknown),
+            )
         }
     }
 
@@ -230,16 +237,19 @@ class OnboardingViewModel @Inject constructor(
         val all = "$msg | $root | ${e::class.simpleName?.lowercase()}"
         return when {
             "networkonmainthread" in all ->
-                "İç hata: ağ isteği ana iş parçacığında çalıştı. Geliştiriciye bildirin."
+                context.getString(R.string.errors_onboarding_internal_network_main_thread)
             "401" in all || "unauthori" in all || "auth" in all ->
-                "Kimlik doğrulama başarısız. Kullanıcı adı ve şifrenizi kontrol edin."
+                context.getString(R.string.errors_onboarding_xtream_auth_failed)
             "unknownhost" in all || "no address" in all ->
-                "Sunucuya ulaşılamadı. URL'yi kontrol edin."
+                context.getString(R.string.errors_onboarding_host_unreachable)
             "connect" in all || "timeout" in all || "unreachable" in all ->
-                "Bağlantı hatası. Sunucu URL'sini ve internet bağlantınızı kontrol edin."
+                context.getString(R.string.errors_onboarding_xtream_connection_failed)
             "empty" in all || "no channel" in all ->
-                "Boş playlist. Xtream hesabınızda kanal bulunamadı."
-            else -> "Bağlantı kurulamadı: ${e.message ?: "bilinmeyen hata"}"
+                context.getString(R.string.errors_onboarding_xtream_empty_playlist)
+            else -> context.getString(
+                R.string.errors_onboarding_xtream_connect_failed,
+                e.message ?: context.getString(R.string.errors_unknown),
+            )
         }
     }
 }

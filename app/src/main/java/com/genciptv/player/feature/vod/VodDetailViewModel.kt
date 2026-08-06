@@ -1,9 +1,11 @@
 package com.genciptv.player.feature.vod
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.genciptv.player.R
 import com.genciptv.player.data.model.Episode
 import com.genciptv.player.data.model.FavoriteTargetType
 import com.genciptv.player.data.model.Series
@@ -19,6 +21,7 @@ import com.genciptv.player.data.source.xtream.XtreamUrlBuilder
 import com.genciptv.player.data.source.local.dao.EpisodeDao
 import com.genciptv.player.data.source.local.entity.EpisodeEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -48,6 +51,7 @@ import javax.inject.Inject
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class VodDetailViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle,
     private val vodRepository: VodRepository,
     private val favoriteRepository: FavoriteRepository,
@@ -251,7 +255,8 @@ class VodDetailViewModel @Inject constructor(
                         runCatching {
                             val obj = episodeJson.jsonObject
                             val episodeId = obj["id"]?.jsonPrimitive?.content ?: return@runCatching
-                            val title = obj["title"]?.jsonPrimitive?.content ?: "Bölüm $episodeId"
+                            val title = obj["title"]?.jsonPrimitive?.content
+                                ?: context.getString(R.string.errors_voddetail_episode_fallback_title, episodeId)
                             val ext = obj["container_extension"]?.jsonPrimitive?.content ?: "mp4"
                             val episodeNum = obj["episode_num"]?.jsonPrimitive?.intOrNull ?: 0
                             // `info` also carries the runtime and a still frame.

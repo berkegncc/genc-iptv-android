@@ -1,10 +1,13 @@
 package com.genciptv.player.feature.profile.playlists
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.genciptv.player.R
 import com.genciptv.player.data.model.Playlist
 import com.genciptv.player.data.repository.PlaylistRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -24,6 +27,7 @@ data class PlaylistManagerUiState(
 
 @HiltViewModel
 class PlaylistManagerViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val playlistRepository: PlaylistRepository,
 ) : ViewModel() {
 
@@ -43,7 +47,7 @@ class PlaylistManagerViewModel @Inject constructor(
             try {
                 playlistRepository.setActive(id)
             } catch (e: Exception) {
-                _uiState.update { it.copy(error = "Aktif ayarlanamadı: ${e.message}") }
+                _uiState.update { it.copy(error = context.getString(R.string.errors_playlist_set_active_failed, e.message ?: "")) }
             }
         }
     }
@@ -53,7 +57,7 @@ class PlaylistManagerViewModel @Inject constructor(
             try {
                 playlistRepository.delete(playlist)
             } catch (e: Exception) {
-                _uiState.update { it.copy(error = "Silinemedi: ${e.message}") }
+                _uiState.update { it.copy(error = context.getString(R.string.errors_playlist_delete_failed, e.message ?: "")) }
             }
         }
     }
@@ -64,7 +68,7 @@ class PlaylistManagerViewModel @Inject constructor(
             try {
                 playlistRepository.sync(id)
             } catch (e: Exception) {
-                _uiState.update { it.copy(error = "Senkronizasyon başarısız: ${e.message}") }
+                _uiState.update { it.copy(error = context.getString(R.string.errors_playlist_sync_failed, e.message ?: "")) }
             } finally {
                 _uiState.update { it.copy(syncingIds = it.syncingIds - id) }
             }
@@ -111,11 +115,14 @@ class PlaylistManagerViewModel @Inject constructor(
     private fun mapError(e: Exception): String {
         val msg = (e.message ?: "").lowercase()
         return when {
-            "unknownhost" in msg || "no address" in msg -> "Sunucuya ulaşılamadı."
-            "timeout" in msg || "connect" in msg -> "Bağlantı zaman aşımı."
-            "empty" in msg || "no channel" in msg -> "Boş playlist."
-            "401" in msg || "auth" in msg -> "Kimlik doğrulama başarısız."
-            else -> "Hata: ${e.message ?: "bilinmeyen"}"
+            "unknownhost" in msg || "no address" in msg -> context.getString(R.string.errors_playlist_host_unreachable)
+            "timeout" in msg || "connect" in msg -> context.getString(R.string.errors_playlist_connection_timeout)
+            "empty" in msg || "no channel" in msg -> context.getString(R.string.errors_playlist_empty)
+            "401" in msg || "auth" in msg -> context.getString(R.string.errors_playlist_auth_failed)
+            else -> context.getString(
+                R.string.errors_playlist_generic,
+                e.message ?: context.getString(R.string.errors_unknown),
+            )
         }
     }
 }

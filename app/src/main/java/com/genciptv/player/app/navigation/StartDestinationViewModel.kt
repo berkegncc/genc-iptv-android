@@ -1,10 +1,14 @@
 package com.genciptv.player.app.navigation
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.genciptv.player.core.util.SyncPolicy.STALE_AFTER_MS
+import com.genciptv.player.core.util.isConnectionMetered
 import com.genciptv.player.data.repository.PlaylistRepository
 import com.genciptv.player.data.repository.UserPreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -19,10 +23,12 @@ import javax.inject.Inject
  *
  * Emits `null` while still loading (splash visible), then one of:
  *  - [AppRoute.Home.route]       — onboarded, valid active playlist, last sync
- *    is fresh (within [AUTO_SYNC_FRESHNESS_MS]).
- *  - [AppRoute.Syncing.route]    — onboarded, valid active playlist, but last
- *    sync is older than the threshold. Shows the auto-sync gate which then
- *    navigates to Home.
+ *    is fresh (within [STALE_AFTER_MS]).
+ *  - [AppRoute.Syncing.route]    — onboarded, valid active playlist, last sync
+ *    is older than [STALE_AFTER_MS], **and** the connection is one the user has
+ *    agreed to sync over. Shows the auto-sync gate, which then goes to Home.
+ *    On a metered connection with "Yalnızca Wi-Fi" set, this is skipped and the
+ *    catalogue simply stays as it was until Wi-Fi or a manual sync.
  *  - [AppRoute.Onboarding.route] — fresh install, missing prefs, OR a stale
  *    `activePlaylistId` pointing at a playlist row that no longer exists
  *    (e.g. after a destructive DB migration). In the last case we also clear
@@ -35,6 +41,7 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class StartDestinationViewModel @Inject constructor(
+    @ApplicationContext private val appContext: Context,
     private val userPreferencesRepository: UserPreferencesRepository,
     private val playlistRepository: PlaylistRepository,
 ) : ViewModel() {
@@ -49,7 +56,19 @@ class StartDestinationViewModel @Inject constructor(
                 activePlaylist != null -> {
                 val now = System.currentTimeMillis()
                 val age = now - activePlaylist.lastSyncedAt
-                if (age > AUTO_SYNC_FRESHNESS_MS) {
+                val stale = age > STALE_AFTER_MS
+
+                // "Yalnızca Wi-Fi" has to hold here too, not just for the
+                // background job. This gate downloads the whole catalogue, and
+                // it fires the moment the app opens — so on a metered
+                // connection we skip it and go straight to Home rather than
+                // spending the user's data against a setting that promised we
+                // would not. Profil → "Şimdi senkronize et" still syncs on
+                // demand, because that is the user asking for it.
+                val blockedByMetering =
+                    prefs.syncOverWifiOnly && appContext.isConnectionMetered()
+
+                if (stale && !blockedByMetering) {
                     AppRoute.Syncing.route
                 } else {
                     AppRoute.Home.route
@@ -83,9 +102,4 @@ class StartDestinationViewModel @Inject constructor(
         )
 
     val isLoading: Boolean get() = startRoute.value == null
-
-    private companion object {
-        /** Auto-sync gate kicks in when last sync is older than this. */
-        const val AUTO_SYNC_FRESHNESS_MS: Long = 6L * 60L * 60L * 1000L
-    }
 }

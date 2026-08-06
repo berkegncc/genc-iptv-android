@@ -20,9 +20,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.genciptv.player.R
 import com.genciptv.player.core.designsystem.Border
 import com.genciptv.player.core.designsystem.GencIptvTheme
 import com.genciptv.player.core.designsystem.LocalAccentPalette
@@ -72,7 +74,7 @@ fun EpgMiniCard(
             LivePulseDot(size = 5.dp)
             Spacer(Modifier.width(5.dp))
             Text(
-                text = "ŞU AN YAYINDA",
+                text = stringResource(R.string.ui_now_on_air_label),
                 style = MaterialTheme.typography.labelSmall.copy(color = TextTertiary)
             )
         }

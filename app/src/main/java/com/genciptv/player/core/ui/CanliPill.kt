@@ -21,11 +21,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import com.genciptv.player.R
 import com.genciptv.player.core.designsystem.GeistFamily
 import com.genciptv.player.core.designsystem.GencIptvTheme
 import com.genciptv.player.core.designsystem.Live
@@ -45,7 +47,7 @@ import com.genciptv.player.core.designsystem.LiveBg
 @Composable
 fun CanliPill(
     modifier: Modifier = Modifier,
-    label: String = "CANLI",
+    label: String = stringResource(R.string.ui_live_label),
 ) {
     val transition = rememberInfiniteTransition(label = "canli-pulse")
     val scale by transition.animateFloat(

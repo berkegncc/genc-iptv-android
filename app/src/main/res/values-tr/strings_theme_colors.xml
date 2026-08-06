@@ -1,0 +1,13 @@
+<resources>
+    <!-- Vurgu rengi adları. -->
+    <string name="palette_purple">Mor</string>
+    <string name="palette_red">Kırmızı</string>
+    <string name="palette_orange">Turuncu</string>
+    <string name="palette_green">Yeşil</string>
+    <string name="palette_blue">Mavi</string>
+    <string name="palette_pink">Pembe</string>
+    <string name="palette_teal">Turkuaz</string>
+    <string name="palette_lilac">Eflatun</string>
+
+    <string name="splash_loading">YÜKLENİYOR…</string>
+</resources>

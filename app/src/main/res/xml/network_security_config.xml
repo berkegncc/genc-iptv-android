@@ -1,14 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Cleartext (HTTP) traffic is permitted because IPTV users commonly supply
-    legacy Xtream/M3U endpoints that only serve over HTTP. User certificates
-    are trusted so self-hosted provider CAs work without rebuilds.
+    Two different trust decisions, because two different kinds of traffic.
+
+    The user's IPTV provider is whatever they typed in. Legacy Xtream and M3U
+    endpoints are routinely HTTP-only, and self-hosted providers routinely use a
+    private CA, so the base config permits cleartext and trusts user-installed
+    certificates. Tightening it would break working setups we cannot enumerate
+    in advance.
+
+    The services this app itself talks to are a closed, known list, all HTTPS,
+    all behind public CAs. They get the strict treatment: no cleartext, and
+    system trust anchors only. That matters most for the update chain — the app
+    downloads an APK and hands it to the system installer, so anyone able to
+    intercept that download is a step away from installing code. ApkInstaller
+    already refuses an APK whose signature does not match the installed app,
+    but a certificate a user was talked into installing should not get to reach
+    that check in the first place.
 -->
 <network-security-config>
+
+    <!-- The user's provider: whatever they configured has to keep working. -->
     <base-config cleartextTrafficPermitted="true">
         <trust-anchors>
             <certificates src="system"/>
             <certificates src="user"/>
         </trust-anchors>
     </base-config>
+
+    <!-- Update check and APK download. -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">github.com</domain>
+        <domain includeSubdomains="true">githubusercontent.com</domain>
+        <trust-anchors>
+            <certificates src="system"/>
+        </trust-anchors>
+    </domain-config>
+
+    <!-- Poster and metadata lookups. -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">themoviedb.org</domain>
+        <domain includeSubdomains="true">tmdb.org</domain>
+        <trust-anchors>
+            <certificates src="system"/>
+        </trust-anchors>
+    </domain-config>
+
 </network-security-config>

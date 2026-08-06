@@ -46,6 +46,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.genciptv.player.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.Color
@@ -76,7 +78,7 @@ import com.genciptv.player.core.designsystem.PosterShape
 import com.genciptv.player.core.designsystem.TextPrimary
 import com.genciptv.player.core.designsystem.TextSecondary
 import com.genciptv.player.core.designsystem.TextTertiary
-import com.genciptv.player.core.util.episodeDisplayTitle
+import com.genciptv.player.core.util.episodeName
 import com.genciptv.player.core.ui.Backdrop
 import com.genciptv.player.core.ui.DetailReadableWidth
 import com.genciptv.player.core.ui.readableContentWidth
@@ -102,6 +104,12 @@ fun VodDetailScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    // Resolved here (composition) rather than inside the click lambdas below,
+    // since those lambdas run later in response to user input — outside any
+    // @Composable scope — and stringResource can only be called during
+    // composition.
+    val moviePlaybackPreparingText = stringResource(R.string.vod_movie_playback_preparing)
+    val episodePlaybackPreparingText = stringResource(R.string.vod_episode_playback_preparing)
 
     VodDetailContent(
         uiState = uiState,
@@ -113,14 +121,14 @@ fun VodDetailScreen(
             if (vodId != null && onNavigateToVodPlayer != null) {
                 onNavigateToVodPlayer(vodId)
             } else {
-                scope.launch { snackbarHostState.showSnackbar("Film oynatma hazırlanıyor") }
+                scope.launch { snackbarHostState.showSnackbar(moviePlaybackPreparingText) }
             }
         },
         onPlayEpisode = { episode ->
             if (onNavigateToEpisodePlayer != null) {
                 onNavigateToEpisodePlayer(episode.id)
             } else {
-                scope.launch { snackbarHostState.showSnackbar("Bölüm oynatma hazırlanıyor") }
+                scope.launch { snackbarHostState.showSnackbar(episodePlaybackPreparingText) }
             }
         },
         onNavigateToSimilar = { id -> onNavigateToVodDetail?.invoke(id) },
@@ -151,7 +159,7 @@ fun VodDetailContent(
             )
             uiState.error != null -> EmptyState(
                 icon = "⚠️",
-                title = "Yüklenemedi",
+                title = stringResource(R.string.vod_load_failed),
                 description = uiState.error,
                 modifier = Modifier.fillMaxSize().padding(innerPadding),
             )
@@ -201,7 +209,7 @@ private fun VodDetailBody(
                 BackdropIconButton(onClick = onBack) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Geri",
+                        contentDescription = stringResource(R.string.action_back),
                         tint = Color.White,
                         modifier = Modifier.size(20.dp),
                     )
@@ -209,7 +217,11 @@ private fun VodDetailBody(
                 BackdropIconButton(onClick = onToggleFavorite) {
                     Icon(
                         imageVector = if (uiState.isFavorite) Icons.Filled.Star else Icons.Filled.StarBorder,
-                        contentDescription = if (uiState.isFavorite) "Favorilerden çıkar" else "Favorilere ekle",
+                        contentDescription = if (uiState.isFavorite) {
+                            stringResource(R.string.vod_remove_from_favorites)
+                        } else {
+                            stringResource(R.string.vod_add_to_favorites)
+                        },
                         tint = if (uiState.isFavorite) Copper else Color.White,
                         modifier = Modifier.size(20.dp),
                     )
@@ -286,7 +298,7 @@ private fun VodDetailBody(
                 if (!plotText.isNullOrBlank()) {
                     Spacer(Modifier.height(14.dp))
                     Text(
-                        text = "Özet",
+                        text = stringResource(R.string.vod_plot_summary_label),
                         style = TextStyle(
                             fontFamily = GeistFamily,
                             fontWeight = FontWeight.SemiBold,
@@ -318,7 +330,7 @@ private fun VodDetailBody(
                 val cast = uiState.displayCast
                 if (cast.isNotEmpty()) {
                     Spacer(Modifier.height(24.dp))
-                    SectionTitle(title = "Oyuncular")
+                    SectionTitle(title = stringResource(R.string.vod_cast_title))
                     Spacer(Modifier.height(12.dp))
                     CastBar(cast = cast)
                 }
@@ -327,7 +339,7 @@ private fun VodDetailBody(
             // ── Similar movies / series ──────────────────────────────────────────
             if (!uiState.isSeries && uiState.similarMovies.isNotEmpty()) {
                 Spacer(Modifier.height(24.dp))
-                SectionTitle(title = "Benzer Filmler")
+                SectionTitle(title = stringResource(R.string.vod_similar_movies))
                 Spacer(Modifier.height(12.dp))
                 SimilarRow(
                     items = uiState.similarMovies.map { SimilarItem(it.id, it.title, it.posterUrl, it.year, it.rating) },
@@ -336,7 +348,7 @@ private fun VodDetailBody(
             }
             if (uiState.isSeries && uiState.similarSeries.isNotEmpty()) {
                 Spacer(Modifier.height(24.dp))
-                SectionTitle(title = "Benzer Diziler")
+                SectionTitle(title = stringResource(R.string.vod_similar_series))
                 Spacer(Modifier.height(12.dp))
                 SimilarRow(
                     items = uiState.similarSeries.map { SimilarItem(it.id, it.title, it.posterUrl, it.year, it.rating) },
@@ -349,7 +361,7 @@ private fun VodDetailBody(
                 val cast = uiState.displayCast
                 if (cast.isNotEmpty()) {
                     Spacer(Modifier.height(24.dp))
-                    SectionTitle(title = "Oyuncular")
+                    SectionTitle(title = stringResource(R.string.vod_cast_title))
                     Spacer(Modifier.height(12.dp))
                     CastBar(cast = cast)
                 }
@@ -453,7 +465,7 @@ private fun PlayButton(onClick: () -> Unit) {
         )
         Spacer(Modifier.width(8.dp))
         Text(
-            text = "Oynat",
+            text = stringResource(R.string.action_play),
             style = TextStyle(
                 fontFamily = GeistFamily,
                 fontWeight = FontWeight.SemiBold,
@@ -640,7 +652,7 @@ private fun EpisodesSection(
     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = "Bölümler",
+                text = stringResource(R.string.term_episodes),
                 style = TextStyle(
                     fontFamily = GeistFamily,
                     fontWeight = FontWeight.SemiBold,
@@ -652,7 +664,7 @@ private fun EpisodesSection(
             if (episodes.isNotEmpty()) {
                 val current = selectedSeason?.let { grouped[it] }.orEmpty()
                 Text(
-                    text = "${current.size} BÖLÜM",
+                    text = stringResource(R.string.vod_episode_count, current.size),
                     style = TextStyle(
                         fontFamily = GeistMonoFamily,
                         fontWeight = FontWeight.Normal,
@@ -682,7 +694,7 @@ private fun EpisodesSection(
             }
             episodes.isEmpty() -> {
                 Text(
-                    text = "Bölüm bilgisi yüklenemiyor.",
+                    text = stringResource(R.string.vod_episodes_unavailable),
                     style = TextStyle(
                         fontFamily = GeistFamily,
                         fontSize = 13.sp,
@@ -735,7 +747,7 @@ private fun SeasonPicker(
                     .padding(horizontal = 14.dp, vertical = 7.dp),
             ) {
                 Text(
-                    text = "Sezon $season",
+                    text = stringResource(R.string.term_season_number, season),
                     style = TextStyle(
                         fontFamily = GeistFamily,
                         fontWeight = if (active) FontWeight.SemiBold else FontWeight.Medium,
@@ -805,7 +817,9 @@ private fun EpisodeItem(
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = episodeDisplayTitle(episode.episode, episode.title),
+                    text = episodeName(episode.episode, episode.title)
+                        ?.let { stringResource(R.string.term_episode_titled, episode.episode, it) }
+                        ?: stringResource(R.string.term_episode_number, episode.episode),
                     style = TextStyle(
                         fontFamily = GeistFamily,
                         fontWeight = FontWeight.SemiBold,
@@ -821,7 +835,7 @@ private fun EpisodeItem(
                 episode.durationSecs?.let { secs ->
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = "${secs / 60} dk",
+                        text = stringResource(R.string.unit_minutes_short, secs / 60),
                         style = TextStyle(
                             fontFamily = GeistMonoFamily,
                             fontWeight = FontWeight.Normal,
@@ -835,7 +849,7 @@ private fun EpisodeItem(
             Spacer(Modifier.width(8.dp))
             Icon(
                 imageVector = Icons.Filled.PlayArrow,
-                contentDescription = "Oynat",
+                contentDescription = stringResource(R.string.action_play),
                 tint = accent.primary,
                 modifier = Modifier.size(20.dp),
             )

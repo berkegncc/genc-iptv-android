@@ -48,11 +48,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.genciptv.player.R
 import com.genciptv.player.core.designsystem.Bg
 import com.genciptv.player.core.designsystem.Border
 import com.genciptv.player.core.designsystem.GencIptvTheme
@@ -134,13 +136,13 @@ fun PlayerSettingsContent(
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Geri",
+                    contentDescription = stringResource(R.string.action_back),
                     modifier = Modifier.size(18.dp),
                     tint = TextPrimary,
                 )
             }
             Text(
-                text = "Player Ayarları",
+                text = stringResource(R.string.playersettings_title),
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Black,
                     color = TextPrimary,
@@ -156,38 +158,38 @@ fun PlayerSettingsContent(
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
-            SectionLabel("Kalite & Codec")
+            SectionLabel(stringResource(R.string.playersettings_section_quality))
             Spacer(Modifier.height(8.dp))
             SettingGroupCard {
                 SettingRow(
                     icon = Icons.Outlined.HighQuality,
-                    label = "Varsayılan Kalite",
+                    label = stringResource(R.string.playersettings_default_quality_label),
                     subtitle = player.defaultQuality.label(),
                     onClick = { showQualitySheet = true },
                 )
                 SettingRowDivider()
                 SettingRow(
                     icon = Icons.Outlined.Memory,
-                    label = "Decoder Tercihi",
+                    label = stringResource(R.string.playersettings_decoder_pref_label),
                     subtitle = player.decoderPref.label(),
                     onClick = { showDecoderSheet = true },
                 )
             }
 
             Spacer(Modifier.height(20.dp))
-            SectionLabel("Ses & Dil")
+            SectionLabel(stringResource(R.string.playersettings_section_audio_language))
             Spacer(Modifier.height(8.dp))
             SettingGroupCard {
                 SettingRow(
                     icon = Icons.Outlined.Language,
-                    label = "Tercih Edilen Audio Dili",
-                    subtitle = player.preferredAudioLang ?: "Yok",
+                    label = stringResource(R.string.playersettings_audio_lang_label),
+                    subtitle = player.preferredAudioLang ?: stringResource(R.string.playersettings_none),
                     onClick = { showAudioLangDialog = true },
                 )
                 SettingRowDivider()
                 SettingRow(
                     icon = Icons.Outlined.GraphicEq,
-                    label = "Ses Normalleştirme",
+                    label = stringResource(R.string.playersettings_loudness_label),
                     trailing = {
                         GencToggle(
                             checked = player.loudnessNormalization,
@@ -198,24 +200,24 @@ fun PlayerSettingsContent(
             }
 
             Spacer(Modifier.height(20.dp))
-            SectionLabel("Ağ")
+            SectionLabel(stringResource(R.string.playersettings_section_network))
             Spacer(Modifier.height(8.dp))
             SettingGroupCard {
                 SettingRow(
                     icon = Icons.Outlined.Dns,
-                    label = "User-Agent Override",
-                    subtitle = player.userAgent ?: "Varsayılan",
+                    label = stringResource(R.string.playersettings_user_agent_label),
+                    subtitle = player.userAgent ?: stringResource(R.string.playersettings_default),
                     onClick = { showUserAgentDialog = true },
                 )
             }
 
             Spacer(Modifier.height(20.dp))
-            SectionLabel("Oynatma")
+            SectionLabel(stringResource(R.string.playersettings_section_playback))
             Spacer(Modifier.height(8.dp))
             SettingGroupCard {
                 SettingRow(
                     icon = Icons.Outlined.PictureInPictureAlt,
-                    label = "Resim İçinde Resim",
+                    label = stringResource(R.string.playersettings_pip_label),
                     trailing = {
                         GencToggle(
                             checked = player.pictureInPicture,
@@ -238,7 +240,7 @@ fun PlayerSettingsContent(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "Varsayılan Kalite",
+                    text = stringResource(R.string.playersettings_default_quality_label),
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     modifier = Modifier.padding(bottom = 8.dp),
                 )
@@ -278,7 +280,7 @@ fun PlayerSettingsContent(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "Decoder Tercihi",
+                    text = stringResource(R.string.playersettings_decoder_pref_label),
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     modifier = Modifier.padding(bottom = 8.dp),
                 )
@@ -314,14 +316,14 @@ fun PlayerSettingsContent(
         var text by remember { mutableStateOf(player.preferredAudioLang ?: "") }
         AlertDialog(
             onDismissRequest = { showAudioLangDialog = false },
-            title = { Text("Tercih Edilen Audio Dili") },
+            title = { Text(stringResource(R.string.playersettings_audio_lang_label)) },
             text = {
                 Column {
                     OutlinedTextField(
                         value = text,
                         onValueChange = { text = it },
-                        label = { Text("Dil kodu (ISO 639-1)") },
-                        placeholder = { Text("tr, en, de...") },
+                        label = { Text(stringResource(R.string.playersettings_audio_lang_code_label)) },
+                        placeholder = { Text(stringResource(R.string.playersettings_audio_lang_placeholder)) },
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = accent.primary,
@@ -330,7 +332,7 @@ fun PlayerSettingsContent(
                         ),
                     )
                     Text(
-                        text = "Örnek: tr (Türkçe), en (İngilizce)",
+                        text = stringResource(R.string.playersettings_audio_lang_example),
                         style = MaterialTheme.typography.bodySmall.copy(color = TextTertiary),
                         modifier = Modifier.padding(top = 4.dp),
                     )
@@ -340,10 +342,10 @@ fun PlayerSettingsContent(
                 TextButton(onClick = {
                     onSetAudioLang(text.ifBlank { null })
                     showAudioLangDialog = false
-                }) { Text("Kaydet") }
+                }) { Text(stringResource(R.string.action_save)) }
             },
             dismissButton = {
-                TextButton(onClick = { showAudioLangDialog = false }) { Text("İptal") }
+                TextButton(onClick = { showAudioLangDialog = false }) { Text(stringResource(R.string.action_cancel)) }
             }
         )
     }
@@ -353,13 +355,13 @@ fun PlayerSettingsContent(
         var text by remember { mutableStateOf(player.userAgent ?: "") }
         AlertDialog(
             onDismissRequest = { showUserAgentDialog = false },
-            title = { Text("User-Agent Override") },
+            title = { Text(stringResource(R.string.playersettings_user_agent_label)) },
             text = {
                 OutlinedTextField(
                     value = text,
                     onValueChange = { text = it },
-                    label = { Text("User-Agent") },
-                    placeholder = { Text("VLC/3.0 (boş = varsayılan)") },
+                    label = { Text(stringResource(R.string.playersettings_user_agent_field_label)) },
+                    placeholder = { Text(stringResource(R.string.playersettings_user_agent_placeholder)) },
                     singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = accent.primary,
@@ -372,10 +374,10 @@ fun PlayerSettingsContent(
                 TextButton(onClick = {
                     onSetUserAgent(text.ifBlank { null })
                     showUserAgentDialog = false
-                }) { Text("Kaydet") }
+                }) { Text(stringResource(R.string.action_save)) }
             },
             dismissButton = {
-                TextButton(onClick = { showUserAgentDialog = false }) { Text("İptal") }
+                TextButton(onClick = { showUserAgentDialog = false }) { Text(stringResource(R.string.action_cancel)) }
             }
         )
     }
@@ -384,17 +386,19 @@ fun PlayerSettingsContent(
 
 // ── Label extensions ──────────────────────────────────────────────────────────
 
+@Composable
 fun QualityPref.label(): String = when (this) {
-    QualityPref.AUTO -> "Otomatik"
+    QualityPref.AUTO -> stringResource(R.string.playersettings_automatic)
     QualityPref.P1080 -> "1080p"
     QualityPref.P720 -> "720p"
     QualityPref.P480 -> "480p"
 }
 
+@Composable
 fun DecoderPref.label(): String = when (this) {
-    DecoderPref.AUTO -> "Otomatik"
-    DecoderPref.HW -> "Donanım"
-    DecoderPref.SW -> "Yazılım"
+    DecoderPref.AUTO -> stringResource(R.string.playersettings_automatic)
+    DecoderPref.HW -> stringResource(R.string.playersettings_decoder_hw)
+    DecoderPref.SW -> stringResource(R.string.playersettings_decoder_sw)
 }
 
 @Composable

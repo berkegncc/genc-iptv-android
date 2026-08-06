@@ -1,0 +1,74 @@
+<resources>
+    <!-- Oynatıcı ekranları (canlı kanal + VOD). -->
+
+    <!-- Alt eylem satırı — genişlik sınırlı; kısa tutulmalı. -->
+    <string name="player_scale">Ölçek</string>
+    <string name="player_speed">Hız (%1$s)</string>
+    <string name="player_audio_subtitles">Ses ve Altyazı</string>
+    <string name="player_next_episode">Sonraki Bölüm</string>
+
+    <!-- Görüntü ölçeği sayfası -->
+    <string name="player_scale_sheet_title">Görüntü Ölçeği</string>
+    <string name="player_scale_original">Orijinal</string>
+    <string name="player_scale_fit_screen">Ekrana Sığdır</string>
+    <string name="player_scale_stretch">Gerdir</string>
+    <string name="player_scale_ratio_16_9">16:9</string>
+    <string name="player_scale_ratio_21_9">21:9</string>
+
+    <!-- Oynatma hızı sayfası -->
+    <string name="player_speed_sheet_title">Oynatma Hızı</string>
+    <string name="player_speed_with_descriptor">%1$s (%2$s)</string>
+    <string name="player_speed_very_slow">Çok Yavaş</string>
+    <string name="player_speed_slow">Yavaş</string>
+    <string name="player_speed_normal">Normal</string>
+    <string name="player_speed_fast">Hızlı</string>
+    <string name="player_speed_very_fast">Çok Hızlı</string>
+
+    <!-- Ses / altyazı -->
+    <string name="player_audio_subtitle_sheet_title">Seslendirme ve Alt Yazı</string>
+    <string name="player_tab_audio">Ses</string>
+    <string name="player_tab_subtitles">Alt Yazı</string>
+    <string name="player_subtitle_label">Altyazı</string>
+    <string name="player_subtitles_off">Kapalı</string>
+    <string name="player_no_audio_tracks">Ses kanalı bulunamadı</string>
+    <string name="player_no_subtitle_tracks">Altyazı bulunamadı</string>
+    <string name="player_language_unknown">Bilinmeyen</string>
+    <string name="player_audio_default">Varsayılan</string>
+    <string name="player_audio_track_number">Ses %1$d</string>
+    <string name="player_quality_auto">Otomatik</string>
+    <string name="player_quality_video_generic">Video</string>
+
+    <!-- Bölümler / sezonlar -->
+    <string name="player_episodes_loading">Bölümler yükleniyor…</string>
+    <string name="player_select_season">Sezon seç</string>
+    <string name="player_season_sheet_title">Sezon</string>
+    <string name="player_season_episode_count">%1$s  ·  %2$d BÖLÜM</string>
+    <string name="player_now_playing">ŞU AN OYNUYOR</string>
+
+    <!-- Oynatma durumu / hatalar -->
+    <string name="player_loading_content">İçerik yükleniyor…</string>
+    <string name="player_playback_error_title">Oynatma Hatası</string>
+    <string name="player_stream_playback_failed">Akış oynatılamadı</string>
+    <string name="player_go_back">Geri Dön</string>
+    <string name="player_channel_not_found">Kanal Bulunamadı</string>
+    <string name="player_channel_loading">Kanal yükleniyor…</string>
+    <string name="player_error_helper_text">Aşağıdaki listeden başka bir kanal seçebilir veya bağlantınızı kontrol edebilirsiniz.</string>
+    <string name="player_no_program_info">Yayın bilgisi yok</string>
+    <string name="player_other_channels_now">Şu Anda Diğer Kanallarda</string>
+
+    <!-- Kontroller -->
+    <string name="player_add_favorite">Favorilere ekle</string>
+    <string name="player_remove_favorite">Favorilerden çıkar</string>
+    <string name="player_fullscreen">Tam ekran</string>
+    <string name="player_exit_fullscreen">Küçük ekran</string>
+    <string name="player_pause">Duraklat</string>
+    <string name="player_seek_back_10">10 saniye geri</string>
+    <string name="player_seek_forward_10">10 saniye ileri</string>
+    <string name="player_more_options">Daha fazla</string>
+
+    <!-- Film bilgi paneli bölümleri -->
+    <string name="player_section_summary">Özet</string>
+    <string name="player_section_cast">Oyuncular</string>
+    <string name="player_section_similar_movies">Benzer Filmler</string>
+    <string name="player_episode_subtitle">S%1$d · B%2$d — %3$s</string>
+</resources>

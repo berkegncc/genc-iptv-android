@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.annotation.StringRes
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
@@ -30,8 +31,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.genciptv.player.R
 import com.genciptv.player.core.designsystem.Border
 import com.genciptv.player.core.designsystem.GencIptvTheme
 import com.genciptv.player.core.designsystem.LocalAccentPalette
@@ -49,14 +52,14 @@ private val NavHeight = 60.dp
  * screens like Guide/Favoriler that sit under Profile conceptually).
  */
 enum class GencNavItem(
-    val label: String,
+    @param:StringRes val labelRes: Int,
     val icon: ImageVector,
 ) {
-    HOME(label = "Ana Sayfa", icon = Icons.Default.Home),
-    CHANNELS(label = "Kanallar", icon = Icons.Default.Tv),
-    MOVIES(label = "Filmler", icon = Icons.Default.Movie),
-    SERIES(label = "Diziler", icon = Icons.Default.VideoLibrary),
-    PROFILE(label = "Profil", icon = Icons.Default.Person);
+    HOME(labelRes = R.string.nav_home, icon = Icons.Default.Home),
+    CHANNELS(labelRes = R.string.nav_channels, icon = Icons.Default.Tv),
+    MOVIES(labelRes = R.string.nav_movies, icon = Icons.Default.Movie),
+    SERIES(labelRes = R.string.nav_series, icon = Icons.Default.VideoLibrary),
+    PROFILE(labelRes = R.string.nav_profile, icon = Icons.Default.Person);
 }
 
 @Composable
@@ -97,6 +100,7 @@ fun GencBottomNav(
                 val isActive = item == current
                 val iconTint = if (isActive) accent else TextTertiary
                 val labelColor = if (isActive) accent else TextTertiary
+                val label = stringResource(item.labelRes)
 
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -115,7 +119,7 @@ fun GencBottomNav(
                     ) {
                         Icon(
                             imageVector = item.icon,
-                            contentDescription = item.label,
+                            contentDescription = label,
                             tint = iconTint,
                             modifier = Modifier.size(17.dp),
                         )
@@ -123,7 +127,7 @@ fun GencBottomNav(
                     Spacer(Modifier.width(0.dp))
                     Spacer(Modifier.height(2.dp))
                     Text(
-                        text = item.label.uppercase(),
+                        text = label.uppercase(),
                         style = MaterialTheme.typography.labelSmall.copy(color = labelColor),
                         maxLines = 1,
                     )

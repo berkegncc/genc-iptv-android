@@ -1,8 +1,11 @@
 package com.genciptv.player.feature.home
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.genciptv.player.core.util.SyncPolicy.STALE_AFTER_MS
+import com.genciptv.player.core.util.isConnectionMetered
 import com.genciptv.player.data.model.Channel
 import com.genciptv.player.data.repository.ChannelRepository
 import com.genciptv.player.data.repository.PlaylistRepository
@@ -10,6 +13,7 @@ import com.genciptv.player.data.repository.PosterEnricher
 import com.genciptv.player.data.repository.UserPreferencesRepository
 import com.genciptv.player.data.repository.VodRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,6 +33,7 @@ import javax.inject.Inject
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class HomeViewModel @Inject constructor(
+    @ApplicationContext private val appContext: Context,
     private val channelRepository: ChannelRepository,
     private val vodRepository: VodRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
@@ -84,12 +89,28 @@ class HomeViewModel @Inject constructor(
 
     // ── Combined UI state ─────────────────────────────────────────────────────
 
+    /**
+     * True when the catalogue is stale and the user's "Yalnızca Wi-Fi" choice
+     * is what is holding the refresh back. Recomputed whenever the playlist row
+     * changes, so it clears itself as soon as a sync lands.
+     */
+    private val refreshHeldForWifiFlow = combine(
+        userPreferencesRepository.user,
+        playlistRepository.observeActive(),
+    ) { prefs, active ->
+        active != null &&
+            System.currentTimeMillis() - active.lastSyncedAt > STALE_AFTER_MS &&
+            prefs.syncOverWifiOnly &&
+            appContext.isConnectionMetered()
+    }
+
     val uiState: StateFlow<HomeUiState> = combine(
         userNameFlow,
         latestMoviesFlow,
         latestSeriesFlow,
         recentChannelsFlow,
-    ) { userName, movies, series, channels ->
+        refreshHeldForWifiFlow,
+    ) { userName, movies, series, channels, heldForWifi ->
         HomeUiState(
             userName = userName,
             latestMovies = movies,
@@ -97,6 +118,7 @@ class HomeViewModel @Inject constructor(
             recentChannels = channels,
             isLoading = false,
             selectedChipIndex = 0,
+            refreshHeldForWifi = heldForWifi,
         )
     }
     .flowOn(Dispatchers.Default)
