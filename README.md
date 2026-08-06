@@ -1,68 +1,68 @@
 # Genç IPTV Player
 
+**Türkçe** · [English](README.en.md)
+
 Modern, sade ve tipografi odaklı bir Android IPTV oynatıcı.
 
 **M3U** ve **Xtream Codes** playlist desteğiyle canlı kanalları, filmleri ve
 dizileri tek bir uygulamada izlemek için tasarlandı.
 
-> ⚠️ **TR:** Genç IPTV Player bir **oynatıcı**dır — içerik veya playlist sağlamaz.
-> Kullanmak için kendi M3U URL'iniz ya da Xtream credentials'larınız olması gerekir.
->
-> ⚠️ **EN:** Genç IPTV Player is a **media player** — it provides no content or
-> playlists. You need your own M3U URL or Xtream credentials to use it.
+> ⚠️ **Genç IPTV Player bir oynatıcıdır** — içerik veya playlist sağlamaz.
+> Kullanmak için kendi M3U URL'iniz ya da Xtream bilgileriniz olması gerekir.
 
 ---
 
 ## Özellikler
 
 ### Canlı yayın
-- M3U ve Xtream Codes playlist desteği (aynı anda birden fazla kayıtlı, biri aktif)
-- Kategori bazlı kanal gezintisi (Glyph row UI)
-- Kanal logoları + canlı program bilgisi (EPG entegre)
-- Program rehberi (XMLTV) — gün gün, kanal kanal grid
-- Pull-to-refresh ile manuel senkron
-- 6 saatten eski sync varsa otomatik güncelleme
+- M3U ve Xtream Codes playlist desteği (birden fazla kayıtlı, biri aktif)
+- Kategori bazlı kanal gezintisi
+- Kanal logoları + anlık program bilgisi
+- Program rehberi (XMLTV) — gün gün, kanal kanal
+- Aşağı çekerek elle yenileme
 
-### Film & Dizi (VOD)
-- Kategori bazlı film/dizi kataloğu
-- Dizi sezon/bölüm gezintisi
-- **"Devam Et"** — aynı diziden farklı bölümler tek satıra collapse, kaldığın
-  bölümden direkt resume
-- Oynatıcıda "Sonraki Bölüm" butonu — sezon arası otomatik geçiş
-- TMDB entegrasyonu (opsiyonel) — boş poster'lar otomatik doldurulur, oyuncu
-  kadrosu çekilir
+### Film & Dizi
+- Kategori bazlı film ve dizi kataloğu
+- Sezon/bölüm gezintisi
+- **Devam Et** — aynı diziden farklı bölümler tek satıra iniyor, kaldığınız
+  yerden devam
+- Oynatıcıda "Sonraki Bölüm" — sezon sonunda bir sonrakine geçer
+- Arama tüm sekmeyi tarar; yazarken kategori filtresi devre dışı kalır
 
 ### Oynatıcı
 - ExoPlayer (HLS, DASH, MPEG-TS, MP4)
-- Picture-in-Picture
-- Subtitle özelleştirme (13 ayar: font, renk, edge type, konum vb.)
-- Aspect ratio (Original / 16:9 / 21:9 / Stretch / Fit)
-- Hız kontrolü (VOD)
-- 3 aşamalı stream fallback (HLS → progressive → .ts variant)
-- Custom User-Agent (gelişmiş ayarlardan)
-- Tercih edilen audio dili (boş bırakılırsa stream'in kendi dili)
+- Pencere içinde pencere (PiP)
+- Altyazı özelleştirme — 13 ayar: yazı tipi, renk, kenar, konum, boyut
+- En-boy oranı (Orijinal / 16:9 / 21:9 / Doldur / Sığdır)
+- Hız kontrolü (film ve dizilerde)
+- Üç aşamalı yayın yedeklemesi (HLS → progressive → .ts)
+- Özel User-Agent ve tercih edilen ses dili (gelişmiş ayarlar)
 
-### UX
-- Animasyonlu splash sekansı (logo fade-in + halo + pulse + wordmark)
-- 8 accent renk paleti + light/dark/system tema
-- Editorial tipografi (Instrument Serif + Geist + Geist Mono)
-- Favoriler (kanallar / filmler / diziler — swipe-able tab'lar)
-- Tüm içerikte arama (Ctrl+F tarzı palette)
-- Recent channels — son izlenen kanallar ana ekranda
+### Arayüz
+- İki dilli: Türkçe ve İngilizce. Sistem dilinizi izler, Profil → Dil'den
+  elle de seçebilirsiniz
+- Işığın işaret üzerinde yol aldığı açılış animasyonu
+- 8 vurgu rengi + açık/koyu/sistem teması
+- Tablet düzeni — geniş ekranda liste ve detay yan yana, kenar navigasyonu
+- Favoriler (kanal / film / dizi)
+- Tüm içerikte arama
+- Son izlenen kanallar ana ekranda
+
+### Güncelleme ve veri
+- Uygulama içi güncelleme — GitHub Releases üzerinden kontrol, indirme ve kurulum
+- **İçerik Yenileme** ayarı: yalnızca Wi-Fi, ya da mobil veri dahil. Yenileme
+  Wi-Fi beklediği için atlandığında ana sayfa bunu söyler
+- Uygulama içinden geri bildirim
 
 ### Mimari
 - Jetpack Compose (Material 3)
-- MVVM + Hilt DI
+- MVVM + Hilt
 - Room (SQLite) + DataStore
-- Coil 3 (image loading)
-- Retrofit + Kotlinx Serialization (Xtream API)
+- Media3 / ExoPlayer
+- Retrofit + kotlinx.serialization
+- Coil 3
+- WorkManager
 - Coroutines + Flow
-
----
-
-## Ekran görüntüleri
-
-> *Ekran görüntüleri eklenecek.*
 
 ---
 
@@ -70,155 +70,117 @@ dizileri tek bir uygulamada izlemek için tasarlandı.
 
 ### Hazır APK ile (önerilen)
 
-[GitHub Releases](../../releases) sayfasından en güncel APK'yı indir, telefonuna
-kur. **Bilinmeyen kaynaklardan yüklemeye izin ver**'i açman gerekebilir.
+[Releases](../../releases) sayfasından en güncel APK'yı indirip kurun.
+**Bilinmeyen kaynaklardan yüklemeye izin ver** seçeneğini açmanız gerekebilir.
+
+Uygulama kuruluysa üzerine güncellenir, verileriniz korunur. Sonraki
+güncellemeler uygulama içinden gelir.
 
 ### Kaynaktan derleme
 
-#### Gereksinimler
-- **Android Studio** (Hedgehog 2023.1.1+ veya daha yenisi)
-- **Android SDK 36** (compile + target)
-- **Minimum SDK**: 24 (Android 7.0)
-- **JDK 17**
-
-#### Adımlar
+Gereksinimler: **Android Studio** (Hedgehog 2023.1.1+), **Android SDK 36**,
+**JDK 17**. Minimum SDK 24 (Android 7.0).
 
 ```bash
-git clone https://github.com/<kullanici>/genc_iptv_mobil.git
-cd genc_iptv_mobil
+git clone https://github.com/berkegncc/genc-iptv-android.git
 ```
 
-Android Studio'da projeyi aç → "Sync Project with Gradle Files" → "Run".
-İlk açılışta tüm bağımlılıkları indirir, ardından bağlı cihaza/emülatöre
-uygulamayı kurar.
+Android Studio'da açın → Gradle senkronizasyonu → Run. Terminalden:
 
-Terminal üzerinden:
 ```bash
 ./gradlew :app:assembleDebug
-# Çıktı: app/build/outputs/apk/debug/app-debug.apk
 ```
 
-#### TMDB API anahtarı (opsiyonel)
+### TMDB API anahtarı (isteğe bağlı)
 
-Genç IPTV temel kullanım için TMDB'siz çalışır. Afişlerin, bölüm karelerinin
-ve arka planların neredeyse tamamı zaten Xtream sağlayıcıdan geliyor —
-TMDB yalnızca iki şey için kullanılıyor:
+Uygulama TMDB olmadan çalışır. Afişlerin ve arka planların neredeyse tamamı
+zaten sağlayıcınızdan geliyor; TMDB yalnızca iki şey için kullanılıyor:
 
-- **Oyuncu fotoğrafları** (film ve dizi detay sayfasındaki kadro)
+- Film ve dizi detayındaki **oyuncu fotoğrafları**
 - Sağlayıcının **afiş vermediği** içerikler için yedek afiş
 
-**Yayınlanan APK'lar anahtar içermez.** Anahtarı APK'ya gömmek, indiren
-herkesin onu çıkarabilmesi ve tüm kurulumların tek bir kotayı paylaşması
-demek olurdu. Bu yüzden bu iki özellik isteğe bağlıdır ve kendi anahtarınızla
-çalışır:
+**Yayınlanan APK'lar anahtar içermez.** Anahtarı APK'ya gömmek, indiren herkesin
+onu çıkarabilmesi ve tüm kurulumların tek bir kotayı paylaşması demek olurdu.
+Kendi anahtarınızı girmek için:
 
-1. https://www.themoviedb.org/settings/api adresinden ücretsiz anahtar alın
-2. Uygulamada **Profil → Hakkında → TMDB API Anahtarı**
-3. Anahtarı yapıştırıp kaydedin
+1. [themoviedb.org/settings/api](https://www.themoviedb.org/settings/api)
+   adresinden ücretsiz anahtar alın
+2. **Profil → Hakkında → TMDB API Anahtarı**
+3. Yapıştırıp kaydedin
 
-Anahtar yalnızca cihazda saklanır, hiçbir yere gönderilmez. "Kaldır" ile
-silebilirsiniz; sildiğinizde bu iki özellik kapanır, gerisi normal çalışır.
+Anahtar yalnızca cihazınızda saklanır, hiçbir yere gönderilmez. Kaldırırsanız
+bu iki özellik kapanır, gerisi normal çalışır.
 
-> Kaynaktan derleyenler için: `local.properties` içine `TMDB_API_KEY=...`
-> yazılırsa derlemeye gömülür ve uygulama içi ayara gerek kalmaz. Bu dosya
-> gitignore'da — **anahtarınızı asla commit etmeyin.** Uygulama içi ayar
-> her zaman derlemedeki anahtarın önüne geçer.
-
----
-
-## Release yayınlama
-
-Yayın elle yapılıyor. Sürüm numaralarını doğru ayarlamak kritik: uygulama içi
-güncelleme sistemi bunlara bakıyor, yanlış olursa kullanıcılar güncellemeyi ya
-hiç göremez ya da kuramaz.
-
-### 1. Sürümü ayarla
-
-`app/build.gradle.kts` → `defaultConfig`:
-
-- **`versionCode`** — her yayında bir artır. Android güncelleme kararını buna
-  göre verir; artırmazsan kurulum `INSTALL_FAILED_VERSION_DOWNGRADE` ile
-  reddedilir.
-- **`versionName`** — üç haneli semver (`1.3.0`). Git etiketi bunun başına `v`
-  eklenmiş hali olmalı: `v1.3.0`.
-
-### 2. İmzalı APK üret
-
-```bash
-./gradlew :app:assembleRelease
-```
-
-Çıktı: `app/build/outputs/apk/release/app-release.apk`
-
-İmzanın doğru anahtarla atıldığını doğrulamak istersen:
-
-```bash
-apksigner verify --print-certs app/build/outputs/apk/release/app-release.apk
-```
-
-`CN=Genc IPTV` görmelisin. `CN=Android Debug` görüyorsan APK'yı **yayınlama** —
-mevcut kullanıcıların hiçbirine kurulmaz. (Derleme bu duruma düşerse zaten
-hata verip duracak, ama kontrol etmek zarar vermez.)
-
-### 3. GitHub Release oluştur
-
-`Releases → Draft a new release` → yeni tag olarak `v1.3.0` gir → APK'yı asset
-olarak yükle → yayınla.
-
-Uygulama içi güncelleme sistemi `latest` release'i okuyor ve **ilk `.apk`
-uzantılı asset'i** indiriyor. Ön sürüm (pre-release) işaretlenen release'ler
-atlanır.
-
-### Dikkat
-
-- **Keystore asla değişmemeli.** `genciptv-release.jks` kaybolursa veya
-  değişirse tüm kullanıcılar uygulamayı kaldırıp yeniden kurmak ve verilerini
-  kaybetmek zorunda kalır.
-- **Veritabanı şeması değiştiyse migration yaz.** Ayrıntı için
-  [CLAUDE.md](CLAUDE.md).
+> Kaynaktan derleyenler `local.properties` içine `TMDB_API_KEY=...` yazabilir;
+> bu dosya gitignore'da. **Anahtarınızı asla commit etmeyin.** Uygulama içi
+> ayar her zaman derlemedeki anahtarın önüne geçer.
 
 ---
 
 ## Kullanım
 
-1. **İlk açılış**: Onboarding ekranında M3U URL veya Xtream credentials gir.
-2. **Senkron**: Playlist eklendikten sonra ilk sync otomatik başlar; sonra her
-   24 saatte bir arka planda + her 6 saatte bir açılış sırasında.
-3. **Kanal izleme**: Sol alt navigasyondan "Kanallar" → kategori → kanal seç.
-4. **Film/dizi izleme**: "Filmler" veya "Diziler" sekmesinden katalogda gez.
-5. **Favoriler**: Bir öğenin yanındaki ⭐ ikonuna tıkla → "Favoriler"
-   sekmesinden ulaş.
-6. **Ayarlar**: Profil → Tema, Oynatıcı, Altyazı, Playlist Yönetimi.
+1. **İlk açılış** — M3U URL'inizi veya Xtream bilgilerinizi girin.
+2. **Senkronizasyon** — Playlist eklendiğinde ilk eşitleme başlar. Sonrasında
+   günde bir arka planda, ayrıca katalog 6 saatten eskiyse uygulamayı açtığınızda.
+   İkisi de İçerik Yenileme ayarınıza uyar; elle yenileme her bağlantıda çalışır.
+3. **Kanallar** — Alt navigasyondan Kanallar → kategori → kanal.
+4. **Film ve diziler** — Filmler ya da Diziler sekmesi.
+5. **Favoriler** — Öğenin yanındaki yıldıza dokunun.
+6. **Ayarlar** — Profil: tema, dil, oynatıcı, altyazı, playlist yönetimi.
 
 ---
 
-## Disclaimer / Yasal Uyarı
+## Yayın çıkarma
 
-**English**
+Yayın elle yapılıyor ve sürüm numaraları kritik: uygulama içi güncelleme
+sistemi bunlara bakıyor.
 
-- **Genç IPTV Player is only a media player.** It does **not** provide, host,
-  bundle, stream, or distribute any channels, content, or playlists.
-- The app ships with **no** preloaded sources. You must supply your own **M3U
-  URL** or **Xtream Codes** credentials to use it.
-- **You are solely responsible** for the content you access and for the
-  legality of any IPTV service, playlist, or credentials you use with this app,
-  in your own jurisdiction.
-- The developer accepts **no liability** for how the app is used or for the
-  legality or content of user-supplied sources.
-- This product uses the TMDB API but is not endorsed or certified by TMDB.
+**1. Sürümü ayarlayın** (`app/build.gradle.kts` → `defaultConfig`)
 
-**Türkçe**
+- `versionCode` — her yayında artmalı. Android güncelleme kararını buna göre
+  verir; artırmazsanız kurulum `INSTALL_FAILED_VERSION_DOWNGRADE` ile reddedilir.
+  Yayımlanmış bir `versionCode` bir daha kullanılamaz.
+- `versionName` — üç haneli semver (`1.3.0`). Git etiketi bunun başına `v`
+  eklenmiş hâli olmalı.
 
-- **Genç IPTV Player yalnızca bir medya oynatıcısıdır.** Hiçbir kanal, içerik
-  veya playlist **sağlamaz, barındırmaz, yayınlamaz veya dağıtmaz.**
-- Uygulama **hiçbir** hazır kaynakla gelmez; kullanmak için kendi **M3U URL'ini**
-  ya da **Xtream Codes** bilgilerini girmen gerekir.
-- Eriştiğin içerikten ve uygulamayla kullandığın IPTV servisinin/playlist'in/
-  hesabının **kendi ülkendeki yasallığından yalnızca sen sorumlusun.**
-- Geliştirici, uygulamanın nasıl kullanıldığından ya da kullanıcının girdiği
-  kaynakların yasallığı veya içeriğinden **hiçbir sorumluluk kabul etmez.**
-- Bu ürün TMDB API'sini kullanır; ancak TMDB tarafından onaylanmış veya
-  sertifikalanmış değildir.
+**2. Anahtarsız, imzalı APK üretin**
+
+```bash
+TMDB_API_KEY= ./gradlew :app:assembleRelease
+```
+
+PowerShell'de: `$env:TMDB_API_KEY=""; ./gradlew :app:assembleRelease`
+
+Ortam değişkeni `local.properties`'in önüne geçer. Ama yalnızca buna güvenmeyin
+— çalışmakta olan bir Gradle daemon'ı eski ortamı taşıyabilir. Asıl kontrol
+derleme çıktısıdır: **"WARNING: this release APK has a TMDB API key compiled
+in"** uyarısı görüyorsanız APK'da anahtar vardır, yayınlamayın. Uyarı
+çıkmıyorsa temizdir. Kesin çözüm `local.properties` içindeki satırı geçici
+olarak boşaltmaktır.
+
+İmzayı doğrulayın:
+
+```bash
+apksigner verify --print-certs app/build/outputs/apk/release/app-release.apk
+```
+
+`CN=Genc IPTV` görmelisiniz. `CN=Android Debug` görüyorsanız **yayınlamayın** —
+mevcut kullanıcıların hiçbirine kurulmaz.
+
+**3. Release oluşturun**
+
+Etiket `v1.3.0` biçiminde, APK'yı asset olarak yükleyin. Güncelleme sistemi
+`latest` release'i okur ve **ilk `.apk` uzantılı asset'i** indirir; ön sürüm
+işaretli olanları atlar.
+
+### Dikkat
+
+- **Keystore asla değişmemeli.** `genciptv-release.jks` kaybolur veya değişirse
+  tüm kullanıcılar uygulamayı kaldırıp yeniden kurmak ve verilerini kaybetmek
+  zorunda kalır.
+- **Veritabanı şeması değiştiyse migration yazın.** Room bir geçiş yolu
+  bulamazsa uygulama çökmez — bütün tabloları siler ve kullanıcı playlist'ini,
+  sunucu adresini, kullanıcı adını ve şifresini kaybeder.
 
 ---
 
@@ -226,16 +188,39 @@ atlanır.
 
 PR'lara açığım. Büyük değişiklikler için önce issue açıp tartışalım.
 
-Kod stili:
-- Kotlin official style (`kotlin.code.style=official` zaten `gradle.properties`'te)
-- Compose composable'lar PascalCase, fonksiyonlar camelCase
-- Tüm UI metinleri Türkçe (i18n şu an yok)
+- Kotlin resmî stili (`gradle.properties` içinde ayarlı)
+- Composable'lar PascalCase, fonksiyonlar camelCase
+- **Kullanıcıya görünen metinleri koda yazmayın.** Uygulama iki dilli:
+  `res/values/` İngilizce (varsayılan), `res/values-tr/` Türkçe. Yeni bir
+  anahtar **iki dosyaya birden** eklenmeli — yalnızca `values/`'a eklerseniz
+  Türkçe kullanan kişi orada İngilizce görür ve bu sessizce olur.
+  `tools/check_locales.py` iki dilin aynı anahtarları tanımladığını doğrular.
+- Değişken içeren metinleri parça birleştirerek kurmayın, `%1$s` kullanın —
+  Türkçe ve İngilizce sözdizimi farklı.
+
+---
+
+## Yasal uyarı
+
+- **Genç IPTV Player yalnızca bir medya oynatıcısıdır.** Hiçbir kanal, içerik
+  veya playlist **sağlamaz, barındırmaz, yayınlamaz veya dağıtmaz.**
+- Uygulama **hiçbir** hazır kaynakla gelmez; kullanmak için kendi **M3U
+  URL'inizi** ya da **Xtream Codes** bilgilerinizi girmeniz gerekir.
+- Eriştiğiniz içerikten ve uygulamayla kullandığınız IPTV servisinin,
+  playlist'in veya hesabın **kendi ülkenizdeki yasallığından yalnızca siz
+  sorumlusunuz.**
+- Geliştirici, uygulamanın nasıl kullanıldığından ya da kullanıcının girdiği
+  kaynakların yasallığı veya içeriğinden **hiçbir sorumluluk kabul etmez.**
+- Bu ürün TMDB API'sini kullanır; TMDB tarafından onaylanmış veya
+  sertifikalanmış değildir.
+
+Güvenlik açığı bildirimi için [SECURITY.md](SECURITY.md).
 
 ---
 
 ## Lisans
 
-MIT — detaylar [LICENSE](LICENSE) dosyasında.
+MIT — ayrıntılar [LICENSE](LICENSE) dosyasında.
 
 ---
 
@@ -244,4 +229,5 @@ MIT — detaylar [LICENSE](LICENSE) dosyasında.
 - [ExoPlayer / Media3](https://github.com/androidx/media)
 - [Coil 3](https://github.com/coil-kt/coil)
 - [TMDB](https://www.themoviedb.org/)
-- [Instrument Serif](https://fonts.google.com/specimen/Instrument+Serif), [Geist](https://vercel.com/font), [Geist Mono](https://vercel.com/font) — Google Fonts
+- [Instrument Serif](https://fonts.google.com/specimen/Instrument+Serif) ·
+  [Geist ve Geist Mono](https://vercel.com/font)
