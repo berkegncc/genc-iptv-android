@@ -213,7 +213,15 @@ class UpdateRepositoryImpl @Inject constructor(
     companion object {
         private const val TAG = "GencIPTV/Update"
         private const val UPDATES_DIR = "updates"
-        private val CHECK_INTERVAL_MS = TimeUnit.HOURS.toMillis(24)
+        /**
+         * Guard rail, not a schedule. Checks fire whenever the app comes to
+         * the front, so this only exists to stop someone who switches apps
+         * every few seconds from making a request each time. Short enough that
+         * a release published while the app sat in the background is offered
+         * on the next open rather than a day later — which is what a 24-hour
+         * interval actually did.
+         */
+        private val CHECK_INTERVAL_MS = TimeUnit.MINUTES.toMillis(30)
         private const val DOWNLOAD_TIMEOUT_MIN = 10L
 
         /**

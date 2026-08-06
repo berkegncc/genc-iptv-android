@@ -35,13 +35,26 @@ fun rememberUpdateViewModel(): UpdateViewModel {
 fun UpdateDialogHost(viewModel: UpdateViewModel) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
-    // Granting "install unknown apps" happens in a separate Settings Activity
-    // that returns no result, so resuming is the only signal that the user is
-    // back. If the permission is now granted, the install continues by itself.
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) viewModel.onResumed()
+            when (event) {
+                // Every time the app comes to the front, not just the first
+                // time this screen is built. Tying the check to composition
+                // meant an app left in the background for days never looked
+                // again — the activity is not recreated on resume, so the
+                // effect never re-ran. The repository's own interval keeps
+                // this from turning into a request per app switch.
+                Lifecycle.Event.ON_START -> viewModel.check(force = false)
+
+                // Granting "install unknown apps" happens in a separate
+                // Settings Activity that returns no result, so resuming is the
+                // only signal that the user is back. If the permission is now
+                // granted, the install continues by itself.
+                Lifecycle.Event.ON_RESUME -> viewModel.onResumed()
+
+                else -> Unit
+            }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }

@@ -105,8 +105,10 @@ fun HomeScreen(
     // onboarding/syncing are separate destinations — so getting here means the
     // user is past setup and can be asked. Throttled to once a day inside the
     // repository, and it stays quiet on any failure.
+    // UpdateDialogHost checks on every foreground, so there is nothing to kick
+    // off here — a LaunchedEffect would only fire on first composition, which
+    // is exactly the case that used to be missed.
     val updateViewModel = rememberUpdateViewModel()
-    LaunchedEffect(Unit) { updateViewModel.check(force = false) }
     UpdateDialogHost(updateViewModel)
 
     HomeContent(

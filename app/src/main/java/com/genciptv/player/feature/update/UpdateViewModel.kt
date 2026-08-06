@@ -46,8 +46,12 @@ class UpdateViewModel @Inject constructor(
      *   reports "you're up to date"; a silent one says nothing.
      */
     fun check(force: Boolean = false) {
-        // Never interrupt an in-flight download or a pending install.
+        // Never interrupt an in-flight download or a pending install — and
+        // never talk over an offer the user has not answered yet. Since checks
+        // now run on every foreground, a throttled one resolves to "nothing to
+        // report", which would otherwise close an open dialog behind them.
         when (_uiState.value) {
+            is UpdateUiState.Available,
             is UpdateUiState.Downloading,
             is UpdateUiState.ReadyToInstall,
             is UpdateUiState.NeedsPermission -> return
